@@ -1,0 +1,13 @@
+sudo: required
+
+services:
+  - docker
+
+install:
+  - make build-all
+
+before_script:
+  - sudo apt-get update -qq
+
+script:
+  - make test-up_0

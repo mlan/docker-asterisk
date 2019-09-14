@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# 50_init-asterisk-conf
+#
+# If /etc/astrisk is empty initalize it with files from /usr/share/docker/etc/astrisk
+#
+DOCKER_CONF_DIR=${DOCKER_CONF_DIR-/etc/asterisk}
+DOCKER_SEED_CONF_DIR=${DOCKER_SEED_CONF_DIR-/usr/local/share/astrisk/config}
+
+if [ -z "$(ls -A $DOCKER_CONF_DIR 2>/dev/null)" ]; then
+	printf "entrypoint[$$]: INFO:$(basename $0): seeding asterisk configuration.\n"
+	cp -p $DOCKER_SEED_CONF_DIR/* $DOCKER_CONF_DIR
+fi

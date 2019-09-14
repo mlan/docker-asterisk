@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# 50_update-loglevel
+#
+# If SYSLOG_LEVEL is not empty update syslog level
+#
+if [ -n "$SYSLOG_LEVEL" ]; then
+	printf "entrypoint[$$]: INFO:$(basename $0): setting syslogd level=$SYSLOG_LEVEL.\n"
+	setup-runit.sh "syslogd -n -O - -l $SYSLOG_LEVEL $SYSLOG_OPTIONS"
+fi

@@ -96,8 +96,36 @@ When you create the `mlan/asterisk` container, you can configure the services by
 
 ## Configuration files
 
-cli_aliases.conf  extensions-globals.conf  pjsip.conf 
-extensions.conf   minivm.conf              pjsip_wizard.conf  rtp.conf
+Asterisk and its modules are configured using several configuration files which are typically found in `/etc/asterisk`. The  `/mlan/astisk` image provides a collection of configuration files which can serve as starting point for your system. We will outline how we intend the default configuration files are structured.
+
+### Functional
+
+Some of the collection of configuration files provided does not contain any user specific data and might initially be left unmodified. These files are:
+
+| File name        | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| acl.conf         |                                                              |
+| asterisk.conf    | asterisk logging, directory structure                        |
+| ccss.conf        |                                                              |
+| cli_aliases.conf | command line interface aliases convenience                   |
+| extensions.conf  | dialplan how incoming and outgoing calls and messages are handled |
+| features.conf    | activation of special features                               |
+| indications.conf | dial tone local                                              |
+| logger.conf      | logfiles                                                     |
+| modules.conf     | activation of modules                                        |
+| musiconhold.conf | music on hold directory                                      |
+| pjproject.conf   | pjsip installation version                                   |
+
+### Personal
+
+| File name               | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| extensions-globals.conf | Defines SIP trunk endpoint                                   |
+| minivm.conf             | Define mail sever URL and authentication credentials which voice mail email notifications will be sent |
+| pjsip.conf              | Defines SIP transport, protocol, port, host URL              |
+| pjsip_wizard.conf       | Defines endpoints, soft-phones, users, sip trunk             |
+| rtp.conf                | Define RTP port range                                        |
+| sms.conf                | Define HTTP SMS, incoming and outgoing                       |
 
 ### `pjsip_wizard.conf` soft-phones and trunks
 
@@ -119,3 +147,12 @@ To facilitate such approach, to achieve persistent storage, the configuration an
 docker run -d --name pbx-mta -v pbx-mta:/srv -p 127.0.0.1:25:25 mlan/asterisk
 ```
 
+
+
+## Initialization procedure
+
+The `mlan/asterisk` image is compiled without any configuration files. When a container is created using the `mlan/asterisk` image default configuration files are copied to the configuration directory `etc/asteroisk` if it is found to be empty. This behavior is intended to support the following initialization procedures.
+
+In scenarios where you already have a collection of configuration files on a docker volume, start/create a `mlan/asterisk` container with this volume mounted. At startup these configuration files are recognized and left untouched and asterisk is stated. The same will happen when the container is restarted. 
+
+In a scenario where we don't have any configuration files yet we start/create a want to start `mlan/asterisk` container with an empty target volume. At startup the default configuration files will be copied to the mounted volume. Now you can edit these configuration files to your liking either from within the container or directly from the volume mounting point on the  docker host. At consecutive startup these configuration files are recognized and left untouched and asterisk is stated.

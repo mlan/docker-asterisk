@@ -22,10 +22,11 @@ ENV	DOCKER_RUNIT_DIR=/etc/sv \
 	DOCKER_CONF_DIR=/etc/asterisk \
 	DOCKER_LOG_DIR=/var/log/asterisk \
 	DOCKER_LIB_DIR=/var/lib/asterisk \
-	DOCKER_MOH_DIR=$DOCKER_LIB_DIR/moh \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
 	SYSLOG_LEVEL=8 \
 	SYSLOG_OPTIONS='-S -D'
+ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh
+
 #
 # Copy utility scripts including entrypoint.sh to image
 #

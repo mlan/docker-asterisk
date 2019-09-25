@@ -1,0 +1,70 @@
+#!/bin/bash
+# /usr/local/bin/minivm-send
+#
+script_name=$(basename $0)
+help() {
+cat<<-!cat
+  DESCRIPTION
+    This script simplifies smtps connections for sendmail
+  USAGE
+    $script_name -H <host:port> [OPTIONS] < message
+  OPTIONS
+    -e                 Also send log messages to stdout
+    -f <from addr>     For use in MAIL FROM
+    -H <host:port>     Mail host/ip and port
+    -h                 Print this text
+    -P <protocol>      Choose from: smtp, smtps, tls, starttls
+    -p <password>      Mail host autentication clear text password
+    -u <username>      Mail host autentication username
+!cat
+}
+
+#
+# Arguments
+#
+while getopts ef:H:hP:p:u: option; do
+	case "${option}" in
+	e) logger_std="-s" ;;
+	f) sendmail_from="-f ${OPTARG}" ;;
+	H) sendmail_host="${OPTARG}" ;;
+	h) help; exit 0 ;;
+	P) sendmail_proto="${OPTARG}" ;;
+	p) sendmail_passwd="-ap${OPTARG}" ;;
+	u) sendmail_user="-au${OPTARG}" ;;
+	esac
+done
+
+#
+# Protocol
+#
+case "$sendmail_proto" in
+starttls)
+	sendmail_opt="-H \"openssl s_client -quiet -tls1 -starttls smtp -connect $sendmail_host\"" ;;
+smtps|tls)
+	sendmail_opt="-H \"openssl s_client -quiet -tls1 -connect $sendmail_host\"" ;;
+smtp|*)
+	sendmail_opt="-S $sendmail_host" ;;
+esac
+
+#
+# Strings
+#
+logger_arg="$logger_std -t $script_name[$$] -p mail"
+sendmail_cmd="sendmail -t $sendmail_from $sendmail_opt $sendmail_user $sendmail_passwd"
+
+#
+# Send email
+# Asterisk pass the message via stdin to this script and
+# the stream is inherited here
+#
+$sendmail_cmd
+
+#
+# log sendmail status
+#
+if [ $? ]; then
+	logger $logger_arg.info "INFO: Successfully sent mail ($sendmail_host)"
+else
+	logger $logger_arg.err "ERROR: Unable to send mail ($sendmail_host)"
+fi
+logger $logger_arg.debug "DEBUG: $sendmail_cmd"

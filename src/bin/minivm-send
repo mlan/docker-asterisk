@@ -1,6 +1,8 @@
 #!/bin/bash
 # /usr/local/bin/minivm-send
 #
+#set -x
+#
 script_name=$(basename $0)
 help() {
 cat<<-!cat
@@ -22,15 +24,17 @@ cat<<-!cat
 #
 # Arguments
 #
+sendmail_args=("-t")
+logger_args=("-t" "$script_name[$$]")
 while getopts ef:H:hP:p:u: option; do
 	case "${option}" in
-	e) logger_std="-s" ;;
-	f) sendmail_from="-f ${OPTARG}" ;;
+	e) logger_args+=("-s") ;;
+	f) sendmail_args+=("-f" "${OPTARG}") ;;
 	H) sendmail_host="${OPTARG}" ;;
 	h) help; exit 0 ;;
 	P) sendmail_proto="${OPTARG}" ;;
-	p) sendmail_passwd="-ap${OPTARG}" ;;
-	u) sendmail_user="-au${OPTARG}" ;;
+	p) sendmail_args+=("-ap${OPTARG}") ;;
+	u) sendmail_args+=("-au${OPTARG}") ;;
 	esac
 done
 
@@ -39,32 +43,27 @@ done
 #
 case "$sendmail_proto" in
 starttls)
-	sendmail_opt="-H \"openssl s_client -quiet -tls1 -starttls smtp -connect $sendmail_host\"" ;;
+	sendmail_args+=("-H" "openssl s_client -quiet -tls1 -starttls smtp -connect $sendmail_host") ;;
 smtps|tls)
-	sendmail_opt="-H \"openssl s_client -quiet -tls1 -connect $sendmail_host\"" ;;
+	sendmail_args+=("-H" "openssl s_client -quiet -tls1 -connect $sendmail_host") ;;
 smtp|*)
-	sendmail_opt="-S $sendmail_host" ;;
+	sendmail_args+=("-S" "$sendmail_host") ;;
 esac
-
-#
-# Strings
-#
-logger_arg="$logger_std -t $script_name[$$] -p mail"
-sendmail_cmd="sendmail -t $sendmail_from $sendmail_opt $sendmail_user $sendmail_passwd"
 
 #
 # Send email
 # Asterisk pass the message via stdin to this script and
-# the stream is inherited here
+# that stream is inherited here
 #
-$sendmail_cmd
+sendmail "${sendmail_args[@]}" &>/dev/null
+sendmail_extival=$?
 
 #
-# log sendmail status
+# Log sendmail status and exit
 #
-if [ $? ]; then
-	logger $logger_arg.info "INFO: Successfully sent mail ($sendmail_host)"
+if [ $sendmail_extival -eq 0 ]; then
+	logger "${logger_args[@]}" -p mail.info "INFO: Successfully sent mail ($sendmail_host)"
 else
-	logger $logger_arg.err "ERROR: Unable to send mail ($sendmail_host)"
+	logger "${logger_args[@]}" -p mail.err "ERROR: Unable to send mail ($sendmail_host)"
 fi
-logger $logger_arg.debug "DEBUG: $sendmail_cmd"
+exit $sendmail_extival

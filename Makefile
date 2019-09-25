@@ -16,16 +16,16 @@ IMG_CMD  ?= /bin/bash
 CNT_NAME ?= test-pbx
 CNT_DOM  ?= example.com
 CNT_HOST ?= pbx.$(CNT_DOM)
-TST_SIPP ?= 5060
-CNT_RTPP ?= 10000-10009
+TST_SIPP ?= 5566
+CNT_RTPP ?= 10000-10099
 TST_SMSP ?= 8080
 TST_SMSU ?= 127.0.0.1:$(TST_SMSP)/
-TST_PORT ?= -p $(TST_SIPP):5060/udp -p $(CNT_RTPP):$(CNT_RTPP)/udp \
-	-p $(TST_SIPP):5060 -p 4569:4569/udp -p $(TST_SMSP):80
+TST_PORT ?= -p $(TST_SIPP):$(TST_SIPP)/udp -p $(CNT_RTPP):$(CNT_RTPP)/udp \
+	-p $(TST_SIPP):$(TST_SIPP) -p 4569:4569/udp -p $(TST_SMSP):80
 TST_XTRA ?= --cap-add SYS_PTRACE \
 	-e ASTERISK_SMSD_DEBUG=true -e SYSLOG_LEVEL=8
 CNT_ENV  ?= --hostname $(CNT_HOST) $(TST_PORT) $(TST_XTRA)
-CNT_VOL  ?= -v $$(pwd)/local/asterisk/config:/etc/asterisk
+CNT_VOL  ?=
 CNT_CMD  ?= asterisk -pf -vvvddd
 CNT_CLI  ?= asterisk -r -vvvddd
 CNT_DRV  ?=

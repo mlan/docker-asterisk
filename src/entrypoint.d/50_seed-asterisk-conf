@@ -2,12 +2,28 @@
 #
 # 50_init-asterisk-conf
 #
-# If /etc/astrisk is empty initalize it with files from /usr/share/docker/etc/astrisk
+#
 #
 DOCKER_CONF_DIR=${DOCKER_CONF_DIR-/etc/asterisk}
 DOCKER_SEED_CONF_DIR=${DOCKER_SEED_CONF_DIR-/usr/local/share/astrisk/config}
 
+
+#
+# Make sure that we have the required direcory structure in place under
+# DOCKER_PERSIST_DIR. It will be missing if we mount an empty volume there.
+#
+mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
+	${DOCKER_PERSIST_DIR}${DOCKER_CONF_DIR} \
+	${DOCKER_PERSIST_DIR}${DOCKER_LOG_DIR} \
+	${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR}
+
+#
+# If DOCKER_CONF_DIR is empty initalize it with files from
+# DOCKER_SEED_CONF_DIR. We dont want to overwire any files,
+# but we only have "cp -u" (only copy newer) in busybox.
+# (The driectory shuld be empty when we try to copy).
+#
 if [ -z "$(ls -A $DOCKER_CONF_DIR 2>/dev/null)" ]; then
 	printf "entrypoint[$$]: INFO:$(basename $0): seeding asterisk configuration.\n"
-	cp -p $DOCKER_SEED_CONF_DIR/* $DOCKER_CONF_DIR
+	cp -p -u $DOCKER_SEED_CONF_DIR/* $DOCKER_CONF_DIR
 fi

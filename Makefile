@@ -87,6 +87,13 @@ test-up_1:
 	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER)) $(CNT_CMD)
 
+test-up_2:
+	#
+	# test (2) run no srv vol
+	#
+	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) \
+		$(IMG_REPO):$(call _version,full,$(IMG_VER))
+
 test-smsd1:
 	curl -i $(TST_SMSU) -X POST \
 	--data-urlencode "caller_did=$(SMS_FROM)" \

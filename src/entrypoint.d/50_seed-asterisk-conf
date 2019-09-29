@@ -9,7 +9,7 @@ DOCKER_SEED_CONF_DIR=${DOCKER_SEED_CONF_DIR-/usr/local/share/astrisk/config}
 
 
 #
-# Make sure that we have the required direcory structure in place under
+# Make sure that we have the required directory structure in place under
 # DOCKER_PERSIST_DIR. It will be missing if we mount an empty volume there.
 #
 mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
@@ -18,10 +18,11 @@ mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 	${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR}
 
 #
-# If DOCKER_CONF_DIR is empty initalize it with files from
-# DOCKER_SEED_CONF_DIR. We dont want to overwire any files,
+# If DOCKER_CONF_DIR is empty, initialize it with files from
+# DOCKER_SEED_CONF_DIR. We don't want to overwrite any files,
 # but we only have "cp -u" (only copy newer) in busybox.
-# (The driectory shuld be empty when we try to copy).
+# The directory should be empty when we try to copy,
+# so this is just an extra precaution.
 #
 if [ -z "$(ls -A $DOCKER_CONF_DIR 2>/dev/null)" ]; then
 	printf "entrypoint[$$]: INFO:$(basename $0): seeding asterisk configuration.\n"

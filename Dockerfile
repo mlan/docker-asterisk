@@ -13,7 +13,7 @@ ARG	REL=latest
 FROM	$DIST:$REL AS mini
 LABEL	maintainer=mlan
 
-ENV	DOCKER_RUNIT_DIR=/etc/sv \
+ENV	DOCKER_RUNIT_DIR=/etc/service \
 	DOCKER_PERSIST_DIR=/srv \
 	DOCKER_BIN_DIR=/usr/local/bin \
 	DOCKER_ENTRY_DIR=/etc/entrypoint.d \
@@ -34,6 +34,7 @@ ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh
 COPY	src/bin $DOCKER_BIN_DIR/
 COPY	src/entrypoint.d $DOCKER_ENTRY_DIR/
 COPY	src/php $DOCKER_PHP_DIR/
+COPY	dep/php $DOCKER_PHP_DIR/
 COPY	src/asterisk/config $DOCKER_SEED_CONF_DIR/
 
 #
@@ -95,11 +96,13 @@ RUN	apk --no-cache --update add \
 	php7-json \
 	runit \
 	bash \
+	nftables \
 	&& setup-runit.sh \
 	"syslogd -n -O - -l $SYSLOG_LEVEL $SYSLOG_OPTIONS" \
 	"crond -f -c /etc/crontabs" \
 	"-q asterisk -pf" \
-	"php -S 0.0.0.0:80 -t $DOCKER_PHP_DIR smsd.php" \
+	"-n smsd php -S 0.0.0.0:80 -t $DOCKER_PHP_DIR smsd.php" \
+	"$DOCKER_PHP_DIR/autoban.php" \
 	&& mkdir -p /var/spool/asterisk/staging
 
 CMD	runsvdir -P ${DOCKER_RUNIT_DIR}
@@ -119,6 +122,7 @@ FROM	base AS full
 
 RUN	apk --no-cache --update add \
 	asterisk-sounds-en
+#	php7-sockets
 
 #
 #
@@ -140,7 +144,7 @@ RUN	apk --no-cache --update add \
 	asterisk-doc \
 	asterisk-fax \
 	asterisk-mobile \
-	asterisk-odbc \
+        asterisk-odbc \
 	asterisk-pgsql \
 	asterisk-tds \
 	asterisk-dbg \

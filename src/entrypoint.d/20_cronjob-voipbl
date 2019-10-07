@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# 20_cronjob-voipbl
+#
+# DO NOT USE: blacklist is too long and asterisk chokes
+#
+# If DOCKER_ACL_CONF contains #include $DOCKER_VOIPBL_CONF create a
+# VOIPBL cronjob
+# Need to run this before 50_seed-asterisk-conf
+#
+DOCKER_VOIPBL_URL=${DOCKER_VOIPBL_URL-http://www.voipbl.org/update/}
+DOCKER_VOIPBL_CONF=${DOCKER_VOIPBL_CONF-/var/spool/asterisk/acl/acl-blacklist.conf}
+DOCKER_VOIPBL_CRON=${DOCKER_VOIPBL_CRON-/etc/periodic/daily/voipbl}
+DOCKER_ACL_CONF=${DOCKER_ACL_CONF-$DOCKER_CONF_DIR/acl.conf}
+
+
+#
+# If there is no DOCKER_ACL_CONF file create it
+#
+if [ ! -f "$DOCKER_ACL_CONF" ]; then
+	cat <<-!cat > $DOCKER_ACL_CONF
+		[acl_blacklist]
+		#include $DOCKER_VOIPBL_CONF
+	!cat
+fi
+
+#
+# If DOCKER_ACL_CONF contains #include $DOCKER_VOIPBL_CONF then
+# create the DOCKER_VOIPBL_CRON cronjob which downloads the voip black list
+# into DOCKER_VOIPBL_FILE
+# If DOCKER_VOIPBL_FILE does not exist run cronjob now
+#
+if grep -q "#include $DOCKER_VOIPBL_CONF" $DOCKER_ACL_CONF; then
+	mkdir -p $(dirname $DOCKER_VOIPBL_CONF)
+	cat <<-!cat > $DOCKER_VOIPBL_CRON
+		#!/bin/sh
+		wget -qO - $DOCKER_VOIPBL_URL |
+		sed 's/^[0-9]/deny = &/' > $DOCKER_VOIPBL_CONF
+	!cat
+	chmod a+x $DOCKER_VOIPBL_CRON
+	if [ ! -f "$DOCKER_VOIPBL_CONF" ]; then
+		$DOCKER_VOIPBL_CRON
+	fi
+fi
+
+

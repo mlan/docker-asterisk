@@ -1,14 +1,15 @@
 #!/bin/sh
 #
 # switches
-# -q send stdout and stderr to /dev/null
-# -l activate svlogd (NOT IMPLEMENTED YET)
+# -q 		send stdout and stderr to /dev/null
+# -n <name>	use this name instead of basename $1
+# -l 		activate svlogd (NOT IMPLEMENTED YET)
 #
 #
 
 # use /etc/service if $DOCKER_RUNIT_DIR not already defined
 DOCKER_RUNIT_DIR=${DOCKER_RUNIT_DIR-/etc/service}
-#docker_svlog_dir=${docker_svlog_dir-/var/log/sv}
+DOCKER_SVLOG_DIR=${DOCKER_SVLOG_DIR-/var/log/sv}
 
 #
 # Define helpers
@@ -16,9 +17,19 @@ DOCKER_RUNIT_DIR=${DOCKER_RUNIT_DIR-/etc/service}
 
 init_service() {
 	local redirstd=
+	local runit_name cmd runit_dir svlog_dir use_log
 	case "$1" in
 		-q|--quiet)
 			redirstd="exec >/dev/null"
+			shift
+			;;
+		-n|--name)
+			shift
+			runit_name="$1"
+			shift
+			;;
+		-l|--log)
+			use_log="yes"
 			shift
 			;;
 		-*|--*)
@@ -26,11 +37,11 @@ init_service() {
 			exit
 			;;
 	esac
-	local cmd="$1"
-	local runit_dir=$DOCKER_RUNIT_DIR/${cmd##*/}
-	local svlog_dir=$docker_svlog_dir/${cmd##*/}
+	cmd=$(which "$1")
+	runit_name=${runit_name-$(base_name $1)}
+	runit_dir=$DOCKER_RUNIT_DIR/$runit_name
+	svlog_dir=$DOCKER_SVLOG_DIR/$runit_name
 	shift
-	cmd=$(which $cmd)
 	if [ ! -z "$cmd" ]; then
 		mkdir -p $runit_dir
 		cat <<-! > $runit_dir/run
@@ -40,7 +51,7 @@ init_service() {
 			exec $cmd $@
 		!
 		chmod +x $runit_dir/run
-		if [ -n "$docker_svlog_dir" ]; then
+		if [ -n "$use_log" ]; then
 			mkdir -p $runit_dir/log $svlog_dir
 			cat <<-! > $runit_dir/log/run
 				#!/bin/sh
@@ -55,6 +66,8 @@ down_service() {
 	local cmd=$1
 	touch $DOCKER_RUNIT_DIR/$cmd/down
 	}
+
+base_name() { local base=${1##*/}; echo ${base%%.*} ;}
 
 #
 # run

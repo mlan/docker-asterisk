@@ -16,13 +16,16 @@ IMG_CMD  ?= /bin/bash
 CNT_NAME ?= test-pbx
 CNT_DOM  ?= example.com
 CNT_HOST ?= pbx.$(CNT_DOM)
-TST_SIPP ?= 5566
+TST_SIPP ?= 5060
 CNT_RTPP ?= 10000-10099
 TST_SMSP ?= 8080
 TST_SMSU ?= 127.0.0.1:$(TST_SMSP)/
-TST_PORT ?= -p $(TST_SIPP):$(TST_SIPP)/udp -p $(CNT_RTPP):$(CNT_RTPP)/udp \
-	-p $(TST_SIPP):$(TST_SIPP) -p 4569:4569/udp -p $(TST_SMSP):80
+TST_PORT ?= -p $(TST_SIPP):$(TST_SIPP)/udp \
+	-p $(CNT_RTPP):$(CNT_RTPP)/udp \
+	-p $(TST_SMSP):80
 TST_XTRA ?= --cap-add SYS_PTRACE \
+	--cap-add=NET_ADMIN \
+	--cap-add=NET_RAW \
 	-e ASTERISK_SMSD_DEBUG=true -e SYSLOG_LEVEL=8
 CNT_ENV  ?= --hostname $(CNT_HOST) $(TST_PORT) $(TST_XTRA)
 CNT_VOL  ?=
@@ -48,11 +51,15 @@ TST_W8L2 ?= 120
 
 build-all: build_mini build_base build_full build_xtra
 
-build: Dockerfile
+build: Dockerfile dep/php/ami.class.inc
 	docker build $(BLD_ARG) --target $(BLD_TGT) -t $(BLD_REPO):$(BLD_VER) .
 
-build_%: Dockerfile
+build_%: Dockerfile dep/php/ami.class.inc
 	docker build $(BLD_ARG) --target $* -t $(BLD_REPO):$(call _version,$*,$(BLD_VER)) .
+
+dep/php/ami.class.inc:
+	mkdir -p dep/php
+	wget -O dep/php/ami.class.inc https://raw.githubusercontent.com/ofbeaton/phpami/master/src/Ami.php
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
@@ -77,22 +84,29 @@ test-up_0:
 	#
 	# test (0) run with defaults
 	#
-	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
+	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
 
 test-up_1:
 	#
 	# test (1) run with $(CNT_CMD)
 	#
-	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
+	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER)) $(CNT_CMD)
 
 test-up_2:
 	#
-	# test (2) run no srv vol
+	# test (2) run using srv vol
 	#
-	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) \
+	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
+
+test-upgrade:
+	docker cp src/bin/. $(CNT_NAME):/usr/local/bin
+	docker cp src/entrypoint.d/. $(CNT_NAME):/etc/entrypoint.d
+	docker cp src/php/. $(CNT_NAME):/usr/share/php7
+	docker cp dep/php/. $(CNT_NAME):/usr/share/php7
+	docker cp src/asterisk/config/. $(CNT_NAME):/etc/asterisk
 
 test-smsd1:
 	curl -i $(TST_SMSU) -X POST \
@@ -117,7 +131,7 @@ test-down:
 test-logs:
 	docker container logs $(CNT_NAME)
 
-test-cmd:
+test-sh:
 	docker exec -it $(CNT_NAME) bash
 
 test-cli:
@@ -125,6 +139,9 @@ test-cli:
 
 test-diff:
 	docker container diff $(CNT_NAME)
+
+test-top:
+	docker container top $(CNT_NAME)
 
 test-htop: test-debugtools
 	docker exec -it $(CNT_NAME) htop

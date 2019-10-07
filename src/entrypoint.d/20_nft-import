@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# 20_ntf-import
+#
+# If DOCKER_NTF_CONF exists have ntf import it
+#
+DOCKER_NTF_CONF=${DOCKER_NTF_CONF-/etc/nftables/inet-filter.nft}
+if [ -f "${DOCKER_NTF_CONF}" ]; then
+	printf "entrypoint[$$]: INFO:$(basename $0): nftables importing $DOCKER_NTF_CONF.\n"
+	nft -f ${DOCKER_NTF_CONF}
+fi

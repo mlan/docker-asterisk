@@ -23,7 +23,7 @@ ENV	DOCKER_RUNIT_DIR=/etc/service \
 	DOCKER_LOG_DIR=/var/log/asterisk \
 	DOCKER_LIB_DIR=/var/lib/asterisk \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
-	SYSLOG_LEVEL=8 \
+	SYSLOG_LEVEL=4 \
 	SYSLOG_OPTIONS='-S -D'
 ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh
 
@@ -144,7 +144,7 @@ RUN	apk --no-cache --update add \
 	asterisk-doc \
 	asterisk-fax \
 	asterisk-mobile \
-        asterisk-odbc \
+	asterisk-odbc \
 	asterisk-pgsql \
 	asterisk-tds \
 	asterisk-dbg \

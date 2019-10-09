@@ -80,7 +80,7 @@ if ($ban->config['autoban']['enabled']) {
 	if ($ami->connect(null,null,null,'on') === false) {
 		trigger_error('Unable to connect to Asterisk Management Interface',E_USER_ERROR);
 	} else {
-		trigger_error('Connected to Asterisk Management Interface',E_USER_NOTICE);
+		trigger_error('Activated and connected to Asterisk Management Interface',E_USER_NOTICE);
 	}
 	while($exit_code === 0) { $ami->waitResponse(); }
 } else {

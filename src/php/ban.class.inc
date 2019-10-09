@@ -60,13 +60,15 @@ class Ban {
 		foreach ($this->ip_abuse_count as &$count)
 			$count = max($count - $periods_elapsed,0);
 		unset($count);
+		$this->ip_abuse_count = array_filter($this->ip_abuse_count, function($c) { return $c > 0; } );
+		$this->debug($this->ip_abuse_count);
 		$this->last_time = time();
+		if ($this->config['autoban']['prune_interval'] < 0) return false;
 		$past_time = time() - $this->config['autoban']['prune_interval'];
 		$ip_to_unban = array_filter($this->ip_ban_time, function($t) use ($past_time) { return $t < $past_time; } );
-		$this->debug($this->ip_abuse_count);
 		if (empty($ip_to_unban)) {
+			//$this->log("Aging abuse and bans $periods_elapsed s");
 			return false;
-			$this->log("Aging abuse and bans $periods_elapsed s");
 		} else {
 			$this->ip_ban_time = array_diff_key($this->ip_ban_time,$ip_to_unban);
 			$ips = array_keys($ip_to_unban);

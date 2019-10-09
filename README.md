@@ -15,9 +15,10 @@ Feature list follows below
 
 - Asterisk PBX
 - php webhook for (incoming) SMS http ISTP origination
-- dialplan curl (outgoing) SMS http ISTP termination
+- dialplan php (outgoing) SMS http ISTP termination
 - dialplan ISTP originating (incoming) SIP voice call
 - dialplan ISTP termination (outgoing) SIP voice call
+- Autoban, an automatic firewall
 - Alpine Linux
 
 ## Tags
@@ -74,13 +75,16 @@ services:
     image: mlan/asterisk
     restart: unless-stopped
     cap_add:
-      - sys_ptrace
+      - net_admin
+      - net_raw
     networks:
       - proxy
     ports:
       - "80:80"
       - "5060:5060/udp"
-      - "10000-10009:10000-10009/udp"
+      - "10000-10099:10000-10099/udp"
+    environment:
+      - SYSLOG_LEVEL=4
     volumes:
       - tele-conf:/srv
 volumes:
@@ -88,6 +92,45 @@ volumes:
 ```
 
 This repository WILL contains a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
+
+## Autoban, automatic firewall
+The Ban class provides functions for monitoring abuse and if it persists ban
+offending ip. Within a time period, `period=300` s a maximum of `count=3`
+abuses are allowd per remote ip before they are banned for a
+`prune_interval=1800` time interval.
+
+#### `autoban.conf`
+
+```ini
+[asmanager]
+server   = 127.0.0.1
+port     = 5038
+username = autoban
+secret   = 6003.438
+
+[autoban]
+enabled        = true
+count          = 3
+period         = 300
+prune_interval = 1800
+
+[amiaction]
+```
+
+#### `manager.conf`
+
+```ini
+[general]
+enabled  = yes
+bindaddr = 127.0.0.1
+port     = 5038
+
+[autoban]
+secret   = 6003.438
+read     = security,system
+write    =
+```
+
 
 
 ## Environment variables
@@ -129,11 +172,195 @@ Some of the collection of configuration files provided does not contain any user
 
 ### `pjsip_wizard.conf` soft-phones and trunks
 
-### `extensions-globals.conf ` sms termination
+### `extensions-local.conf ` sms termination
 
 ### `pjsip.conf`,  `rtp.conf` network
 
 ### `minivm.conf` voice-mail
+
+#### `pjsip-local.conf`
+
+```ini
+;================================ GLOBAL ==
+[global]
+type = global
+user_agent = Platform PBX
+
+;================================ TRANSPORTS ==
+;
+[transport]
+type = transport
+protocol = udp
+bind = 0.0.0.0:5060
+domain = example.com
+external_media_address = example.com
+external_signaling_address = example.com
+tos = cs3
+cos = 3
+```
+
+#### `extensions-local.conf`
+
+```ini
+;================================ globals =====================================
+; include file providing dialing texting options used in context globals
+;
+;================================ dialing
+[globals]
+DIAL_TIMEOUT =,30
+TRUNK_ENDPOINT = trunk_example
+;================================ voice mail
+VOICEMAIL_TEMPLATE =,en_US_email
+VOICEMAIL_RECGAINDB =,g(12)
+;================================ sms
+; Full path to SMS app
+APP_SMS = /usr/share/php7/sms.php
+
+;================================ entries =====================================
+; Calls enter the dialplan in one of these entries
+;
+[dp_entry_user_calling]
+
+[dp_entry_trunk_calling]
+
+[dp_entry_user_texting]
+
+[dp_entry_trunk_texting]
+
+[dp_entry_channel_open]
+```
+
+#### `pjsip_wizard.conf`
+
+```ini
+;================================ TEMPLATES ==
+
+[trunk_defaults](!)
+type = wizard
+transport = transport
+endpoint/context = dp_entry_trunk_calling
+endpoint/allow = !all,ulaw
+endpoint/direct_media=no
+endpoint/rewrite_contact=yes
+endpoint/rtp_symmetric=yes
+endpoint/allow_subscribe = no
+endpoint/send_rpid = yes
+endpoint/send_pai = yes
+aor/qualify_frequency = 60
+
+
+[outbound_defaults](!,trunk_defaults)
+type = wizard
+sends_auth = yes
+
+[inbound_defaults](!,trunk_defaults)
+type = wizard
+accepts_auth = yes
+
+
+[user_defaults](!)
+type = wizard
+transport = transport
+accepts_registrations = yes
+accepts_auth = yes
+has_hint = yes
+hint_context = dp_lookup_user
+endpoint/context = dp_entry_user_calling
+endpoint/message_context = dp_entry_user_texting
+endpoint/from_domain = example.com
+endpoint/allow_subscribe = yes
+endpoint/tos_audio=ef
+endpoint/tos_video=af41
+endpoint/cos_audio=5
+endpoint/cos_video=4
+endpoint/send_pai = yes
+endpoint/allow = !all,ulaw
+endpoint/rtp_symmetric = yes
+endpoint/trust_id_inbound = yes
+endpoint/language = en
+aor/max_contacts = 5
+aor/remove_existing = yes
+
+;================================ SIP ITSP ==
+
+[trunk_example](outbound_defaults)
+remote_hosts = host.example.com
+outbound_auth/username = user
+outbound_auth/password = password
+
+;================================ SIP USERS ==
+
+[john.doe](user_defaults)
+hint_exten = +12025550160
+endpoint/callerid = John Doe <+12025550160>
+endpoint/mailboxes = john.doe@example.com
+endpoint/from_user = +12025550160
+inbound_auth/username = john.doe
+inbound_auth/password = password
+
+[jane.doe](user_defaults)
+hint_exten = +12025550183
+endpoint/callerid = Jane Doe <+12025550183>
+endpoint/mailboxes = jane.doe@example.com
+endpoint/from_user = +12025550183
+inbound_auth/username = jane.doe
+inbound_auth/password = password
+```
+
+#### `rtp.conf`
+
+```ini
+[general]
+; RTP start and RTP end configure start and end addresses
+; docker will stall if we open a large range of ports, since it runs a
+; a proxy process of each exposed port
+rtpstart = 10000
+rtpend   = 10099
+;
+; Strict RTP protection will drop packets that have passed NAT. Disable to allow
+; remote endpoints connected to LANs.
+;
+strictrtp = no
+```
+
+####`sms.conf`
+
+This file hold user customization of http sms
+originating and termination service.
+
+```ini
+[sms]
+sms_host             = api.example.com
+sms_path             = /sms/send/
+sms_auth_user        = user
+sms_auth_passwd      = passwd
+
+[smsd]
+smsd_exten_context   = dp_entry_channel_open
+smsd_message_context = dp_entry_trunk_texting
+```
+
+#### `minivm.conf`
+
+```ini
+[general]
+;  DESCRIPTION
+;    This script simplifies smtps connections for sendmail
+;  USAGE
+;    minivm-send -H <host:port> [OPTIONS] < message
+;  OPTIONS
+;    -e                 Also send log messages to stdout
+;    -f <from addr>     For use in MAIL FROM
+;    -H <host:port>     Mail host/ip and port
+;    -h                 Print this text
+;    -P <protocol>      Choose from: smtp, smtps, tls, starttls
+;    -p <password>      Mail host autentication clear text password
+;    -u <username>      Mail host autentication username
+;
+mailcmd = minivm-send -H mx.example.com:587 -P starttls -u username -p password -f voicemail-noreply@example.com
+
+...
+```
 
 
 
@@ -147,8 +374,6 @@ To facilitate such approach, to achieve persistent storage, the configuration an
 docker run -d --name pbx-mta -v pbx-mta:/srv -p 127.0.0.1:25:25 mlan/asterisk
 ```
 
-
-
 ## Initialization procedure
 
 The `mlan/asterisk` image is compiled without any configuration files. When a container is created using the `mlan/asterisk` image default configuration files are copied to the configuration directory `etc/asteroisk` if it is found to be empty. This behavior is intended to support the following initialization procedures.
@@ -156,3 +381,8 @@ The `mlan/asterisk` image is compiled without any configuration files. When a co
 In scenarios where you already have a collection of configuration files on a docker volume, start/create a `mlan/asterisk` container with this volume mounted. At startup these configuration files are recognized and left untouched and asterisk is stated. The same will happen when the container is restarted. 
 
 In a scenario where we don't have any configuration files yet we start/create a want to start `mlan/asterisk` container with an empty target volume. At startup the default configuration files will be copied to the mounted volume. Now you can edit these configuration files to your liking either from within the container or directly from the volume mounting point on the  docker host. At consecutive startup these configuration files are recognized and left untouched and asterisk is stated.
+
+## Logging `SYSLOG_LEVEL`
+
+The level of output for logging is in the range from 0 to 8. 1 means emergency logging only, 2 for alert messages, 3 for critical messages only, 4 for error or worse, 5 for warning or worse, 6 for notice or worse, 7 for info or worse, 8 debug. Default: `SYSLOG_LEVEL=4`
+

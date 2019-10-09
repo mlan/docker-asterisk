@@ -143,6 +143,12 @@ test-diff:
 test-top:
 	docker container top $(CNT_NAME)
 
+test-nft:
+	docker exec -it $(CNT_NAME) nft list ruleset
+
+test-nft_watch:
+	docker exec -it $(CNT_NAME) nft list set inet autoban watch
+
 test-htop: test-debugtools
 	docker exec -it $(CNT_NAME) htop
 

@@ -22,7 +22,9 @@ ENV	DOCKER_RUNIT_DIR=/etc/service \
 	DOCKER_CONF_DIR=/etc/asterisk \
 	DOCKER_LOG_DIR=/var/log/asterisk \
 	DOCKER_LIB_DIR=/var/lib/asterisk \
+	DOCKER_NFT_DIR=/var/lib/nftables \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
+	DOCKER_SEED_NFT_DIR=/etc/nftables \
 	SYSLOG_LEVEL=4 \
 	SYSLOG_OPTIONS='-S -D'
 ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh
@@ -36,6 +38,7 @@ COPY	src/entrypoint.d $DOCKER_ENTRY_DIR/
 COPY	src/php $DOCKER_PHP_DIR/
 COPY	dep/php $DOCKER_PHP_DIR/
 COPY	src/asterisk/config $DOCKER_SEED_CONF_DIR/
+COPY	src/nftables $DOCKER_SEED_NFT_DIR/
 
 #
 # Install
@@ -47,11 +50,13 @@ RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 	${DOCKER_PERSIST_DIR}${DOCKER_CONF_DIR} \
 	${DOCKER_PERSIST_DIR}${DOCKER_LOG_DIR} \
 	${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR} \
+	${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR} \
 	${DOCKER_LIB_DIR} \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} $DOCKER_SPOOL_DIR \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_CONF_DIR} $DOCKER_CONF_DIR \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_LOG_DIR} $DOCKER_LOG_DIR \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR} $DOCKER_MOH_DIR \
+	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR} $DOCKER_NFT_DIR \
 	&& apk --no-cache --update add \
 	asterisk
 

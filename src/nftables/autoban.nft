@@ -1,0 +1,30 @@
+#!/usr/sbin/nft -f
+#
+
+table inet autoban {
+	set watch {
+		type ipv4_addr
+		flags timeout
+	}
+	set jail {
+		type ipv4_addr
+		flags timeout
+	}
+	set parole {
+		type ipv4_addr
+		flags timeout
+	}
+	set blacklist {
+		type ipv4_addr
+	}
+	set whitelist {
+		type ipv4_addr
+	}
+
+	chain incoming {
+		type filter hook input priority 0; policy accept;
+		ip saddr @whitelist accept
+		ip saddr @blacklist drop
+		ip saddr @jail drop
+	}
+}

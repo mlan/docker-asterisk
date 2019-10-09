@@ -2,10 +2,35 @@
 #
 # 20_ntf-import
 #
+#
+#
+DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
+DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
+DOCKER_NTF_FILE=${DOCKER_NTF_FILE-autoban.nft}
+
+#
+# Make sure that we have the required directory structure in place under
+# DOCKER_PERSIST_DIR. It will be missing if we mount an empty volume there.
+#
+mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR}
+
+#
+# If DOCKER_NFT_DIR is empty, initialize it with files from
+# DOCKER_SEED_NFT_DIR. We don't want to overwrite any files,
+# but we only have "cp -u" (only copy newer) in busybox.
+# The directory should be empty when we try to copy,
+# so this is just an extra precaution.
+#
+if [ -z "$(ls -A $DOCKER_NFT_DIR 2>/dev/null)" ]; then
+	printf "entrypoint[$$]: INFO:$(basename $0): nftables seeding configuration.\n"
+	cp -p -u $DOCKER_SEED_NFT_DIR/$DOCKER_NTF_FILE $DOCKER_NFT_DIR
+fi
+
+#
 # If DOCKER_NTF_CONF exists have ntf import it
 #
-DOCKER_NTF_CONF=${DOCKER_NTF_CONF-/etc/nftables/inet-filter.nft}
-if [ -f "${DOCKER_NTF_CONF}" ]; then
-	printf "entrypoint[$$]: INFO:$(basename $0): nftables importing $DOCKER_NTF_CONF.\n"
-	nft -f ${DOCKER_NTF_CONF}
+nft_file=$DOCKER_NFT_DIR/$DOCKER_NTF_FILE
+if [ -f "$nft_file" ]; then
+	printf "entrypoint[$$]: INFO:$(basename $0): nftables importing $nft_file.\n"
+	nft -f ${nft_file}
 fi

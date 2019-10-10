@@ -94,10 +94,7 @@ volumes:
 This repository WILL contains a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
 
 ## Autoban, automatic firewall
-The Ban class provides functions for monitoring abuse and if it persists ban
-offending ip. Within a time period, `period=300` s a maximum of `count=3`
-abuses are allowd per remote ip before they are banned for a
-`prune_interval=1800` time interval.
+The Autoban service listens to Asterisk security events on the AMI interface. Autoban is activated if there is an  `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount`  security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `relapsebase`, which determines how many times longer the IP is blocked. To illustrate assuming `jailtime=300`  and `relapsebase=10` then the IP is blocked 5min the first time, 50min the second, 8.3h (500min) the third, 3.5days (5000min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
 
 #### `autoban.conf`
 
@@ -109,13 +106,16 @@ username = autoban
 secret   = 6003.438
 
 [autoban]
-enabled        = true
-count          = 3
-period         = 300
-prune_interval = 1800
+enabled     = yes
+maxcount    = 3
+watchtime   = 300
+jailtime    = 300
+relapsebase = 10
 
-[amiaction]
+[nftables]
 ```
+
+The AMI interface is configured in  `autoban.conf` and `manager.conf`. For security reasons use `bindaddr=127.0.0.1`  and change the `secret` (in both files).
 
 #### `manager.conf`
 
@@ -127,8 +127,16 @@ port     = 5038
 
 [autoban]
 secret   = 6003.438
-read     = security,system
+read     = security
 write    =
+```
+
+Autoban uses nftables which does the actual package filtering. nftables needs the `NET_ADMIN` and `NET_RAW` capabilities to function, which you provide by issuing  `--cap-add=NET_ADMIN --cap-add=NET_RAW`.
+
+You can watch the status of the nftable firewall by, from within the container, typing
+
+```bash
+nft list ruleset
 ```
 
 

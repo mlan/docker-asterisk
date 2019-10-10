@@ -50,8 +50,10 @@ class Nft {
 		}
 	}
 	public function book($ip) {
-		// prune watch counters from ip that has timed out
+		// prune counters from ip that has timed out
 		$this->prune('watch');
+		$this->prune('jail');
+		$this->prune('parole');
 		// increment watch counter
 		if (isset($this->count['watch']["$ip"])) {
 			$this->count['watch']["$ip"]++;
@@ -60,9 +62,6 @@ class Nft {
 		}
 		// add ip to watch set
 		$this->add('watch',$ip,$this->config['autoban']['watchtime']);
-		// prune parole counters from ip that has timed out
-		$this->prune('jail');
-		$this->prune('parole');
 		// if not alreay in jail but on parole or watch count > maxcount
 		// determine sentence and increment parole counter
 		if (isset($this->count['jail'][$ip])) {
@@ -73,7 +72,7 @@ class Nft {
 				$this->count['parole'][$ip]++;
 				$sentence = $this->config['autoban']['jailtime']
 					* pow($this->config['autoban']['relapsebase'],
-						$this->count['parole'][$ip]);
+						max($this->count['parole'][$ip] -1, 0));
 			} elseif ($this->count['watch'][$ip] >
 				$this->config['autoban']['maxcount']) {
 				$this->count['parole'][$ip] = 1;
@@ -100,7 +99,8 @@ class Nft {
 			$parole = self::MAXTIME;
 			$sentence = $parole - $watchtime;
 		}
-		return $parole;
+		$sentence = round($sentence);
+		return round($parole);
 	}
 	public function prune($set) {
 		$ipaddresses = $this->list($set);
@@ -157,7 +157,7 @@ class Nft {
 			$nr_watch = count($this->count['watch']);
 			$nr_jail = count($this->count['jail']);
 			$nr_parole = max(count($this->count['parole']) - $nr_jail,0);
-			$message = $message.' (watch='.$nr_watch.', jail='.$nr_jail.', parole='.$nr_parole.')';
+			$message = $message.' (watch='.$nr_watch.', jail='.$nr_jail.')';
 		}
 		trigger_error($message, $level);
 	}

@@ -33,12 +33,12 @@ ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh
 # Copy utility scripts including entrypoint.sh to image
 #
 
-COPY	src/bin $DOCKER_BIN_DIR/
-COPY	src/entrypoint.d $DOCKER_ENTRY_DIR/
-COPY	src/php $DOCKER_PHP_DIR/
-COPY	dep/php $DOCKER_PHP_DIR/
-COPY	src/asterisk/config $DOCKER_SEED_CONF_DIR/
-COPY	src/nftables $DOCKER_SEED_NFT_DIR/
+COPY	src/*/bin $DOCKER_BIN_DIR/
+COPY	src/*/entrypoint.d $DOCKER_ENTRY_DIR/
+COPY	src/*/php $DOCKER_PHP_DIR/
+COPY	dep/*/php $DOCKER_PHP_DIR/
+COPY	src/*/config $DOCKER_SEED_CONF_DIR/
+COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 
 #
 # Install

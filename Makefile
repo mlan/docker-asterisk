@@ -51,15 +51,15 @@ TST_W8L2 ?= 120
 
 build-all: build_mini build_base build_full build_xtra
 
-build: Dockerfile dep/php/ami.class.inc
+build: Dockerfile dep/autoban/php/ami.class.inc
 	docker build $(BLD_ARG) --target $(BLD_TGT) -t $(BLD_REPO):$(BLD_VER) .
 
-build_%: Dockerfile dep/php/ami.class.inc
+build_%: Dockerfile dep/autoban/php/ami.class.inc
 	docker build $(BLD_ARG) --target $* -t $(BLD_REPO):$(call _version,$*,$(BLD_VER)) .
 
-dep/php/ami.class.inc:
-	mkdir -p dep/php
-	wget -O dep/php/ami.class.inc https://raw.githubusercontent.com/ofbeaton/phpami/master/src/Ami.php
+dep/autoban/php/ami.class.inc:
+	mkdir -p dep/autoban/php
+	wget -O dep/autoban/php/ami.class.inc https://raw.githubusercontent.com/ofbeaton/phpami/master/src/Ami.php
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
@@ -105,7 +105,7 @@ test-upgrade:
 	docker cp src/bin/. $(CNT_NAME):/usr/local/bin
 	docker cp src/entrypoint.d/. $(CNT_NAME):/etc/entrypoint.d
 	docker cp src/php/. $(CNT_NAME):/usr/share/php7
-	docker cp dep/php/. $(CNT_NAME):/usr/share/php7
+	docker cp dep/autoban/php/. $(CNT_NAME):/usr/share/php7
 	docker cp src/asterisk/config/. $(CNT_NAME):/etc/asterisk
 
 test-smsd1:

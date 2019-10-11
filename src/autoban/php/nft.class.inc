@@ -51,29 +51,31 @@ class Nft {
 	}
 	public function book($ip) {
 		// prune counters from ip that has timed out
+		@printf("autoban before  prune %15s w=%-2d j=%-2d p=%-2d\n",$ip,$this->count['watch'][$ip],$this->count['jail'][$ip],$this->count['parole'][$ip]);
 		$this->prune('watch');
 		$this->prune('jail');
 		$this->prune('parole');
+		@printf("autoban after   prune %15s w=%-2d j=%-2d p=%-2d\n",$ip,$this->count['watch'][$ip],$this->count['jail'][$ip],$this->count['parole'][$ip]);
 		// increment watch counter
 		$this->inc('watch',$ip);
 		// add ip to watch set
 		$this->add('watch',$ip,$this->config['autoban']['watchtime']);
 		// if not alreay in jail but on parole or watch count > maxcount
-		// determine sentence and increment parole counter
+		// determine sentence and increment jail and parole counters
 		if (isset($this->count['parole'][$ip])) {
 			if (!isset($this->count['jail'][$ip])) {
 				$this->inc('jail',$ip);
 				$this->inc('parole',$ip);
 				$this->del('parole',$ip);
 			}
-			$relapsecount = max($this->count['parole'][$ip],1);
+			$relapsecount = $this->count['parole'][$ip];
 		} elseif ($this->count['watch'][$ip] >=
 			$this->config['autoban']['maxcount']) {
 			$this->inc('jail',$ip,false);
 			$this->inc('parole',$ip,false);
-			$relapsecount = max($this->count['parole'][$ip],1);
+			$relapsecount = $this->count['parole'][$ip];
 		}
-		// add ip to jail and parole sets if there is a sentence
+		// if relapsecount, determine sentence and add ip to jail and parole sets
 		if (isset($relapsecount)) {
 			$sentence = $this->config['autoban']['jailtime']
 				* pow($this->config['autoban']['relapsebase'],
@@ -87,10 +89,7 @@ class Nft {
 			$this->log(sprintf('Watching %15s = %-3d',$ip,
 				$this->count['watch'][$ip]));
 		}
-		if ($this->count['watch'][$ip] >
-			$this->config['autoban']['maxcount']) {
-			echo json_encode($this->count).PHP_EOL;
-		}
+		@printf("autoban after verdict %15s w=%-2d j=%-2d p=%-2d\n",$ip,$this->count['watch'][$ip],$this->count['jail'][$ip],$this->count['parole'][$ip]);
 	}
 	public function inc($set,$ip,$inc=true) {
 		if (isset($this->count[$set][$ip]) && $inc) {
@@ -116,10 +115,16 @@ class Nft {
 		if (empty($ipaddresses)) {
 			$this->count[$set] = [];
 		} else {
-			$this->debug($this->count);
-			$this->count[$set] = array_intersect_ukey($this->count[$set],
-				$ipaddresses,function($a,$b) {return $a === $b;});
-			$this->debug($this->count);
+			$basecount = array_fill_keys($ipaddresses,1);
+			$this->debug($basecount);
+			foreach ($basecount as $ip => &$count) {
+				if (array_key_exists($ip,$this->count[$set])) {
+					$count = max($this->count[$set][$ip],1);
+				}
+			}
+			unset($count);
+			$this->debug($basecount);
+			$this->count[$set] = $basecount;
 		}
 	}
 	public function add($set,$ip,$timeout) {
@@ -165,7 +170,8 @@ class Nft {
 			$nr_watch = count($this->count['watch']);
 			$nr_jail = count($this->count['jail']);
 			$nr_parole = max(count($this->count['parole']) - $nr_jail,0);
-			$message = $message.' (watch='.$nr_watch.', jail='.$nr_jail.')';
+			$message = sprintf('%s (watch = %-2d jail = %-2d)',
+				$message,$nr_watch,$nr_jail);
 		}
 		trigger_error($message, $level);
 	}

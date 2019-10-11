@@ -55,41 +55,49 @@ class Nft {
 		$this->prune('jail');
 		$this->prune('parole');
 		// increment watch counter
-		if (isset($this->count['watch']["$ip"])) {
-			$this->count['watch']["$ip"]++;
-		} else {
-			$this->count['watch']["$ip"] = 1;
-		}
+		$this->inc('watch',$ip);
 		// add ip to watch set
 		$this->add('watch',$ip,$this->config['autoban']['watchtime']);
 		// if not alreay in jail but on parole or watch count > maxcount
 		// determine sentence and increment parole counter
-		if (isset($this->count['jail'][$ip])) {
-			$sentence = null;
-		} else {
-			if (isset($this->count['parole'][$ip])) {
+		if (isset($this->count['parole'][$ip])) {
+			if (!isset($this->count['jail'][$ip])) {
+				$this->inc('jail',$ip);
+				$this->inc('parole',$ip);
 				$this->del('parole',$ip);
-				$this->count['parole'][$ip]++;
-				$sentence = $this->config['autoban']['jailtime']
-					* pow($this->config['autoban']['relapsebase'],
-						max($this->count['parole'][$ip] -1, 0));
-			} elseif ($this->count['watch'][$ip] >
-				$this->config['autoban']['maxcount']) {
-				$this->count['parole'][$ip] = 1;
-				$sentence = $this->config['autoban']['jailtime'];
 			}
+			$relapsecount = max($this->count['parole'][$ip],1);
+		} elseif ($this->count['watch'][$ip] >=
+			$this->config['autoban']['maxcount']) {
+			$this->inc('jail',$ip,false);
+			$this->inc('parole',$ip,false);
+			$relapsecount = max($this->count['parole'][$ip],1);
 		}
 		// add ip to jail and parole sets if there is a sentence
-		if (isset($sentence)) {
+		if (isset($relapsecount)) {
+			$sentence = $this->config['autoban']['jailtime']
+				* pow($this->config['autoban']['relapsebase'],
+					max($relapsecount -1, 0));
 			$parole = $this->chktime($sentence);
-			$this->count['jail'][$ip] = 1;
 			$this->add('jail',$ip,$sentence);
 			$this->add('parole',$ip,$parole);
-			$this->log("Jailing  $ip=".$this->count['parole'][$ip],null,E_USER_WARNING);
+			$this->log(sprintf('Jailing  %15s = %-3d',$ip,
+				$this->count['parole'][$ip]),null,E_USER_WARNING);
 		} else {
-			$this->log("Watching $ip=".$this->count['watch'][$ip]);
+			$this->log(sprintf('Watching %15s = %-3d',$ip,
+				$this->count['watch'][$ip]));
 		}
-		$this->debug($this->count);
+		if ($this->count['watch'][$ip] >
+			$this->config['autoban']['maxcount']) {
+			echo json_encode($this->count).PHP_EOL;
+		}
+	}
+	public function inc($set,$ip,$inc=true) {
+		if (isset($this->count[$set][$ip]) && $inc) {
+			$this->count[$set][$ip]++;
+		} else {
+			$this->count[$set][$ip] = 1;
+		}
 	}
 	public function chktime(&$sentence) {
 		$watchtime = $this->config['autoban']['watchtime'];
@@ -150,7 +158,7 @@ class Nft {
 		}
 	}
 	public function log($message, $error = [], $level = E_USER_NOTICE) {
-		$message = 'nftables '.$message;
+		//$message = 'nftables '.$message;
 		if (isset($error[0])) {
 			$message = $message.' error: '.$error[0];
 		} else {

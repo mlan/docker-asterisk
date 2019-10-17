@@ -94,7 +94,7 @@ volumes:
 This repository WILL contains a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
 
 ## Autoban, automatic firewall
-The Autoban service listens to Asterisk security events on the AMI interface. Autoban is activated if there is an  `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount`  security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `relapsebase`, which determines how many times longer the IP is blocked. To illustrate assuming `jailtime=300`  and `relapsebase=10` then the IP is blocked 5min the first time, 50min the second, 8.3h (500min) the third, 3.5days (5000min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
+The Autoban service listens to Asterisk security events on the AMI interface. Autoban is activated if there is an `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount` security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `relapsebase`, which determines how many times longer the IP is blocked. To illustrate, first assume `jailtime=1200` and `relapsebase=6`, then the IP is blocked 20min the first time, 2h (120min) the second, 12h (720min) the third, 3days (4320min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
 
 #### `autoban.conf`
 
@@ -107,10 +107,10 @@ secret   = 6003.438
 
 [autoban]
 enabled     = yes
-maxcount    = 3
-watchtime   = 300
-jailtime    = 300
-relapsebase = 10
+maxcount    = 9
+watchtime   = 1200
+jailtime    = 1200
+relapsebase = 6
 
 [nftables]
 ```

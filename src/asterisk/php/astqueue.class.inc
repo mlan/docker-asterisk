@@ -22,6 +22,7 @@ class Astqueue {
 	private $name;
 	private $call;
 	private $mess;
+	public $debug = true;
 	public function __construct($config = null, array $optconfig = []) {
 		if (is_string($config) !== true) {
 			$config = self::DEFAULT_CONF_FILE;
@@ -113,7 +114,7 @@ class Astqueue {
 	* Setvar: MESSAGE(body)= The SMS message
 	*/
 	private function gen_call($exten,$callid) {
-		$call = [
+		$this->call = [
 		'Channel'     => $this->gen_channel($exten),
 		'CallerID'    => $this->gen_callid($callid),
 		'WaitTime'    => null,
@@ -127,52 +128,59 @@ class Astqueue {
 		'Priority'    => null,
 		'Archive'     => null
 		];
-		foreach ($call as $key => &$value) {
+		foreach ($this->call as $key => &$value) {
 			$key_lower = strtolower($key);
 			if(empty($value) && array_key_exists($key_lower,$this->config['astqueue'])) {
 				$value = $this->config['astqueue'][$key_lower];
 			}
 		}
+		$this->debug($this->call);
 		unset($value);
 	}
 	private function gen_mess($message) {
 		if (isset($message['to']) && isset($message['from']) && isset($message['body'])) {
 			$this->mess = $message;
+			$this->debug($this->mess);
 			return true;
 		} else {
 			return false;
 		}
 	}
 	private function gen_channel($exten) {
-		return sprintf('Local/%s@%s',$exten,$this-config['astqueue']['channel_context']);
+		return sprintf('Local/%s@%s',$exten,$this->config['astqueue']['channel_context']);
 	}
 	private function gen_callid($num,$name = '') {
 		return sprintf('"%s" <%s>',$name,$num);
 	}
 	private function strings($array,$type = '') {
-		$strings =
+		$strings = null;
 		$format = $this->format($type);
 		foreach ($array as $key => $value) {
 			if (isset($value)) {
-				$strings .= sprintf($format,$key,$value);
+				$strings .= sprintf("$format",$key,$value);
 			}
 		}
-		return $strings
+		return $strings;
 	}
 	private function format($type) {
 		switch ($type) {
 			case 'mess':
-				$format = 'setvar: MESSAGE(%s)=%s\n';
+				$format = "setvar: MESSAGE(%s)=%s\n";
 				break;
 			case 'setvar':
-				$format = 'setvar: %s=%s\n';
+				$format = "setvar: %s=%s\n";
 				break;
 			case 'call':
 			default:
-				$format = '%s: %s\n';
+				$format = "%s: %s\n";
 				break;
 		}
 		return $format;
+	}
+	public function debug($data, $debug = false) {
+		if($debug || $this->debug) {
+			var_dump($data);
+		}
 	}
 }
 ?>

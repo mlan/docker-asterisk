@@ -102,11 +102,13 @@ test-up_2:
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
 
 test-upgrade:
-	docker cp src/bin/. $(CNT_NAME):/usr/local/bin
-	docker cp src/entrypoint.d/. $(CNT_NAME):/etc/entrypoint.d
-	docker cp src/php/. $(CNT_NAME):/usr/share/php7
-	docker cp dep/autoban/php/. $(CNT_NAME):/usr/share/php7
-	docker cp src/asterisk/config/. $(CNT_NAME):/etc/asterisk
+#	docker cp src/*/bin/. $(CNT_NAME):/usr/local/bin
+#	docker cp src/*/entrypoint.d/. $(CNT_NAME):/etc/entrypoint.d
+	docker cp src/asterisk/php/. $(CNT_NAME):/usr/share/php7
+	docker cp src/websms/php/. $(CNT_NAME):/usr/share/php7
+#	docker cp dep/*/php/. $(CNT_NAME):/usr/share/php7
+#	docker cp src/*/config/. $(CNT_NAME):/etc/asterisk
+#	docker cp src/*/nft/. $(CNT_NAME):/var/lib/nftables
 
 test-smsd1:
 	curl -i $(TST_SMSU) -X POST \

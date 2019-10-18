@@ -1,25 +1,25 @@
 <?php
-/**
-* The Websms class provides functions for creating Astrisk call files
-*
-* <websmsd.php>
-* listen()
-*   filter($addr)
-*   echo()
-*   post_mess($post)
-* answer($status)
-*
-*
-* <websms.php>
-* query($args)
-*   args_mess($args)
-*   curl_init()
-*   curl_data($post)
-*   curl_auth($post)
-*   curl_send()
-*   check($responce)
-*
-*/
+/*------------------------------------------------------------------------------
+ The Websms class provides functions for creating Astrisk call files
+
+ <websmsd.php>
+ listen()
+   filter($addr)
+   echo()
+   post_mess($post)
+ answer($status)
+
+
+ <websms.php>
+ query($args)
+   args_mess($args)
+   curl_init()
+   curl_data($post)
+   curl_auth($post)
+   curl_send()
+   check($responce)
+
+------------------------------------------------------------------------------*/
 class Websms {
 	const DEFAULT_CONF_FILE = '/etc/asterisk/websms.conf';
 	const DEFAULT_CONFD_VALS = [
@@ -70,7 +70,7 @@ class Websms {
 	public function listen() {
 		$this->message = false;
 		$post = file_get_contents("php://input");
-		if ($this->filter($_SERVER['REMOTE_ADDR'])) {
+		if ($this->firewall($_SERVER['REMOTE_ADDR'])) {
 			$this->echo();
 			$this->post_mess($post);
 			return $this->message;
@@ -142,33 +142,41 @@ class Websms {
 			trigger_error("Did not get all required POST data ($post)", E_USER_WARNING);
 		}
 	}
-	private function filter($addr) {
+	private function firewall($ip) {
 		if (isset($this->config['websmsd']['permit'])) {
-			$permitted = explode(',',$this->config['websmsd']['permit']);
-			return isset($permitted[$addr]);
+			return $this->cmp_cidr($ip,$this->config['websmsd']['permit']);
 		} else {
 			return true;
 		}
 	}
+	/*--------------------------------------------------------------------------
+	 @param string $ip        addr to test eg, 216.245.217.2
+	 @param string $csvcidrs  comma separated list of CIDR ranges
+	                          eg, 185.45.152.42,3.104.90.0/24,3.1.77.0/24
+	 @return boolean true if $ip matches any range in $csvcidrs
+	--------------------------------------------------------------------------*/
 	public function cmp_cidr($ip,$csvcidrs) {
 		$cidrs = explode(',',$csvcidrs);
-		foreach $cidrs as $cidr {
+		foreach ($cidrs as $cidr) {
 			$blknmask = explode('/',$cidr);
-			$blk    = @$blknmask[0];
-			$mask   = @$blknmask[1];
+			$blk = $blknmask[0];
+			if (isset($blknmask[1])) {
+				$mask = $blknmask[1];
+			} else {
+				$mask = 32;
+			}
 			$blkbin = ip2long($blk) >> (32 - $mask);
 			$ipbin  = ip2long($ip) >> (32 - $mask);
-			$this->debug($blknmask);
-			$this->debug($blkbin);
-			$this->debug($ipbin);
 			if ($ipbin === $blkbin) return true;
 		}
 		return false;
 	}
-	/**
-	* receive an additional header "Signature",
-	* $signatureTest = base64_encode(hash_hmac('sha1', $_POST['result'], API_SECRET));
-	*/
+	/*--------------------------------------------------------------------------
+	 receive an additional header "Signature",
+	 $signatureTest = base64_encode(hash_hmac('sha1', $_POST['result'], API_SECRET));
+	 @param array $post HTTP POST
+	 @return boolean true if HTTP request was verified
+	--------------------------------------------------------------------------*/
 	private function verify($post) {
 		$method = $this->config['websmsd']['auth_method'];
 		$passwd = $this->config['websmsd']['auth_passwd'];

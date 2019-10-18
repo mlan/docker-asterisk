@@ -1,0 +1,39 @@
+;
+; websms.conf.sample
+;
+; This file hold user customization of the websms originate and termination.
+; This is a php ini file. Luckily its syntax is similar to other asterisk conf files.
+; "yes" and "no" have to be within quotation marks otherwise they will be 
+; interpreted as Boolean.
+;
+;
+;[websms]
+;host            = "https://api.example.com" ;protocol and host name to send sms to
+;path            = "/sms/send/" ;complete url will be <host><path>
+;key_to          = "To"   ;http POST key name holding sms destination phone number
+;key_from        = "From" ;http POST key name holding sms orignating phone number
+;key_body        = "Body" ;http POST key name holding the sms message
+;auth_user       = "usename" ;autentcion username/key
+;auth_passwd     = "passwd"  ;authentication password/secret
+;auth_method     = "basic"   ;eg "zadarma" method to authenticate sms request
+;responce_check  = ""        ;http POST key=value to check, eg "status=success"
+;
+;[websmsd]
+;key_to          = "To"   ;http POST key name holding sms destination phone number
+;key_from        = "From" ;http POST key name holding sms orignating phone number
+;key_body        = "Body" ;http POST key name holding the sms message
+;key_echo        = "" ;some ITSP test that the client respond by echoing it value, eg "zd_echo"
+;key_account     = "" ;
+;report_success  = "" ;report success, eg, "<Response></Response>"
+;permit          = "" ;if defined, only listed addrs are accepted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24
+;
+;[astqueue]
+;outgoingdir     = /var/spool/asterisk/outgoing ;directory where asterisk picks up call files
+;stagingdir      = /var/spool/asterisk/staging  ;create call file here and then move to outgoing
+;waittime        = 45      ;how many seconds to wait for an answer before the call fails
+;maxretries      = 0       ;number of retries before failing. 0 = don't retry if fails
+;retrytime       = 300     ;how many seconds to wait before retry
+;archive         = "no"    ;"yes" = save call file to /var/spool/asterisk/outgoing_done
+;channel_context = default ;dialplan context to answer the call, ie set up the channel
+;context         = default ;dialplan context to handle the sms
+;priority        = 1       ;dialplan priority to handle the sms

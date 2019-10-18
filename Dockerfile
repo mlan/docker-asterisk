@@ -106,7 +106,7 @@ RUN	apk --no-cache --update add \
 	"syslogd -n -O - -l $SYSLOG_LEVEL $SYSLOG_OPTIONS" \
 	"crond -f -c /etc/crontabs" \
 	"-q asterisk -pf" \
-	"-n smsd php -S 0.0.0.0:80 -t $DOCKER_PHP_DIR smsd.php" \
+	"-n websmsd php -S 0.0.0.0:80 -t $DOCKER_PHP_DIR websmsd.php" \
 	"$DOCKER_PHP_DIR/autoban.php" \
 	&& mkdir -p /var/spool/asterisk/staging
 

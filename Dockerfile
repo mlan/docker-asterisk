@@ -64,7 +64,7 @@ RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 # Rudimentary healthcheck
 #
 
-#HEALTHCHECK CMD asterisk status || exit 1
+HEALTHCHECK CMD sv status $(ls -1 ${DOCKER_RUNIT_DIR})
 
 #
 # Entrypoint, how container is run

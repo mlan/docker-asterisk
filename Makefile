@@ -84,21 +84,21 @@ test-up_0:
 	#
 	# test (0) run with defaults
 	#
-	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) \
+	docker run -d --name $(CNT_NAME) $(CNT_ENV) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
 
 test-up_1:
 	#
 	# test (1) run with $(CNT_CMD)
 	#
-	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) \
+	docker run -d --name $(CNT_NAME) $(CNT_ENV) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER)) $(CNT_CMD)
 
 test-up_2:
 	#
 	# test (2) run using srv vol
 	#
-	docker run --rm -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
+	docker run -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
 
 test-upgrade:
@@ -128,7 +128,7 @@ test-smsd3:
 	--data-urlencode "zd_echo=$(shell date)"
 
 test-down:
-	docker stop $(CNT_NAME) 2>/dev/null || true
+	docker rm -f $(CNT_NAME) 2>/dev/null || true
 
 test-logs:
 	docker container logs $(CNT_NAME)

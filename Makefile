@@ -130,6 +130,9 @@ test-smsd3:
 test-down:
 	docker rm -f $(CNT_NAME) 2>/dev/null || true
 
+test-start:
+	docker start $(CNT_NAME)
+
 test-logs:
 	docker container logs $(CNT_NAME)
 

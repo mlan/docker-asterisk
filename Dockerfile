@@ -13,10 +13,11 @@ ARG	REL=latest
 FROM	$DIST:$REL AS mini
 LABEL	maintainer=mlan
 
-ENV	DOCKER_RUNIT_DIR=/etc/service \
+ENV	DOCKER_RUNSV_DIR=/etc/service \
 	DOCKER_PERSIST_DIR=/srv \
 	DOCKER_BIN_DIR=/usr/local/bin \
 	DOCKER_ENTRY_DIR=/etc/entrypoint.d \
+	DOCKER_EXIT_DIR=/etc/exitpoint.d \
 	DOCKER_PHP_DIR=/usr/share/php7 \
 	DOCKER_SPOOL_DIR=/var/spool/asterisk \
 	DOCKER_CONF_DIR=/etc/asterisk \
@@ -35,6 +36,7 @@ ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh
 
 COPY	src/*/bin $DOCKER_BIN_DIR/
 COPY	src/*/entrypoint.d $DOCKER_ENTRY_DIR/
+COPY	src/*/exitpoint.d $DOCKER_EXIT_DIR/
 COPY	src/*/php $DOCKER_PHP_DIR/
 COPY	dep/*/php $DOCKER_PHP_DIR/
 COPY	src/*/config $DOCKER_SEED_CONF_DIR/
@@ -64,7 +66,7 @@ RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 # Rudimentary healthcheck
 #
 
-HEALTHCHECK CMD sv status $(ls -1 ${DOCKER_RUNIT_DIR})
+HEALTHCHECK CMD sv status $(ls -1 ${DOCKER_RUNSV_DIR})
 
 #
 # Entrypoint, how container is run
@@ -110,7 +112,7 @@ RUN	apk --no-cache --update add \
 	"$DOCKER_PHP_DIR/autoban.php" \
 	&& mkdir -p /var/spool/asterisk/staging
 
-CMD	runsvdir -P ${DOCKER_RUNIT_DIR}
+CMD	runsvdir -P ${DOCKER_RUNSV_DIR}
 
 #
 #

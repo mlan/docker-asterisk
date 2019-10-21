@@ -7,8 +7,8 @@
 #
 #
 
-# use /etc/service if $DOCKER_RUNIT_DIR not already defined
-DOCKER_RUNIT_DIR=${DOCKER_RUNIT_DIR-/etc/service}
+# use /etc/service if $DOCKER_RUNSV_DIR not already defined
+DOCKER_RUNSV_DIR=${DOCKER_RUNSV_DIR-/etc/service}
 DOCKER_SVLOG_DIR=${DOCKER_SVLOG_DIR-/var/log/sv}
 
 #
@@ -39,7 +39,7 @@ init_service() {
 	esac
 	cmd=$(which "$1")
 	runit_name=${runit_name-$(base_name $1)}
-	runit_dir=$DOCKER_RUNIT_DIR/$runit_name
+	runit_dir=$DOCKER_RUNSV_DIR/$runit_name
 	svlog_dir=$DOCKER_SVLOG_DIR/$runit_name
 	shift
 	if [ ! -z "$cmd" ]; then
@@ -64,7 +64,7 @@ init_service() {
 
 down_service() {
 	local cmd=$1
-	touch $DOCKER_RUNIT_DIR/$cmd/down
+	touch $DOCKER_RUNSV_DIR/$cmd/down
 	}
 
 base_name() { local base=${1##*/}; echo ${base%%.*} ;}

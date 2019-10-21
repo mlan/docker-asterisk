@@ -128,7 +128,8 @@ test-smsd3:
 	--data-urlencode "zd_echo=$(shell date)"
 
 test-down:
-	docker rm -f $(CNT_NAME) 2>/dev/null || true
+	docker stop $(CNT_NAME) 2>/dev/null || true
+	docker rm $(CNT_NAME) 2>/dev/null || true
 
 test-start:
 	docker start $(CNT_NAME)

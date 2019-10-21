@@ -2,6 +2,18 @@
 /*------------------------------------------------------------------------------
  The Autoban class provides functions for watching and jailing IP addresses
  using nftables.
+ The state information is represented by timeouts in NFT, so that it can be
+ recovered after a system reboot.
+
+ The NFT set 'watch' hold a watch list of IPs. The watch count is represented by
+ the number of seconds beyond 'watchtime' in the timeout
+
+ The NFT set 'jail' hold IPs that whose packets will be dropped by NFT. When 
+ the timeout completes the IP is released.
+
+ The NFT set 'parole' hold a list of IPs which was recently released. If watched
+ during the parole time the IP is immediately jailed again and now 'relapsebase'
+ longer.
 ------------------------------------------------------------------------------*/
 class Autoban {
 	private const DEFAULT_CONF_FILE = '/etc/asterisk/nft.conf';
@@ -49,7 +61,12 @@ class Autoban {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	The number of offence from an IP address $ip is initially
+	Start to count how many time we watch an IP address $ip by adding it to the
+	'watch' NFT set and use the number of seconds of its timeout > 'watchtime'
+	as a counter. If count is > 'maxcount' add $ip to 'jail' and 'parole' NFT 
+	sets with timeouts 'jailtime' and jailtime'+'watchtime'. If $ip is watched
+	during its parole immediately add it again to the 'jail' and 'parole' NFT sets 
+	with timeouts 'relapsebase' longer than previously.
 	
 	@param  string  $ip  eg "23.94.144.50"
 	@return boolean success
@@ -62,31 +79,32 @@ class Autoban {
 			return false;
 		}
 		$log = null;
-		$watchtime = $this->gettimeout('watch',$ip);
-		$jailtime = $this->gettimeout('jail',$ip);
-		$paroletime = $this->gettimeout('parole',$ip);
-		$sentence = $this->sentence($watchtime,$jailtime,$paroletime);
-		$probation = $this->probation($sentence);
-		if ($jailtime === false) {
-			if($sentence !== false) {
+		$watch_nft  = $this->timeoutsec('watch',$ip);
+		$jail_nft   = $this->timeoutsec('jail',$ip);
+		$parole_nft = $this->timeoutsec('parole',$ip);
+		$watch_new  = $this->incrementwatch($watch_nft);
+		$jail_new   = $this->jailsec($watch_new,$jail_nft,$parole_nft);
+		$parole_new = $this->parolesec($jail_new);
+		if ($jail_nft === false) {
+			if($jail_new !== false) {
 				$log = 'jail';
-				if ($paroletime !== false) $this->del('parole',$ip);
+				if ($parole_nft !== false) $this->del('parole',$ip);
 			} else {
 				$log = 'watch';
-				if ($watchtime !== false) $this->del('watch',$ip);
+				if ($watch_nft !== false) $this->del('watch',$ip);
 			}
 		}
-		$count = $this->increment('watchtime',$watchtime);
-		if ($this->add('watch',$ip,$watchtime) === false) return false;
-		if ($this->add('jail',$ip,$sentence) === false) return false;
-		if ($this->add('parole',$ip,$probation) === false) return false;
+		if ($this->add('watch',$ip,$watch_new) === false) return false;
+		if ($this->add('jail',$ip,$jail_new) === false) return false;
+		if ($this->add('parole',$ip,$parole_new) === false) return false;
 		switch ($log) {
 			case 'watch':
-				$this->log(sprintf('Watching %15s = %-8d',$ip,$count));
+				$this->log(sprintf('Watching %15s %-8d',$ip,
+					$this->countwatch($watch_new)));
 				break;
 			case 'jail':
-				$this->log(sprintf('Jailing  %15s = %8s',$ip,
-					$this->timeout($sentence)),null,E_USER_WARNING);
+				$this->log(sprintf('Jailing  %15s %8s',$ip,
+					$this->timestr($jail_new)),null,E_USER_WARNING);
 				break;
 		}
 		return true;
@@ -94,25 +112,28 @@ class Autoban {
 	/*--------------------------------------------------------------------------
 	Increment both watch count and watchtime, illustrated below, watchtime=20m.
 		$time $count $time
-		false      1   20m
-		  20m      2 20m1s
-		20m1s      3 20m2s
-		20m2s      4 20m3s
-		20m3s      5 20m4s
+		false      1 20m1s
+		20m1s      2 20m2s
+		20m2s      3 20m3s
+		20m3s      4 20m4s
+		20m4s      5 20m5s
 
-	@param  string  $param eg 'watchtime'
 	@param  mixed   $time integer time in seconds or boolean false
+	@return integer time + 1
+	--------------------------------------------------------------------------*/
+	private function incrementwatch($time) {
+		if($time === false) {
+			return $this->configsec('watchtime') + 1;
+		} else {
+			return $time + 1;
+		}
+	}
+	/*--------------------------------------------------------------------------
+	@param  integer $time integer time in seconds
 	@return integer count
 	--------------------------------------------------------------------------*/
-	private function increment($param,&$time) {
-		$time1 = $this->configtime($param);
-		if($time === false) {
-			$time = $time1;
-			return 1;
-		} else {
-			$time++;
-			return max(1, $time - $time1 + 2);
-		}
+	private function countwatch($time) {
+		return $time - $this->configsec('watchtime');
 	}
 	/*--------------------------------------------------------------------------
 	Compute sentencing time which is last jailtime times relapsebase if in parole.
@@ -124,29 +145,29 @@ class Autoban {
 	@param  mixed $paroletime integer time in seconds or boolean false
 	@return mixed integer sentence time in seconds or boolean false
 	--------------------------------------------------------------------------*/
-	private function sentence($watchtime,$jailtime,$paroletime) {
+	private function jailsec($watchtime,$jailtime,$paroletime) {
 		if ($jailtime !== false) return false;
 		if ($paroletime !== false) {
-			$jailt = max($this->configtime('jailtime'),
-				$paroletime - $this->configtime('watchtime'));
+			$jailt = max($this->configsec('jailtime'),
+				$paroletime - $this->configsec('watchtime'));
 			return $jailt * $this->config['autoban']['relapsebase'];
 		} elseif (($watchtime !== false) &&
-			($watchtime - $this->configtime('watchtime') + 2 >=
+			($watchtime - $this->configsec('watchtime') >=
 			$this->config['autoban']['maxcount'])) {
-			return $sentence = $this->configtime('jailtime');
+			return $sentence = $this->configsec('jailtime');
 		}
 		return false;
 	}
 	/*--------------------------------------------------------------------------
-	Compute probition time = sentence time + watchtime. Also make sure both 
-	probition and sentence times are sane.
+	Compute probation time = sentence time + watchtime. Also make sure both 
+	probation and sentence times are sane.
 	
 	@param  mixed &$sentence integer time in seconds or boolean false
-	@return mixed integer probition time in seconds or boolean false
+	@return mixed integer probation time in seconds or boolean false
 	--------------------------------------------------------------------------*/
-	private function probation(&$sentence) {
+	private function parolesec(&$sentence) {
 		if ($sentence === false) return false;
-		$watchtime = $this->configtime('watchtime');
+		$watchtime = $this->configsec('watchtime');
 		if ($watchtime > 0.5*self::MAXTIME) $watchtime = 0.5*self::MAXTIME;
 		$parole = $sentence + $watchtime;
 		if ($parole > self::MAXTIME) {
@@ -185,15 +206,26 @@ class Autoban {
 		return $ret;
 	}
 	/*--------------------------------------------------------------------------
-	NFT returns elements = { 23.94.144.50 timeout 40m expires 31m8s696ms, ...}
-	We stuff this into the timeout arrays [sting addr => string time, ...].
-	Now we can get the timeout for the IP address $ip
-
 	@param  string $set eg "jail"
 	@param  string $ip  eg "23.94.144.50"
 	@return mixed  time integer seconds or boolean false
 	--------------------------------------------------------------------------*/
-	public function gettimeout($set,$ip) {
+	public function timeoutsec($set,$ip) {
+		if (($this->countelements($set) !== false) &&
+			isset($this->timeout[$set][$ip])) {
+				return $this->seconds($this->timeout[$set][$ip]);
+		} else {
+			return false;
+		}
+	}
+	/*--------------------------------------------------------------------------
+	NFT returns elements = { 23.94.144.50 timeout 40m expires 31m8s696ms, ...}
+	We stuff this into $this->timeout[$set] = [sting addr => string time, ...].
+
+	@param  string $set eg "jail"
+	@return mixed  count integer elements or boolean false
+	--------------------------------------------------------------------------*/
+	public function countelements($set) {
 		$args = ['sub'=>'list set','set'=>$set];
 		$ret = $this->exec($args);
 		if ($ret === false) return false;
@@ -207,24 +239,7 @@ class Autoban {
 			$timeout += [trim($addrntime[0]) => trim($addrntime[1])];
 		}
 		$this->timeout[$set]=$timeout;
-		if (isset($timeout[$ip])) {
-			return $this->seconds($timeout[$ip]);
-		} else {
-			return false;
-		}
-	}
-	/*--------------------------------------------------------------------------
-	@param  string  $set eg "jail"
-	@return integer count elements
-	--------------------------------------------------------------------------*/
-	public function countelements($set) {
-		$args = ['sub'=>'list set','set'=>$set];
-		$ret = $this->exec($args);
-		if ($ret === false) return false;
-		preg_match('/elements = {([^}]+)}/', implode($ret), $matches);
-		if (empty($matches[1])) return 0;
-		$elementsexpires = preg_split('/,/', $matches[1]);
-		return count($elementsexpires);
+		return count($timeout);
 	}
 	/*--------------------------------------------------------------------------
 	@param  array  $args NFT cli arguments eg ['sub'=>'list set','set'=>'jail']
@@ -261,7 +276,7 @@ class Autoban {
 	@param  integer $seconds
 	@return string  $time eg, "1d9h40m1s"
 	--------------------------------------------------------------------------*/
-	public function timeout($seconds) {
+	public function timestr($seconds) {
 		$time = "";
 		foreach (self::TIMEUNIT as $unit => $scale) {
 			$number = floor($seconds / $scale);
@@ -277,7 +292,7 @@ class Autoban {
 	@param  string  $param eg, "watchtime"
 	@return integer $seconds
 	--------------------------------------------------------------------------*/
-	public function configtime($param) {
+	public function configsec($param) {
 		$time = $this->config['autoban'][$param];
 		if(!is_numeric($time)) $time = $this->seconds($time);
 		return $time;
@@ -294,10 +309,17 @@ class Autoban {
 		} else {
 			$nr_watch = $this->countelements('watch');
 			$nr_jail = $this->countelements('jail');
-			$message = sprintf('%s (watch = %-3d jail = %-3d)',
+			$message = sprintf('%s (watch %-3d jail %-3d)',
 				$message,$nr_watch,$nr_jail);
 		}
 		trigger_error($message, $level);
+	}
+	/*--------------------------------------------------------------------------
+	PLACEHOLDER
+	print table with headers: IP WATCH JAIL
+	@return void
+	--------------------------------------------------------------------------*/
+	public function show() {
 	}
 	/*--------------------------------------------------------------------------
 	@param  mixed $param
@@ -306,18 +328,6 @@ class Autoban {
 	public function debug($data, $debug = false) {
 		if($debug || $this->debug) {
 			var_dump($data);
-		}
-	}
-	public function debugOLD($data, $debug = false) {
-		if($debug || $this->debug) {
-			if (is_string($data)) {
-				$message = @sprintf("State    %15s w=%-2d j=%-2d p=%-2d\n",
-					$data,$this->count['watch'][$data],$this->count['jail'][$data],
-					$this->count['parole'][$data]);
-				$this->log($message);
-			} else {
-				var_dump($data);
-			}
 		}
 	}
 }

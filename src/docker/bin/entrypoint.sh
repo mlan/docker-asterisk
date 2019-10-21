@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# set -x
 #
 # This script need to run as PID 1 allowing it to receive signals from docker
 #
@@ -6,8 +7,6 @@
 # ENTRYPOINT ["entrypoint.sh"]
 # CMD runsvdir -P ${DOCKER_RUNSV_DIR}
 #
-
-set -x
 
 #
 # Variables

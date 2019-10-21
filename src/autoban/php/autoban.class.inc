@@ -88,6 +88,7 @@ class Autoban {
 		if ($jail_nft === false) {
 			if($jail_new !== false) {
 				$log = 'jail';
+				$watch_new = false;
 				if ($parole_nft !== false) $this->del('parole',$ip);
 			} else {
 				$log = 'watch';

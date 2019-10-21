@@ -10,24 +10,24 @@ openlog("autoban", LOG_PID, LOG_LOCAL0);
 
 require_once 'error.inc';
 require_once 'ami.class.inc';
-require_once 'nft.class.inc';
+require_once 'autoban.class.inc';
 
 /**
 * The AMI event handlers are defined here.
 */
 
 function eventAbuse($event,$parameters,$server,$port) {
-	global $ban, $nft;
+	global $ban;
 	if (array_key_exists('RemoteAddress',$parameters)) {
 		$address = explode('/',$parameters['RemoteAddress']);
 		$ip = $address[2];
 		if (!empty($ip)) {
-			$nft->book($ip);
+			$ban->book($ip);
 		}
 	}
 }
 
-$nft = new \Autoban\Nft('/etc/asterisk/autoban.conf');
+$ban = new \Autoban('/etc/asterisk/autoban.conf');
 $ami = new \PHPAMI\Ami('/etc/asterisk/autoban.conf');
 $ami->setLogLevel(2);
 
@@ -50,7 +50,7 @@ $ami->addEventHandler('InvalidPassword',         'eventAbuse');
 * Otherwise the system supervisor will relentlessly just try to restart us.
 */
 sleep(1);
-if ($nft->config['autoban']['enabled']) {
+if ($ban->config['autoban']['enabled']) {
 	if ($ami->connect(null,null,null,'on') === false) {
 		$connected = false;
 		trigger_error('Unable to connect to Asterisk Management Interface',E_USER_ERROR);

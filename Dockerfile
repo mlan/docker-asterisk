@@ -63,12 +63,6 @@ RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 	asterisk
 
 #
-# Rudimentary healthcheck
-#
-
-HEALTHCHECK CMD sv status $(ls -1 ${DOCKER_RUNSV_DIR})
-
-#
 # Entrypoint, how container is run
 #
 
@@ -81,7 +75,7 @@ CMD	["asterisk", "-fp"]
 # target: base
 #
 # Configure Runit, a process manager
-# 
+#
 #
 #
 
@@ -112,13 +106,24 @@ RUN	apk --no-cache --update add \
 	"$DOCKER_PHP_DIR/autoban.php" \
 	&& mkdir -p /var/spool/asterisk/staging
 
+#
+# Have runit's runsvdir start all services
+#
+
 CMD	runsvdir -P ${DOCKER_RUNSV_DIR}
+
+#
+# Check if all services are running
+#
+
+HEALTHCHECK CMD sv status ${DOCKER_RUNSV_DIR}/*
+
 
 #
 #
 # target: full
 #
-# 
+#
 #
 #
 
@@ -135,7 +140,7 @@ RUN	apk --no-cache --update add \
 #
 # target: extra
 #
-# 
+#
 #
 #
 

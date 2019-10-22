@@ -2,4 +2,4 @@
 .gitignore
 .github
 .gitattributes
-src/donotuse
+src/notused

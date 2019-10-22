@@ -1,6 +1,6 @@
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.9
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.10
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
@@ -126,6 +126,7 @@ test-smsd2:
 test-smsd3:
 	curl -i $(TST_SMSU) -G \
 	--data-urlencode "zd_echo=$(shell date)"
+	@echo
 
 test-down:
 	docker stop $(CNT_NAME) 2>/dev/null || true

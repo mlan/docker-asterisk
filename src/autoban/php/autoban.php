@@ -1,21 +1,20 @@
 #!/usr/bin/env php
 <?php
-/**
-* autoban.php
-*
-*/
+/*------------------------------------------------------------------------------
+ autoban.php
+------------------------------------------------------------------------------*/
 
-//error_reporting(E_ALL);
+/*------------------------------------------------------------------------------
+ Initiate logging and load dependencies.
+------------------------------------------------------------------------------*/
 openlog("autoban", LOG_PID, LOG_LOCAL0);
-
 require_once 'error.inc';
 require_once 'ami.class.inc';
 require_once 'autoban.class.inc';
 
-/**
-* The AMI event handlers are defined here.
-*/
-
+/*------------------------------------------------------------------------------
+ Define AMI event handlers.
+------------------------------------------------------------------------------*/
 function eventAbuse($event,$parameters,$server,$port) {
 	global $ban;
 	if (array_key_exists('RemoteAddress',$parameters)) {
@@ -27,28 +26,30 @@ function eventAbuse($event,$parameters,$server,$port) {
 	}
 }
 
+/*------------------------------------------------------------------------------
+ Create class objects and set log level.
+------------------------------------------------------------------------------*/
 $ban = new \Autoban('/etc/asterisk/autoban.conf');
 $ami = new \PHPAMI\Ami('/etc/asterisk/autoban.conf');
 $ami->setLogLevel(2);
 
-/**
-* Register the AMI event handlers to their corresponding events.
-*/
+/*------------------------------------------------------------------------------
+ Register the AMI event handlers to their corresponding events.
+------------------------------------------------------------------------------*/
 $ami->addEventHandler('FailedACL',               'eventAbuse');
 $ami->addEventHandler('InvalidAccountID',        'eventAbuse');
 $ami->addEventHandler('ChallengeResponseFailed', 'eventAbuse');
 $ami->addEventHandler('InvalidPassword',         'eventAbuse');
 
-/**
-* Start code execution.
-* Wait 1s allowing Asterisk time to setup the Asterisk Management Interface (AMI).
-* If autoban is activated try to connect to the AMI. If successful, start
-* listening for events indefinitely. If connection fails, exit
-* and let the system supervisor start us again, so we can retry to
-* connect.
-* If autoban is deactivated stay in an infinite loop instead of exiting.
-* Otherwise the system supervisor will relentlessly just try to restart us.
-*/
+/*------------------------------------------------------------------------------
+ Start code execution.
+ Wait 1s allowing Asterisk time to setup the Asterisk Management Interface (AMI).
+ If autoban is activated try to connect to the AMI. If successful, start
+ listening for events indefinitely. If connection fails, exit and let the
+ system supervisor start us again, so we can retry to connect.
+ If autoban is deactivated stay in an infinite loop instead of exiting.
+ Otherwise the system supervisor will relentlessly just try to restart us.
+------------------------------------------------------------------------------*/
 sleep(1);
 if ($ban->config['autoban']['enabled']) {
 	if ($ami->connect(null,null,null,'on') === false) {
@@ -64,8 +65,8 @@ if ($ban->config['autoban']['enabled']) {
 	while(true) { sleep(60); }
 }
 
-/**
-* We normally will not come here.
-*/
+/*------------------------------------------------------------------------------
+ We normally will not come here.
+------------------------------------------------------------------------------*/
 $ami->disconnect();
 ?>

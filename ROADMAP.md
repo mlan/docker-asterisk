@@ -1,15 +1,24 @@
 # Road map
 
-## Alpine Linux
-Currently using alpine:3.9 since for alpine:3.10 there are dependency errors reported when asterisk starts, will be fixed in alpine:3.10.3 so will test then it is available.
+## Dial plan
+
+- Sanitize all incoming extensions so they are all international
 
 ## Documentation
+
 Needed. :)
 Start with describing the seeding procedure(s).
 
-## Music on hold
-script that converts sound files to wav 8000 Hz mono
+Perhaps use separate files for Autoban and Websms?
 
-##Autoban
-- Introduce a `SIGTERM` trap in `entrypoint.sh` so that we can save the `nft` state at container shutdown.
-- Write shell utility to add/delete IPs from `nft` state
+## Music on hold
+- script that converts sound files to wav 8000 Hz mono
+
+## Autoban
+
+- Write shell utility to add/delete IPs from `nft` state. Use shell utility name `autoban` and rename service to `autoband.php`.
+- Sanitise conf settings. Issue warning and use defaults when invalid settings are detected.
+
+## Websms
+
+- Sanitise conf settings. Issue warning and use defaults when invalid settings are detected.

@@ -18,8 +18,7 @@
    curl_auth($post)
    curl_send()
    check($responce)
-
-------------------------------------------------------------------------------*/
+*/
 class Websms {
 	const DEFAULT_CONF_FILE = '/etc/asterisk/websms.conf';
 	const DEFAULT_CONFD_VALS = [
@@ -45,7 +44,7 @@ class Websms {
 	private $config;
 	private $message;
 	private $curl;
-	public $debug = true;
+	public $debug = false;
 	public function __construct($config = null, array $optconfig = []) {
 		if (is_string($config) !== true) {
 			$config = self::DEFAULT_CONF_FILE;
@@ -63,7 +62,7 @@ class Websms {
 			$this->config['websms'][$var] = $val;
 		}
 	}
-	/**
+	/*--------------------------------------------------------------------------
 	* Read the post header data.
 	* Also log warnings if any header data is missing.
 	*/
@@ -78,8 +77,8 @@ class Websms {
 			return false;
 		}
 	}
-	/**
-	* Respond with a status message.
+	/*--------------------------------------------------------------------------
+	Respond with a status message.
 	*/
 	public function answer($status = true) {
 		if ($status) {
@@ -87,17 +86,17 @@ class Websms {
 			echo $this->config['websmsd']['report_success'];
 		}
 	}
-	/**
-	* Send SMS HTTP POST query. We require 3 arguments; to, from, body.
-	* args[0] is set to script name so drop this.
-	*
-	* Outline
-	* Parse arguments.
-	* Build http POST query.
-	* Setup curl for POST query.
-	* Setup curl's authentication method.
-	* Send POST query.
-	* Check responce.
+	/*--------------------------------------------------------------------------
+	Send SMS HTTP POST query. We require 3 arguments; to, from, body.
+	args[0] is set to script name so drop this.
+
+	Outline
+		Parse arguments.
+		Build http POST query.
+		Setup curl for POST query.
+		Setup curl's authentication method.
+		Send POST query.
+		 Check responce.
 	*/
 	public function query($args) {
 		unset($args[0]);
@@ -112,18 +111,20 @@ class Websms {
 			return false;
 		}
 	}
-	/**
-	* Respond to echo requests.
-	* The API of some ITSP, eg Zadarma, test the web server by sending an echo
-	* request. Let's respond and exit if we detect a echo request.
+	/*--------------------------------------------------------------------------
+	Respond to echo requests.
+	The API of some ITSP, eg Zadarma, test the web server by sending an echo
+	request. Let's respond and exit if we detect a echo request.
 	*/
 	private function echo() {
-		if (!empty($this->config['websmsd']['key_echo']) 
+		if (!empty($this->config['websmsd']['key_echo'])
 			&& isset($_GET[$this->config['websmsd']['key_echo']])) {
 			trigger_error('Received echo request ('.$_GET[$this->config['websmsd']['key_echo']].')', E_USER_NOTICE);
 			exit($_GET[$this->config['websmsd']['key_echo']]);
 		}
 	}
+	/*--------------------------------------------------------------------------
+	*/
 	private function post_mess($post) {
 		parse_str($post, $data);
 		if (empty($data)) {
@@ -132,29 +133,36 @@ class Websms {
 		}
 		if (!empty($data[$this->config['websmsd']['key_to']]) &&
 			!empty($data[$this->config['websmsd']['key_from']]) &&
-			!empty($data[$this->config['websmsd']['key_from']])) {
+			!empty($data[$this->config['websmsd']['key_body']])) {
 			$this->message = [
 				'to'   => $data[$this->config['websmsd']['key_to']],
 				'from' => $data[$this->config['websmsd']['key_from']],
-				'body' => $data[$this->config['websmsd']['key_from']]
+				'body' => $data[$this->config['websmsd']['key_body']]
 			];
 		} else {
 			trigger_error("Did not get all required POST data ($post)", E_USER_WARNING);
 		}
 	}
+	/*--------------------------------------------------------------------------
+	@param string $ip addr to test eg, "216.245.217.2"
+	@return boolean true if $ip is permitted otherwise false
+	*/
 	private function firewall($ip) {
 		if (isset($this->config['websmsd']['permit'])) {
-			return $this->cmp_cidr($ip,$this->config['websmsd']['permit']);
+			$permit = $this->cmp_cidr($ip,$this->config['websmsd']['permit']);
+			$permitstr = $permit ? 'permitted' : 'denied';
+			trigger_error('HTTP request ('.$ip.') '.$permitstr, E_USER_NOTICE);
+			return $permit;
 		} else {
 			return true;
 		}
 	}
 	/*--------------------------------------------------------------------------
-	 @param string $ip        addr to test eg, 216.245.217.2
-	 @param string $csvcidrs  comma separated list of CIDR ranges
+	@param string $ip        addr to test eg, 216.245.217.2
+	@param string $csvcidrs  comma separated list of CIDR ranges
 	                          eg, 185.45.152.42,3.104.90.0/24,3.1.77.0/24
-	 @return boolean true if $ip matches any range in $csvcidrs
-	--------------------------------------------------------------------------*/
+	@return boolean true if $ip matches any range in $csvcidrs
+	*/
 	public function cmp_cidr($ip,$csvcidrs) {
 		$cidrs = explode(',',$csvcidrs);
 		foreach ($cidrs as $cidr) {
@@ -172,11 +180,11 @@ class Websms {
 		return false;
 	}
 	/*--------------------------------------------------------------------------
-	 receive an additional header "Signature",
-	 $signatureTest = base64_encode(hash_hmac('sha1', $_POST['result'], API_SECRET));
-	 @param array $post HTTP POST
-	 @return boolean true if HTTP request was verified
-	--------------------------------------------------------------------------*/
+	receive an additional header "Signature",
+	$signatureTest = base64_encode(hash_hmac('sha1', $_POST['result'], API_SECRET));
+	@param array $post HTTP POST
+	@return boolean true if HTTP request was verified
+	*/
 	private function verify($post) {
 		$method = $this->config['websmsd']['auth_method'];
 		$passwd = $this->config['websmsd']['auth_passwd'];
@@ -196,10 +204,10 @@ class Websms {
 			break;
 		}
 	}
-	/**
-	* Parse arguments.
-	* We require 3 arguments; to, from, body.
-	* Build http POST query, from arguments, sort and URL-encode.
+	/*--------------------------------------------------------------------------
+	Parse arguments.
+	We require 3 arguments; to, from, body.
+	Build http POST query, from arguments, sort and URL-encode.
 	*/
 	private function args_mess($args) {
 		if (count($args) === 3) {
@@ -222,8 +230,8 @@ class Websms {
 		$url = $this->config['websms']['host'].$this->config['websms']['path'];
 		$this->curl = curl_init($url);
 	}
-	/**
-	* Setup curl for POST query.
+	/*--------------------------------------------------------------------------
+	Setup curl for POST query.
 	*/
 	private function curl_data($post) {
 		curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
@@ -232,17 +240,17 @@ class Websms {
 		curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($this->curl, CURLINFO_HEADER_OUT, true); // debug only
 	}
-	/**
-	* Setup curl's authentication method.
-	* Currently we suport:
-	*
-	* 'basic'
-	*   basic access authentication, see, wikipedia.org/wiki/Basic_access_authentication,
-	*   with headers like: Authorization: Basic <credentials>
-	*
-	* 'zadarma'
-	*   Zadarma's uniqe authentication method, see, zadarma.com/en/support/api,
-	*   with headers like: Authorization: <user_key>:<signature>
+	/*--------------------------------------------------------------------------
+	Setup curl's authentication method.
+	Currently we suport:
+
+	'basic'
+		basic access authentication, see, wikipedia.org/wiki/Basic_access_authentication,
+		with headers like: Authorization: Basic <credentials>
+
+	'zadarma'
+		Zadarma's uniqe authentication method, see, zadarma.com/en/support/api,
+		with headers like: Authorization: <user_key>:<signature>
 	*/
 	private function curl_auth($post) {
 		$method = $this->config['websms']['auth_method'];
@@ -266,9 +274,9 @@ class Websms {
 			break;
 		}
 	}
-	/**
-	* Send POST query,
-	* read responce and close.
+	/*--------------------------------------------------------------------------
+	Send POST query,
+	read responce and close.
 	*/
 	private function curl_send() {
 		$responce_json = curl_exec($this->curl);
@@ -284,17 +292,17 @@ class Websms {
 		$this->debug($responce_json);
 		return $responce;
 	}
-	/**
-	* Check responce and set exit code accordingly.
-	* the reponce check is controlled by the variable responce_check. It can be:
-	* = null\""; No check, we will always exit with status true
-	* = "key=value" If value of key in responce is equal to value exit true otherwize false
-	* = "/pattern/"; If pattern matches responce exit with status true otherwize false
+	/*--------------------------------------------------------------------------
+	Check responce and set exit code accordingly.
+	the reponce check is controlled by the variable responce_check. It can be:
+	= null\""; No check, we will always exit with status true
+	= "key=value" If value of key in responce is equal to value exit true otherwize false
+	= "/pattern/"; If pattern matches responce exit with status true otherwize false
 	{
-	    "status":"success",
-	    "messages":1,
-	    "cost":0.24,
-	    "currency":"USD"
+		"status":"success",
+		"messages":1,
+		"cost":0.24,
+		"currency":"USD"
 	}
 	*/
 	private function check($responce) {

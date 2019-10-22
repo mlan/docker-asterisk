@@ -8,7 +8,7 @@
  The NFT set 'watch' hold a watch list of IPs. The watch count is represented by
  the number of seconds beyond 'watchtime' in the timeout
 
- The NFT set 'jail' hold IPs that whose packets will be dropped by NFT. When 
+ The NFT set 'jail' hold IPs that whose packets will be dropped by NFT. When
  the timeout completes the IP is released.
 
  The NFT set 'parole' hold a list of IPs which was recently released. If watched
@@ -67,7 +67,7 @@ class Autoban {
 	sets with timeouts 'jailtime' and jailtime'+'watchtime'. If $ip is watched
 	during its parole immediately add it again to the 'jail' and 'parole' NFT sets 
 	with timeouts 'relapsebase' longer than previously.
-	
+
 	@param  string  $ip  eg "23.94.144.50"
 	@return boolean success
 	--------------------------------------------------------------------------*/
@@ -140,7 +140,7 @@ class Autoban {
 	Compute sentencing time which is last jailtime times relapsebase if in parole.
 	Sentencing is jailtime if first time offender watch count >= maxcount.
 	Return false if already in jail or watch count < maxcount.
-	
+
 	@param  mixed $watchtime integer time in seconds or boolean false
 	@param  mixed $jailtime integer time in seconds or boolean false
 	@param  mixed $paroletime integer time in seconds or boolean false
@@ -160,9 +160,9 @@ class Autoban {
 		return false;
 	}
 	/*--------------------------------------------------------------------------
-	Compute probation time = sentence time + watchtime. Also make sure both 
+	Compute probation time = sentence time + watchtime. Also make sure both
 	probation and sentence times are sane.
-	
+
 	@param  mixed &$sentence integer time in seconds or boolean false
 	@return mixed integer probation time in seconds or boolean false
 	--------------------------------------------------------------------------*/

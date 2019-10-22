@@ -1,0 +1,27 @@
+;
+; autoban.conf.sample
+;
+; This file hold user customization of the autoban firewall service.
+; This is a php ini file. Luckily its syntax is similar to other asterisk conf
+; files. "yes" and "no" have to be within quotation marks otherwise they will be
+; interpreted as Boolean. The default values of the variables are given below.
+; You only have to define variables with non default values.
+;
+;
+;[asmanager]
+;server     = localhost ; here asterisk runs in same container so ami server is localhost
+;port       = 5038      ; should be equal to port used in manager.conf
+;username   = phpagi    ; should be equal to username used in manager.conf, ie autoban
+;secret     = phpagi    ; should be equal to secret used in manager.conf
+;
+;[autoban]
+;enabled    = true ; autoban is activated when autoban.conf exists and not explicitly disabled here
+;maxcount   = 10   ; abuse count at which IP will be jailed, ie its packets dropped
+;watchtime  = 20m  ; time to keep IP under watch in seconds or time string eg 1d2h3m4s
+;jailtime   = 20m  ; time to drop packets from IP in seconds or time string eg 1d2h3m4s
+;repeatmult = 6    ; repeat offenders get jailtime multiplied by this factor
+;
+;[nftables]           ; you normally don't need to mess with these variables
+;cmd        = nft     ;
+;family     = inet    ;
+;table      = autoban ;

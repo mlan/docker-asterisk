@@ -12,17 +12,17 @@
  the timeout completes the IP is released.
 
  The NFT set 'parole' hold a list of IPs which was recently released. If watched
- during the parole time the IP is immediately jailed again and now 'relapsebase'
+ during the parole time the IP is immediately jailed again and now 'repeatmult'
  longer.
 ------------------------------------------------------------------------------*/
 class Autoban {
 	private const DEFAULT_CONF_FILE = '/etc/asterisk/nft.conf';
 	public const DEFAULT_CONF_VALS = [
-		'enabled'     => true,
-		'maxcount'    => 10,
-		'watchtime'   => 1200,
-		'jailtime'    => 1200,
-		'relapsebase' => 6
+		'enabled'    => true,
+		'maxcount'   => 10,
+		'watchtime'  => 20m,
+		'jailtime'   => 20m,
+		'repeatmult' => 6
 	];
 	private const DEFAULT_NFT_VALS = [
 		'cmd'    => 'nft',
@@ -66,7 +66,7 @@ class Autoban {
 	as a counter. If count is > 'maxcount' add $ip to 'jail' and 'parole' NFT 
 	sets with timeouts 'jailtime' and jailtime'+'watchtime'. If $ip is watched
 	during its parole immediately add it again to the 'jail' and 'parole' NFT sets 
-	with timeouts 'relapsebase' longer than previously.
+	with timeouts 'repeatmult' longer than previously.
 
 	@param  string  $ip  eg "23.94.144.50"
 	@return boolean success
@@ -137,7 +137,7 @@ class Autoban {
 		return $time - $this->configsec('watchtime');
 	}
 	/*--------------------------------------------------------------------------
-	Compute sentencing time which is last jailtime times relapsebase if in parole.
+	Compute sentencing time which is last jailtime times repeatmult if in parole.
 	Sentencing is jailtime if first time offender watch count >= maxcount.
 	Return false if already in jail or watch count < maxcount.
 
@@ -151,7 +151,7 @@ class Autoban {
 		if ($paroletime !== false) {
 			$jailt = max($this->configsec('jailtime'),
 				$paroletime - $this->configsec('watchtime'));
-			return $jailt * $this->config['autoban']['relapsebase'];
+			return $jailt * $this->config['autoban']['repeatmult'];
 		} elseif (($watchtime !== false) &&
 			($watchtime - $this->configsec('watchtime') >=
 			$this->config['autoban']['maxcount'])) {

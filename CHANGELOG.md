@@ -14,7 +14,7 @@
 - [autoban](src/autoban) New service Autoban, which listens to security AMI events and dynamically configures nftables to block abusing IPs.
 - [autoban](src/autoban) autoban.class.inc (formerly nft.class.inc) is now state less
 - [autoban](src/autoban) Restricting Autoban's AMI access to a minimum
-- [autoban](src/autoban) Autoban now has `relapsebase` punishing repeat offenders progressively more severely
+- [autoban](src/autoban) Autoban now has `repeatmult` punishing repeat offenders progressively more severely
 - [autoban](src/autoban) Autoban now use nftables timeouts
 - [autoban](src/autoban) Added `entrypoint.d`  and  `exitpoint.d` scripts so that the `nft` state is loaded/saved at container startup/shutdown.
 # 0.1.0

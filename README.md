@@ -65,7 +65,7 @@ make test-down
 
 ## Docker compose example
 
-An example of how to configure an web mail server using docker compose is given below. It defines 4 services, `pbx-app`, `pbx-mta`, `pbx-db` and `auth`, which are the web mail server, the mail transfer agent, the SQL database and LDAP authentication respectively.
+An example of how to configure an VoIP SIP server using docker compose is given below.
 
 ```yaml
 version: '3.7'
@@ -91,28 +91,26 @@ volumes:
   tele-conf:
 ```
 
-This repository WILL contains a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
+This repository WILL contain a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
 
 ## Autoban, automatic firewall
-The Autoban service listens to Asterisk security events on the AMI interface. Autoban is activated if there is an `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount` security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `relapsebase`, which determines how many times longer the IP is blocked. To illustrate, first assume `jailtime=20m` and `relapsebase=6`, then the IP is blocked 20min the first time, 2h (120min) the second, 12h (720min) the third, 3days (4320min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
+The Autoban service listens to Asterisk security events on the AMI interface. Autoban is activated if there is an `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount` security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `repeatmult`, which determines how many times longer the IP is blocked. To illustrate, first assume `jailtime=20m` and `repeatmult=6`, then the IP is blocked 20min the first time, 2h (120min) the second, 12h (720min) the third, 3days (4320min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
 
 #### `autoban.conf`
 
 ```ini
 [asmanager]
-server   = 127.0.0.1
-port     = 5038
-username = autoban
-secret   = 6003.438
+server     = 127.0.0.1
+port       = 5038
+username   = autoban
+secret     = 6003.438
 
 [autoban]
-enabled     = yes
-maxcount    = 10
-watchtime   = 20m
-jailtime    = 20m
-relapsebase = 6
-
-[nftables]
+enabled    = yes
+maxcount   = 10
+watchtime  = 20m
+jailtime   = 20m
+repeatmult = 6
 ```
 
 The AMI interface is configured in  `autoban.conf` and `manager.conf`. For security reasons use `bindaddr=127.0.0.1`  and change the `secret` (in both files).

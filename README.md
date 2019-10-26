@@ -13,6 +13,7 @@ This (non official) repository provides dockerized PBX.
 
 Feature list follows below
 
+- [websms](srs/websms/README.md) service sends and receives HTTP SMS
 - Asterisk PBX
 - php webhook for (incoming) SMS http ISTP origination
 - dialplan php (outgoing) SMS http ISTP termination
@@ -93,7 +94,12 @@ volumes:
 
 This repository WILL contain a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
 
+# WebSMS
+
+The [websms](src/websms/doc/websms.md) service is described [here](src/websms/doc/websms.md).
+
 ## Autoban, automatic firewall
+
 The Autoban service listens to Asterisk security events on the AMI interface. Autoban is activated if there is an `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount` security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `repeatmult`, which determines how many times longer the IP is blocked. To illustrate, first assume `jailtime=20m` and `repeatmult=6`, then the IP is blocked 20min the first time, 2h (120min) the second, 12h (720min) the third, 3days (4320min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
 
 #### `autoban.conf`

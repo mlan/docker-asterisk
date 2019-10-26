@@ -14,7 +14,7 @@
  The NFT set 'parole' hold a list of IPs which was recently released. If watched
  during the parole time the IP is immediately jailed again and now 'repeatmult'
  longer.
-------------------------------------------------------------------------------*/
+*/
 class Autoban {
 	private const DEFAULT_CONF_FILE = '/etc/asterisk/nft.conf';
 	public const DEFAULT_CONF_VALS = [

@@ -1,10 +1,10 @@
 <?php
 /*------------------------------------------------------------------------------
- The Websms class provides functions for creating Astrisk call files
+ The Websms class provides functions for creating Asterisk call files
 
  <websmsd.php>
  listen()
-   filter($addr)
+   permitted()
    echo()
    post_mess($post)
  answer($status)
@@ -17,7 +17,7 @@
    curl_data($post)
    curl_auth($post)
    curl_send()
-   check($responce)
+   check($response)
 */
 class Websms {
 	const DEFAULT_CONF_FILE = '/etc/asterisk/websms.conf';
@@ -28,7 +28,9 @@ class Websms {
 		'key_echo'        => null,
 		'key_account'     => null,
 		'report_success'  => "",
-		'permit'          => null
+		'permit_addr'     => null,
+		'proxy_addr'      => "172.16.0.0/12",
+		'proxy_header'    => "HTTP_X_FORWARDED_FOR"
 	];
 	const DEFAULT_CONF_VALS = [
 		'host'            => "https://api.example.com",
@@ -39,7 +41,7 @@ class Websms {
 		'auth_user'       => "usename",
 		'auth_passwd'     => "passwd",
 		'auth_method'     => "basic",
-		'responce_check'  => null
+		'response_check'  => null
 	];
 	private $config;
 	private $message;
@@ -69,7 +71,7 @@ class Websms {
 	public function listen() {
 		$this->message = false;
 		$post = file_get_contents("php://input");
-		if ($this->firewall($_SERVER['REMOTE_ADDR'])) {
+		if ($this->permitted()) {
 			$this->echo();
 			$this->post_mess($post);
 			return $this->message;
@@ -82,7 +84,7 @@ class Websms {
 	*/
 	public function answer($status = true) {
 		if ($status) {
-			trigger_error('Inbount SMS accepted, for ('.$this->message['to'].')', E_USER_NOTICE);
+			trigger_error('Inbound SMS accepted, for ('.$this->message['to'].')', E_USER_NOTICE);
 			echo $this->config['websmsd']['report_success'];
 		}
 	}
@@ -96,7 +98,7 @@ class Websms {
 		Setup curl for POST query.
 		Setup curl's authentication method.
 		Send POST query.
-		 Check responce.
+		 Check response.
 	*/
 	public function query($args) {
 		unset($args[0]);
@@ -105,8 +107,8 @@ class Websms {
 			$this->curl_init();
 			$this->curl_data($post);
 			$this->curl_auth($post);
-			$responce = $this->curl_send();
-			return $this->check($responce);
+			$response = $this->curl_send();
+			return $this->check($response);
 		} else {
 			return false;
 		}
@@ -144,14 +146,21 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	@param string $ip addr to test eg, "216.245.217.2"
-	@return boolean true if $ip is permitted otherwise false
+	Initially assume 'REMOTE_ADDR' is the real IP of the HTTP client. But if it
+	is a 'proxy_addr' then trust that  'proxy_header' hold the real IP of the
+	client instead. Now that we have the real IP of the client check if it is
+	permitted.
+	@return Boolean true if $saddr is permitted otherwise false
 	*/
-	private function firewall($ip) {
-		if (isset($this->config['websmsd']['permit'])) {
-			$permit = $this->cmp_cidr($ip,$this->config['websmsd']['permit']);
+	private function permitted() {
+		if (isset($this->config['websmsd']['permit_addr'])) {
+			$saddr = $_SERVER['REMOTE_ADDR'];
+			if ($this->cmp_cidr($saddr,$this->config['websmsd']['proxy_addr'])) {
+				$saddr = $_SERVER[$this->config['websmsd']['proxy_header']];
+			}
+			$permit = $this->cmp_cidr($saddr,$this->config['websmsd']['permit_addr']);
 			$permitstr = $permit ? 'permitted' : 'denied';
-			trigger_error('HTTP request ('.$ip.') '.$permitstr, E_USER_NOTICE);
+			trigger_error('HTTP request ('.$saddr.') '.$permitstr, E_USER_NOTICE);
 			return $permit;
 		} else {
 			return true;
@@ -161,7 +170,7 @@ class Websms {
 	@param string $ip        addr to test eg, 216.245.217.2
 	@param string $csvcidrs  comma separated list of CIDR ranges
 	                          eg, 185.45.152.42,3.104.90.0/24,3.1.77.0/24
-	@return boolean true if $ip matches any range in $csvcidrs
+	@return Boolean true if $ip matches any range in $csvcidrs
 	*/
 	public function cmp_cidr($ip,$csvcidrs) {
 		$cidrs = explode(',',$csvcidrs);
@@ -183,7 +192,7 @@ class Websms {
 	receive an additional header "Signature",
 	$signatureTest = base64_encode(hash_hmac('sha1', $_POST['result'], API_SECRET));
 	@param array $post HTTP POST
-	@return boolean true if HTTP request was verified
+	@return Boolean true if HTTP request was verified
 	*/
 	private function verify($post) {
 		$method = $this->config['websmsd']['auth_method'];
@@ -242,14 +251,14 @@ class Websms {
 	}
 	/*--------------------------------------------------------------------------
 	Setup curl's authentication method.
-	Currently we suport:
+	Currently we support:
 
 	'basic'
 		basic access authentication, see, wikipedia.org/wiki/Basic_access_authentication,
 		with headers like: Authorization: Basic <credentials>
 
 	'zadarma'
-		Zadarma's uniqe authentication method, see, zadarma.com/en/support/api,
+		Zadarma's unique authentication method, see, zadarma.com/en/support/api,
 		with headers like: Authorization: <user_key>:<signature>
 	*/
 	private function curl_auth($post) {
@@ -276,28 +285,28 @@ class Websms {
 	}
 	/*--------------------------------------------------------------------------
 	Send POST query,
-	read responce and close.
+	read response and close.
 	*/
 	private function curl_send() {
-		$responce_json = curl_exec($this->curl);
-		if (!empty($responce_json)) {
-			$responce = json_decode($responce_json,true);
+		$response_json = curl_exec($this->curl);
+		if (!empty($response_json)) {
+			$response = json_decode($response_json,true);
 		} else {
-			$responce = false;
+			$response = false;
 			trigger_error("Curl error: ".curl_error($this->curl));
 		}
 		$curl_info = curl_getinfo($this->curl);
 		curl_close($this->curl);
 		//$this->debug($curl_info);
-		$this->debug($responce_json);
-		return $responce;
+		$this->debug($response_json);
+		return $response;
 	}
 	/*--------------------------------------------------------------------------
-	Check responce and set exit code accordingly.
-	the reponce check is controlled by the variable responce_check. It can be:
+	Check response and set exit code accordingly.
+	the response check is controlled by the variable response_check. It can be:
 	= null\""; No check, we will always exit with status true
-	= "key=value" If value of key in responce is equal to value exit true otherwize false
-	= "/pattern/"; If pattern matches responce exit with status true otherwize false
+	= "key=value" If value of key in response is equal to value exit true otherwise false
+	= "/pattern/"; If pattern matches response exit with status true otherwise false
 	{
 		"status":"success",
 		"messages":1,
@@ -305,21 +314,21 @@ class Websms {
 		"currency":"USD"
 	}
 	*/
-	private function check($responce) {
-		$check = $this->config['websms']['responce_check'];
+	private function check($response) {
+		$check = $this->config['websms']['response_check'];
 		$host = $this->config['websms']['host'];
 		$user = $this->config['websms']['auth_user'];
-		if (empty($responce)) return false;
+		if (empty($response)) return false;
 		if (!empty($check)) {
 			if (strpos($check, '=') !== false) { // "key=value"
 				list($test_key, $test_value) = explode('=',$check);
-				if (@$responce[$test_key] !== $test_value) {
-					trigger_error("Called ($url) but return key ($test_key = $responce[$test_key] != $test_value)", E_USER_WARNING);
+				if (@$response[$test_key] !== $test_value) {
+					trigger_error("Called ($url) but return key ($test_key = $response[$test_key] != $test_value)", E_USER_WARNING);
 					return false;
 				}
 			} else { // "/pattern/"
-				if (!preg_match($check,$responce)) {
-					trigger_error("Called ($url) but return not matched ($responce != $check)", E_USER_WARNING);
+				if (!preg_match($check,$response)) {
+					trigger_error("Called ($url) but return not matched ($response != $check)", E_USER_WARNING);
 					return false;
 				}
 			}

@@ -20,8 +20,8 @@ class Autoban {
 	public const DEFAULT_CONF_VALS = [
 		'enabled'    => true,
 		'maxcount'   => 10,
-		'watchtime'  => 20m,
-		'jailtime'   => 20m,
+		'watchtime'  => '20m',
+		'jailtime'   => '20m',
 		'repeatmult' => 6
 	];
 	private const DEFAULT_NFT_VALS = [

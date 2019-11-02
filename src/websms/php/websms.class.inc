@@ -65,12 +65,13 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	* Read the post header data.
-	* Also log warnings if any header data is missing.
+	Read the post header data.
+	Use $_POST since file_get_contents("php://input") cannot handle multipart/form-data
+	@return mixed array message or boolean false
 	*/
 	public function listen() {
 		$this->message = false;
-		$post = file_get_contents("php://input");
+		$post = $_POST;
 		if ($this->permitted()) {
 			$this->echo();
 			$this->post_mess($post);
@@ -98,7 +99,7 @@ class Websms {
 		Setup curl for POST query.
 		Setup curl's authentication method.
 		Send POST query.
-		 Check response.
+		Check response.
 	*/
 	public function query($args) {
 		unset($args[0]);
@@ -126,23 +127,28 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
+	Evaluates POST request data and updates $this->message. Parameters are
+	json decoded and searched recursively.
+	@param array POST request parameters
+	@return void
 	*/
 	private function post_mess($post) {
-		parse_str($post, $data);
-		if (empty($data)) {
+		if (empty($post)) {
 			trigger_error("No POST header data", E_USER_WARNING);
 			return false;
 		}
-		if (!empty($data[$this->config['websmsd']['key_to']]) &&
-			!empty($data[$this->config['websmsd']['key_from']]) &&
-			!empty($data[$this->config['websmsd']['key_body']])) {
-			$this->message = [
-				'to'   => $data[$this->config['websmsd']['key_to']],
-				'from' => $data[$this->config['websmsd']['key_from']],
-				'body' => $data[$this->config['websmsd']['key_body']]
-			];
-		} else {
-			trigger_error("Did not get all required POST data ($post)", E_USER_WARNING);
+		array_walk_recursive($post, function(&$val) {
+			$json = json_decode($val,true);
+			if (!empty($json)) $val = $json;
+		});
+		array_walk_recursive($post, function($val,$key) {
+			if ($key === $this->config['websmsd']['key_to'])   $this->message['to']   = $val;
+			if ($key === $this->config['websmsd']['key_from']) $this->message['from'] = $val;
+			if ($key === $this->config['websmsd']['key_body']) $this->message['body'] = $val;
+		});
+		if (empty($this->message['to']) || empty($this->message['from']) || empty($this->message['body'])) {
+			trigger_error(sprintf("Did not get all required POST data (%s)",
+				json_encode($post)), E_USER_WARNING);
 		}
 	}
 	/*--------------------------------------------------------------------------
@@ -323,12 +329,16 @@ class Websms {
 			if (strpos($check, '=') !== false) { // "key=value"
 				list($test_key, $test_value) = explode('=',$check);
 				if (@$response[$test_key] !== $test_value) {
-					trigger_error("Called ($url) but return key ($test_key = $response[$test_key] != $test_value)", E_USER_WARNING);
+					trigger_error("Called ($host) but return key ($test_key = $response[$test_key] != $test_value)", E_USER_WARNING);
+					trigger_error(sprintf("Response was: %s",
+						json_encode($response)));
 					return false;
 				}
 			} else { // "/pattern/"
 				if (!preg_match($check,$response)) {
-					trigger_error("Called ($url) but return not matched ($response != $check)", E_USER_WARNING);
+					trigger_error("Called ($host) but return not matched ($response != $check)", E_USER_WARNING);
+					trigger_error(sprintf("Response was: %s",
+						json_encode($response)));
 					return false;
 				}
 			}

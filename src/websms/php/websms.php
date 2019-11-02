@@ -10,7 +10,7 @@
  Call via AGI in extensions.conf:
  same = n,AGI(websms.php,${EXTEN},${MESSAGE(from)},${MESSAGE(body)})
 */
-openlog("websms", LOG_PID | LOG_PERROR, LOG_LOCAL0);
+openlog("websms", LOG_PID, LOG_LOCAL0);
 require_once 'error.inc';
 require_once 'websms.class.inc';
 

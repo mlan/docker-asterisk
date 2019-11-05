@@ -1,6 +1,17 @@
+# 0.2.1
+- [asterisk](src/asterisk) Sanitize incoming extensions so they are all international
+- [asterisk](src/asterisk) Move APP_SMS global to extensions.conf
+- [websms](src/websms) Use `$_POST` since `file_get_contents("php://input")` cannot handle multipart/form-data
+- [websms](src/websms) Allow IP addr filtering behind proxy by using HTTP_X_FORWARDED_FOR
+- [websms](src/websms) websmsd.php parameters are json decoded and searched recursively
+- [websms](src/websms) Also support Zadarma POST parameters in websms.class.inc
+- [websms](src/websms) Started WebSMS (separate) documentation
+- [autoban](src/autoban) Fixed new bug in autoban.class.inc
+- [autoban](src/autoban) Added conf sample file autoban.conf.sample
+
 # 0.2.0
 - [docker](Dockerfile) alpine 3.10.3 released so now build using alpine:3.10
-- [docker](Dockerfile) Added Healthcheck
+- [docker](Dockerfile) Added Health check
 - [docker](Dockerfile) Introduce a `SIGTERM` trap in `entrypoint.sh` allowing graceful container termination with `exitpoint.d` script execution
 - [docker](Dockerfile) Now reorganize repo files according to which service they provide
 - [docker](Dockerfile) src/bin/setup-runit.sh now also take switches -n and -l.

@@ -103,11 +103,11 @@ class Websms {
 	*/
 	public function query($args) {
 		unset($args[0]);
-		$post = $this->args_mess($args);
+		$poststr = $this->args_mess($args);
 		if (!empty($post)) {
 			$this->curl_init();
-			$this->curl_data($post);
-			$this->curl_auth($post);
+			$this->curl_data($poststr);
+			$this->curl_auth($poststr);
 			$response = $this->curl_send();
 			return $this->check($response);
 		} else {
@@ -248,12 +248,14 @@ class Websms {
 	/*--------------------------------------------------------------------------
 	Setup curl for POST query.
 	*/
-	private function curl_data($post) {
+	private function curl_data($poststr) {
 		curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
+//		curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, 'POST');
 		curl_setopt($this->curl, CURLOPT_POST, true);
-		curl_setopt($this->curl, CURLOPT_POSTFIELDS, $post);
+		curl_setopt($this->curl, CURLOPT_POSTFIELDS, $poststr);
 		curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($this->curl, CURLINFO_HEADER_OUT, true); // debug only
+		curl_setopt($this->curl, CURLOPT_SSL_VERIFYHOST, false);
+//		curl_setopt($this->curl, CURLINFO_HEADER_OUT, true); // debug only
 	}
 	/*--------------------------------------------------------------------------
 	Setup curl's authentication method.
@@ -267,7 +269,7 @@ class Websms {
 		Zadarma's unique authentication method, see, zadarma.com/en/support/api,
 		with headers like: Authorization: <user_key>:<signature>
 	*/
-	private function curl_auth($post) {
+	private function curl_auth($poststr) {
 		$method = $this->config['websms']['auth_method'];
 		$user = $this->config['websms']['auth_user'];
 		$passwd = $this->config['websms']['auth_passwd'];
@@ -279,7 +281,7 @@ class Websms {
 			break;
 		case 'zadarma':
 			$signature = base64_encode(hash_hmac('sha1', $path .
-				$post . md5($post), $passwd));
+				$poststr . md5($poststr), $passwd));
 			curl_setopt($this->curl, CURLOPT_HTTPHEADER, array(
 				'Authorization: ' . $user . ':' . $signature,
 				'Content-Type: application/json'));

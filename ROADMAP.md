@@ -2,20 +2,19 @@
 
 ## Dial plan
 
-- Sanitize all incoming extensions so they are all international
-
 ## Documentation
 
 Needed. :)
 Start with describing the seeding procedure(s).
 
-Perhaps use separate files for Autoban and Websms?
+Perhaps use separate files for Autoban?
 
 ## Music on hold
 - script that converts sound files to wav 8000 Hz mono
 
 ## Autoban
 
+- Write to autoban.nft every time we get a security event and updates NFT, so that its state is always preserved.
 - Write shell utility to add/delete IPs from `nft` state. Use shell utility name `autoban` and rename service to `autoband.php`.
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
 

@@ -1,3 +1,6 @@
+# 0.2.2
+- [websms](src/websms) added `number_format` parameter. Set to `omit+` to strip phone numbers from leading +
+
 # 0.2.1
 - [asterisk](src/asterisk) Sanitize incoming extensions so they are all international
 - [asterisk](src/asterisk) Move APP_SMS global to extensions.conf

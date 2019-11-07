@@ -17,6 +17,7 @@
 ;auth_passwd     = "passwd"  ;authentication password/secret
 ;auth_method     = "basic"   ;eg "zadarma" method to authenticate sms request
 ;response_check  = ""        ;http POST key=value to check, eg "status=success"
+;number_format   = ""        ;eg "omit+" omit leading "+" in phone numbers
 ;
 ;[websmsd]
 ;key_to          = "To"   ;http POST key name holding sms destination phone number

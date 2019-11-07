@@ -30,7 +30,7 @@ class Websms {
 		'report_success'  => "",
 		'permit_addr'     => null,
 		'proxy_addr'      => "172.16.0.0/12",
-		'proxy_header'    => "HTTP_X_FORWARDED_FOR"
+		'proxy_header'    => "HTTP_X_FORWARDED_FOR",
 	];
 	const DEFAULT_CONF_VALS = [
 		'host'            => "https://api.example.com",
@@ -41,7 +41,8 @@ class Websms {
 		'auth_user'       => "usename",
 		'auth_passwd'     => "passwd",
 		'auth_method'     => "basic",
-		'response_check'  => null
+		'response_check'  => null,
+		'number_format'   => "",
 	];
 	private $config;
 	private $message;
@@ -229,7 +230,10 @@ class Websms {
 			$keys = [ $this->config['websms']['key_to'],
 				$this->config['websms']['key_from'],
 				$this->config['websms']['key_body'] ];
-			$this->message = array_combine($keys,$args);
+			$vals = [ $this->filter_number($args[1]),
+				$this->filter_number($args[2]),
+				$args[3] ];
+			$this->message = array_combine($keys,$vals);
 			ksort($this->message);
 			$this->debug($this->message);
 			$post = http_build_query($this->message);
@@ -241,6 +245,23 @@ class Websms {
 			return false;
 		}
 	}
+	/*--------------------------------------------------------------------------
+	Sanitize telephone numbers.
+	@param string $number
+	@return string $number
+	*/
+	private function filter_number($number) {
+		switch ($this->config['websms']['number_format']) {
+		case 'no+':
+		case 'omit+':
+			return preg_replace('/[+]/', '', $number);
+		default:
+			return $number;
+		}
+	}
+	/*--------------------------------------------------------------------------
+	Init curl.
+	*/
 	private function curl_init() {
 		$url = $this->config['websms']['host'].$this->config['websms']['path'];
 		$this->curl = curl_init($url);
@@ -282,9 +303,8 @@ class Websms {
 		case 'zadarma':
 			$signature = base64_encode(hash_hmac('sha1', $path .
 				$poststr . md5($poststr), $passwd));
-			curl_setopt($this->curl, CURLOPT_HTTPHEADER, array(
-				'Authorization: ' . $user . ':' . $signature,
-				'Content-Type: application/json'));
+			curl_setopt($this->curl, CURLOPT_HTTPHEADER,
+				array('Authorization: ' . $user . ':' . $signature));
 			break;
 		default:
 			trigger_error("Unknown method (auth_method=$method)", E_USER_WARNING);

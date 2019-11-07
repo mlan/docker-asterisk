@@ -105,7 +105,7 @@ class Websms {
 	public function query($args) {
 		unset($args[0]);
 		$poststr = $this->args_mess($args);
-		if (!empty($post)) {
+		if (!empty($poststr)) {
 			$this->curl_init();
 			$this->curl_data($poststr);
 			$this->curl_auth($poststr);

@@ -25,6 +25,11 @@ Perhaps use separate files for Autoban?
 - Write shell utility to add/delete IPs from `nft` state. Use shell utility name `autoban` and rename service to `autoband.php`.
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
 
+If autoban.conf does not have an `[nftables]` section we get the following warning
+autoban[43]: WARNING[8]: autoban.class.inc:55: Undefined index: nftables.
+autoban[43]: WARNING[2]: autoban.class.inc:55: array_merge(): Expected parameter 2 to be an array, null given.
+
+
 ## WebSMS
 
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.

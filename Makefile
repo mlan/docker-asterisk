@@ -52,15 +52,23 @@ TST_W8L2 ?= 120
 
 build-all: build_mini build_base build_full build_xtra
 
-build: Dockerfile dep/autoban/php/ami.class.inc
+build: depends
 	docker build $(BLD_ARG) --target $(BLD_TGT) -t $(BLD_REPO):$(BLD_VER) .
 
-build_%: Dockerfile dep/autoban/php/ami.class.inc
+build_%: depends
 	docker build $(BLD_ARG) --target $* -t $(BLD_REPO):$(call _version,$*,$(BLD_VER)) .
+
+depends: Dockerfile dep/autoban/php/ami.class.inc
+	
 
 dep/autoban/php/ami.class.inc:
 	mkdir -p dep/autoban/php
 	wget -O dep/autoban/php/ami.class.inc https://raw.githubusercontent.com/ofbeaton/phpami/master/src/Ami.php
+
+dep/asterisk/bin/ast_tls_cert:
+	mkdir -p dep/asterisk/bin
+	wget -O dep/asterisk/bin/ast_tls_cert https://raw.githubusercontent.com/asterisk/asterisk/master/contrib/scripts/ast_tls_cert
+	chmod a+x dep/asterisk/bin/ast_tls_cert
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
@@ -108,7 +116,7 @@ test-up_3: test-up-net
 	#
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		--network $(TST_NET) \
-		$(IMG_REPO):$(call _version,full,$(IMG_VER))
+		$(IMG_REPO):$(call _version,$(BLD_TGT),$(IMG_VER))
 
 test-up-net:
 	docker network create $(TST_NET) 2>/dev/null || true

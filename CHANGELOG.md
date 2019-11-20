@@ -2,6 +2,7 @@
 
 - [acme](src/acme) New support for [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using [Traefik](https://traefik.io/) using `ACME_FILE=/acme/acme.json`.
 - [asterisk](src/asterisk) Configuration now supports UDP, TCP and TLS and SDES.
+- [asterisk](src/asterisk) Generate self-signed TLS certificate.
 - [asterisk](src/asterisk) Don't answer when device is UNAVAILABLE in `[dp_channel_answer]`
 - [docker](src/docker) The [setup-runit.sh](src/docker/bin/setup-runit.sh) script now have options:  down, force, log, name, source, quiet.
 - [websms](src/websms) Added `number_format` parameter. Set to `omit+` to strip phone numbers from leading +.

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 50_setup-acmecerts
+# 50_setup-tlscert-acme
 #
 #
 #
@@ -28,24 +28,27 @@ _is_installed() { apk -e info $1 &>/dev/null ;} # true if pkg is installed
 #
 
 fix_persist_dirs() {
-	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_ACME_SSL_DIR} \
-		${DOCKER_PERSIST_DIR}${DOCKER_AST_SSL_DIR}
+	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_AST_SSL_DIR} \
+		${DOCKER_PERSIST_DIR}${DOCKER_ACME_SSL_DIR}
 }
 
 setup_runit_acme_dump() {
-	if (_is_installed jq && [ -f $ACME_FILE ]); then
+	if (_is_installed jq && [ -s $ACME_FILE ]); then
+		inform "Setup ACME TLS certificate monitoring"
 		setup-runit.sh "-n acme $(which inotifyd) $(which dumpcerts.sh) $ACME_FILE:c"
-	fi
-}
-
-configure_acme_tls_cert() {
-	if (_is_installed jq && [ -f $ACME_FILE ]); then
 		# run dumpcerts.sh on cnt creation (and every time the json file changes)
 		local message="$(dumpcerts.sh $ACME_FILE $DOCKER_ACME_SSL_DIR 2>&1 | sed ':a;N;$!ba;s/\n/ - /g')"
 		inform "$message"
-		inform "Configuring acme-tls for host $HOSTNAME"
-		ln -sf $DOCKER_ACME_SSL_DIR/certs/${HOSTNAME}.crt $DOCKER_AST_SSL_DIR/cert.pem
-		ln -sf $DOCKER_ACME_SSL_DIR/private/${HOSTNAME}.key $DOCKER_AST_SSL_DIR/priv_key.pem
+	fi
+}
+
+setup_acme_tls_cert() {
+	local cert=$DOCKER_AST_SSL_DIR/asterisk.cert.pem
+	local key=$DOCKER_AST_SSL_DIR/asterisk.priv_key.pem
+	if ([ -s $ACME_FILE ] && ([ ! -s $cert ] || [ ! -s $key ])); then
+		inform "Setup ACME TLS certificate for host $HOSTNAME"
+		ln -sf $DOCKER_ACME_SSL_DIR/certs/${HOSTNAME}.crt $cert
+		ln -sf $DOCKER_ACME_SSL_DIR/private/${HOSTNAME}.key $key
 	fi
 }
 
@@ -53,6 +56,6 @@ configure_acme_tls_cert() {
 # Run
 #
 
-fix_presist_dirs
+fix_persist_dirs
 setup_runit_acme_dump
-configure_acme_tls_cert
+setup_acme_tls_cert

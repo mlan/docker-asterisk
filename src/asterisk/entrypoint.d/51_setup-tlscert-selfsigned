@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# 51_setup-tlscert-selfsigned
+#
+#
+#
+
+#
+# Config
+#
+
+HOSTNAME=${HOSTNAME-$(hostname)}
+DOCKER_AST_SSL_DIR=${DOCKER_AST_SSL_DIR-/etc/ssl/asterisk}
+TLS_KEYBITS=${TLS_KEYBITS-2048}
+TLS_CERTDAYS=${TLS_CERTDAYS-30}
+
+#
+# Helpers
+#
+
+inform() { printf "entrypoint[$$]: INFO:$(basename $0): $*.\n" ;}
+
+#
+# Make sure that we have the required directory structure in place under
+# DOCKER_PERSIST_DIR. It will be missing if we mount an empty volume there.
+#
+
+fix_persist_dirs() {
+	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_AST_SSL_DIR}
+}
+
+setup_selfsigned_tls_cert() {
+	local cert=$DOCKER_AST_SSL_DIR/asterisk.cert.pem
+	local key=$DOCKER_AST_SSL_DIR/asterisk.priv_key.pem
+	if ([ ! -s $cert ] || [ ! -s $key ]); then
+		inform "Setup self-signed TLS certificate for host $HOSTNAME"
+		openssl genrsa -out $key $TLS_KEYBITS
+		openssl req -x509 -utf8 -new -batch -subj "/CN=$HOSTNAME" \
+			-days $TLS_CERTDAYS -key $key -out $cert
+	fi
+}
+
+#
+# Run
+#
+
+fix_persist_dirs
+setup_selfsigned_tls_cert

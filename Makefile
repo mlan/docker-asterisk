@@ -16,11 +16,15 @@ IMG_CMD  ?= /bin/bash
 CNT_NAME ?= test-pbx
 CNT_DOM  ?= example.com
 CNT_HOST ?= pbx.$(CNT_DOM)
+TST_NET  ?= test-net
 TST_SIPP ?= 5060
+TST_SIPS ?= 5061
 CNT_RTPP ?= 10000-10099
 TST_SMSP ?= 8080
 TST_SMSU ?= 127.0.0.1:$(TST_SMSP)/
 TST_PORT ?= -p $(TST_SIPP):$(TST_SIPP)/udp \
+	-p $(TST_SIPP):$(TST_SIPP) \
+	-p $(TST_SIPS):$(TST_SIPS) \
 	-p $(CNT_RTPP):$(CNT_RTPP)/udp \
 	-p $(TST_SMSP):80
 TST_XTRA ?= --cap-add SYS_PTRACE \
@@ -33,9 +37,6 @@ CNT_CMD  ?= asterisk -pf -vvvddd
 CNT_CLI  ?= asterisk -r -vvvddd
 CNT_DRV  ?=
 CNT_TZ   ?= UTC
-CNT_IP    = $(shell docker inspect -f \
-	'{{range .NetworkSettings.Networks}}{{println .IPAddress}}{{end}}' \
-	$(1) | head -n1)
 
 SMS_FROM ?= +15017122661
 SMS_TO   ?= +15558675310
@@ -101,6 +102,17 @@ test-up_2:
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
 
+test-up_3: test-up-net
+	#
+	# test (3) run using srv vol and test net
+	#
+	docker run -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
+		--network $(TST_NET) \
+		$(IMG_REPO):$(call _version,full,$(IMG_VER))
+
+test-up-net:
+	docker network create $(TST_NET) 2>/dev/null || true
+
 test-upgrade:
 #	docker cp src/*/bin/. $(CNT_NAME):/usr/local/bin
 #	docker cp src/*/entrypoint.d/. $(CNT_NAME):/etc/entrypoint.d
@@ -131,6 +143,7 @@ test-smsd3:
 test-down:
 	docker stop $(CNT_NAME) 2>/dev/null || true
 	docker rm $(CNT_NAME) 2>/dev/null || true
+	docker network rm $(TST_NET) || true
 
 test-start:
 	docker start $(CNT_NAME)
@@ -166,3 +179,6 @@ test-debugtools:
 test-tz:
 	docker cp /usr/share/zoneinfo/$(CNT_TZ) $(CNT_NAME):/etc/localtime
 	docker exec -it $(CNT_NAME) sh -c 'echo $(CNT_TZ) > /etc/timezone'
+
+test-tls:
+	docker run --rm -it --network $(TST_NET) drwetter/testssl.sh $(CNT_NAME):$(TST_SIPS) || true

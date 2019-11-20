@@ -26,9 +26,12 @@ ENV	DOCKER_RUNSV_DIR=/etc/service \
 	DOCKER_NFT_DIR=/var/lib/nftables \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
 	DOCKER_SEED_NFT_DIR=/etc/nftables \
+	DOCKER_SSL_DIR=/etc/ssl \
 	SYSLOG_LEVEL=4 \
 	SYSLOG_OPTIONS='-S -D'
-ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh
+ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh \
+	DOCKER_ACME_SSL_DIR=${DOCKER_SSL_DIR}/acme \
+	DOCKER_AST_SSL_DIR=${DOCKER_SSL_DIR}/asterisk
 
 #
 # Copy utility scripts including entrypoint.sh to image
@@ -53,12 +56,17 @@ RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 	${DOCKER_PERSIST_DIR}${DOCKER_LOG_DIR} \
 	${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR} \
 	${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR} \
+	${DOCKER_PERSIST_DIR}${DOCKER_ACME_SSL_DIR} \
+	${DOCKER_PERSIST_DIR}${DOCKER_AST_SSL_DIR} \
 	${DOCKER_LIB_DIR} \
+	${DOCKER_SSL_DIR} \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} $DOCKER_SPOOL_DIR \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_CONF_DIR} $DOCKER_CONF_DIR \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_LOG_DIR} $DOCKER_LOG_DIR \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR} $DOCKER_MOH_DIR \
 	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR} $DOCKER_NFT_DIR \
+	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_ACME_SSL_DIR} $DOCKER_ACME_SSL_DIR \
+	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_AST_SSL_DIR} $DOCKER_AST_SSL_DIR \
 	&& apk --no-cache --update add \
 	asterisk
 
@@ -98,6 +106,7 @@ RUN	apk --no-cache --update add \
 	runit \
 	bash \
 	nftables \
+	jq \
 	&& setup-runit.sh \
 	"syslogd -n -O - -l $SYSLOG_LEVEL $SYSLOG_OPTIONS" \
 	"crond -f -c /etc/crontabs" \

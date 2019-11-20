@@ -1,7 +1,13 @@
-# 0.2.2
-- [websms](src/websms) added `number_format` parameter. Set to `omit+` to strip phone numbers from leading +
+# 0.3.0
+
+- [acme](src/acme) New support for [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using [Traefik](https://traefik.io/) using `ACME_FILE=/acme/acme.json`.
+- [asterisk](src/asterisk) Configuration now supports UDP, TCP and TLS and SDES.
+- [asterisk](src/asterisk) Don't answer when device is UNAVAILABLE in `[dp_channel_answer]`
+- [docker](src/docker) The [setup-runit.sh](src/docker/bin/setup-runit.sh) script now have options:  down, force, log, name, source, quiet.
+- [websms](src/websms) Added `number_format` parameter. Set to `omit+` to strip phone numbers from leading +.
 
 # 0.2.1
+
 - [asterisk](src/asterisk) Sanitize incoming extensions so they are all international
 - [asterisk](src/asterisk) Move APP_SMS global to extensions.conf
 - [websms](src/websms) Use `$_POST` since `file_get_contents("php://input")` cannot handle multipart/form-data
@@ -13,12 +19,13 @@
 - [autoban](src/autoban) Added conf sample file autoban.conf.sample
 
 # 0.2.0
+
+- [repo](src) Now reorganize repo files according to which service they provide
 - [docker](Dockerfile) alpine 3.10.3 released so now build using alpine:3.10
 - [docker](Dockerfile) Added Health check
-- [docker](Dockerfile) Introduce a `SIGTERM` trap in `entrypoint.sh` allowing graceful container termination with `exitpoint.d` script execution
-- [docker](Dockerfile) Now reorganize repo files according to which service they provide
-- [docker](Dockerfile) src/bin/setup-runit.sh now also take switches -n and -l.
-- [docker](Dockerfile) We now create directory structure when empty volume is mounted at /srv.
+- [docker](src/docker) Introduce a `SIGTERM` trap in `entrypoint.sh` allowing graceful container termination with `exitpoint.d` script execution
+- [docker](src/docker) [setup-runit.sh](src/docker/bin/setup-runit.sh) now also take switches -n and -l.
+- [docker](src/docker) We now create directory structure when an empty volume is mounted at /srv.
 - [asterisk](src/asterisk) Based on live testing updated templates in pjsip_wizard.conf
 - [asterisk](src/asterisk) Now use extensions-local.conf to keep all local configurations
 - [asterisk](src/asterisk) Fixed typo in rtp.conf
@@ -31,6 +38,8 @@
 - [autoban](src/autoban) Autoban now has `repeatmult` punishing repeat offenders progressively more severely
 - [autoban](src/autoban) Autoban now use nftables timeouts
 - [autoban](src/autoban) Added `entrypoint.d`  and  `exitpoint.d` scripts so that the `nft` state is loaded/saved at container startup/shutdown.
+
 # 0.1.0
+
 - Using alpine:3.9 since for alpine:3.10 there are dependency errors reported when asterisk starts
 - minivm-send bash script simplify minivm configuration

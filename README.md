@@ -98,7 +98,9 @@ This repository WILL contain a `demo` directory which hold the `docker-compose.y
 
 The [websms](src/websms/doc/websms.md) service is described [here](src/websms/doc/websms.md).
 
-## Autoban, automatic firewall
+# AutoBan
+
+The [autoban](src/autoban/doc/autoban.md) service is described [here](src/autoban/doc/autoban.md).
 
 The Autoban service listens to Asterisk security events on the AMI interface. Autoban is activated if there is an `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount` security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `repeatmult`, which determines how many times longer the IP is blocked. To illustrate, first assume `jailtime=20m` and `repeatmult=6`, then the IP is blocked 20min the first time, 2h (120min) the second, 12h (720min) the third, 3days (4320min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
 
@@ -112,7 +114,7 @@ username   = autoban
 secret     = 6003.438
 
 [autoban]
-enabled    = yes
+enabled    = true
 maxcount   = 10
 watchtime  = 20m
 jailtime   = 20m
@@ -142,8 +144,6 @@ You can watch the status of the nftable firewall by, from within the container, 
 ```bash
 nft list ruleset
 ```
-
-
 
 ## Environment variables
 
@@ -193,13 +193,12 @@ Some of the collection of configuration files provided does not contain any user
 #### `pjsip-local.conf`
 
 ```ini
-;================================ GLOBAL ==
+;-------------------------------- GLOBAL ---------------------------------------
 [global]
 type = global
 user_agent = Platform PBX
 
-;================================ TRANSPORTS ==
-;
+;-------------------------------- TRANSPORTS -----------------------------------
 [transport]
 type = transport
 protocol = udp
@@ -214,21 +213,19 @@ cos = 3
 #### `extensions-local.conf`
 
 ```ini
-;================================ globals =====================================
+;-------------------------------- globals --------------------------------------
 ; include file providing dialing texting options used in context globals
 ;
-;================================ dialing
+;-------------------------------- dialing
 [globals]
+CONTRY_CODE = 46
 DIAL_TIMEOUT =,30
 TRUNK_ENDPOINT = trunk_example
-;================================ voice mail
+;-------------------------------- voice mail
 VOICEMAIL_TEMPLATE =,en_US_email
 VOICEMAIL_RECGAINDB =,g(12)
-;================================ sms
-; Full path to SMS app
-APP_SMS = /usr/share/php7/sms.php
 
-;================================ entries =====================================
+;-------------------------------- entries --------------------------------------
 ; Calls enter the dialplan in one of these entries
 ;
 [dp_entry_user_calling]
@@ -245,7 +242,7 @@ APP_SMS = /usr/share/php7/sms.php
 #### `pjsip_wizard.conf`
 
 ```ini
-;================================ TEMPLATES ==
+;-------------------------------- TEMPLATES ------------------------------------
 
 [trunk_defaults](!)
 type = wizard
@@ -253,11 +250,9 @@ transport = transport
 endpoint/context = dp_entry_trunk_calling
 endpoint/allow = !all,ulaw
 endpoint/direct_media=no
-endpoint/rewrite_contact=yes
+endpoint/force_rport = yes
 endpoint/rtp_symmetric=yes
 endpoint/allow_subscribe = no
-endpoint/send_rpid = yes
-endpoint/send_pai = yes
 aor/qualify_frequency = 60
 
 
@@ -279,6 +274,7 @@ has_hint = yes
 hint_context = dp_lookup_user
 endpoint/context = dp_entry_user_calling
 endpoint/message_context = dp_entry_user_texting
+endpoint/subscribe_context = dp_lookup_user
 endpoint/from_domain = example.com
 endpoint/allow_subscribe = yes
 endpoint/tos_audio=ef
@@ -288,19 +284,22 @@ endpoint/cos_video=4
 endpoint/send_pai = yes
 endpoint/allow = !all,ulaw
 endpoint/rtp_symmetric = yes
-endpoint/trust_id_inbound = yes
+endpoint/force_rport = yes
+endpoint/direct_media = no
 endpoint/language = en
-aor/max_contacts = 5
+aor/max_contacts = 10
 aor/remove_existing = yes
+aor/qualify_frequency = 60
+aor/minimum_expiration = 120
 
-;================================ SIP ITSP ==
+;-------------------------------- SIP ITSP -------------------------------------
 
 [trunk_example](outbound_defaults)
 remote_hosts = host.example.com
 outbound_auth/username = user
 outbound_auth/password = password
 
-;================================ SIP USERS ==
+;-------------------------------- SIP USERS ------------------------------------
 
 [john.doe](user_defaults)
 hint_exten = +12025550160
@@ -333,23 +332,6 @@ rtpend   = 10099
 ; remote endpoints connected to LANs.
 ;
 strictrtp = no
-```
-
-####`sms.conf`
-
-This file hold user customization of http sms
-originating and termination service.
-
-```ini
-[sms]
-sms_host             = api.example.com
-sms_path             = /sms/send/
-sms_auth_user        = user
-sms_auth_passwd      = passwd
-
-[smsd]
-smsd_exten_context   = dp_entry_channel_open
-smsd_message_context = dp_entry_trunk_texting
 ```
 
 #### `minivm.conf`

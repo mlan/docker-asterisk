@@ -1,73 +1,121 @@
 #!/bin/sh
 #
-# switches
-# -q 		send stdout and stderr to /dev/null
-# -n <name>	use this name instead of basename $1
-# -l 		activate svlogd (NOT IMPLEMENTED YET)
-#
+# setup-runit.sh
 #
 
 # use /etc/service if $DOCKER_RUNSV_DIR not already defined
 DOCKER_RUNSV_DIR=${DOCKER_RUNSV_DIR-/etc/service}
 DOCKER_SVLOG_DIR=${DOCKER_SVLOG_DIR-/var/log/sv}
+DOCKER_RUN_DIR=${DOCKER_RUN_DIR-/var/run}
 
 #
 # Define helpers
 #
+usage() {
+	cat <<-!cat
+		 NAME
+		  setup-runit.sh
+
+		 SYNOPSIS
+		  setup-runit.sh [-d] [-f] [-h] [-l] [-n name] [-s file] [-q] command [args]
+
+		 OPTIONS
+		  -d       default down
+		  -f       remove lingering pid file at start up
+		  -h       print this text and exit
+		  -l       activate logging (svlogd)
+		  -n name  use this name instead of command
+		  -s file  source file
+		  -q       send stdout and stderr to /dev/null
+
+		 EXAMPLES
+		  setup-runit.sh "kopano-dagent -l" "-d kopano-grapi serve"
+		  "-q -s /etc/apache2/envvars apache2 -DFOREGROUND -DNO_DETACH -k start"
+
+	!cat
+}
+
+base_name() { local base=${1##*/}; echo ${base%%.*} ;}
+
+pid_name() {
+	local dir_name=${1%%-*}
+	local pid_name=${1##*-}
+	echo "${DOCKER_RUN_DIR}/${dir_name}/${pid_name}.pid"
+}
+
+inform() {
+	name=$(basename $0)
+	case "$1" in
+		0) pre_string="\e[1m\e[92mINFO ($name)\e[0m";;
+		1) pre_string="\e[1m\e[93mWARN ($name)\e[0m";;
+		2) pre_string="\e[1m\e[91mERROR ($name)\e[0m";;
+	esac
+	shift
+	printf "$pre_string %s\n" "$*"
+}
+
+add_opt() {
+	if [ -z "$options" ]; then
+		options=$1
+	else
+		options="$options,$1"
+	fi
+}
+
+#
+# Define main function
+#
 
 init_service() {
 	local redirstd=
-	local runit_name cmd runit_dir svlog_dir use_log
-	case "$1" in
-		-q|--quiet)
-			redirstd="exec >/dev/null"
-			shift
-			;;
-		-n|--name)
-			shift
-			runit_name="$1"
-			shift
-			;;
-		-l|--log)
-			use_log="yes"
-			shift
-			;;
-		-*|--*)
-			echo "unknown switch in $@"
-			exit
-			;;
-	esac
+	local clearpid=
+	local sourcefile=
+	local sv_name cmd runsv_dir svlog_dir sv_log sv_down sv_force options
+	while getopts ":dfhln:s:q" opts; do
+		case "${opts}" in
+			d) sv_down="down"; add_opt "down";;
+			f) sv_force="force"; add_opt "force";;
+			h) usage; exit;;
+			l) sv_log="log"; add_opt "log";;
+			n) sv_name="${OPTARG}"; add_opt "name";;
+			s) sourcefile=". ${OPTARG}"; add_opt "source";;
+			q) redirstd="exec >/dev/null"; add_opt "quiet";;
+		esac
+	done
+	shift $((OPTIND -1))
 	cmd=$(which "$1")
-	runit_name=${runit_name-$(base_name $1)}
-	runit_dir=$DOCKER_RUNSV_DIR/$runit_name
-	svlog_dir=$DOCKER_SVLOG_DIR/$runit_name
+	sv_name=${sv_name-$(base_name $1)}
+	runsv_dir=$DOCKER_RUNSV_DIR/$sv_name
+	svlog_dir=$DOCKER_SVLOG_DIR/$sv_name
+	if [ -n "$sv_force" ]; then
+		forcepid="$(echo rm -f $(pid_name $sv_name)*)"
+	fi
 	shift
 	if [ ! -z "$cmd" ]; then
-		mkdir -p $runit_dir
-		cat <<-! > $runit_dir/run
+		inform 0 "Setting up ($sv_name) options ($options) args ($@)"
+		mkdir -p $runsv_dir
+		cat <<-!cat > $runsv_dir/run
 			#!/bin/sh -e
 			exec 2>&1
+			$forcepid
 			$redirstd
+			$sourcefile
 			exec $cmd $@
-		!
-		chmod +x $runit_dir/run
-		if [ -n "$use_log" ]; then
-			mkdir -p $runit_dir/log $svlog_dir
-			cat <<-! > $runit_dir/log/run
+		!cat
+		chmod +x $runsv_dir/run
+		if [ -n "$sv_down" ]; then
+			touch $runsv_dir/down
+		fi
+		if [ -n "$sv_log" ]; then
+			mkdir -p $runsv_dir/log $svlog_dir
+			cat <<-!cat > $runsv_dir/log/run
 				#!/bin/sh
 				exec svlogd -tt $svlog_dir
-			!
-			chmod +x $runit_dir/log/run
+			!cat
+			chmod +x $runsv_dir/log/run
 		fi
 	fi
 	}
-
-down_service() {
-	local cmd=$1
-	touch $DOCKER_RUNSV_DIR/$cmd/down
-	}
-
-base_name() { local base=${1##*/}; echo ${base%%.*} ;}
 
 #
 # run

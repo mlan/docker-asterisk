@@ -1,5 +1,11 @@
 # Road map
 
+## Signaling Security
+
+- SIP message traffic via TLS
+- SDES-SRTP
+[Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial)
+
 ## Dial plan
 
 ## Documentation
@@ -10,6 +16,7 @@ Start with describing the seeding procedure(s).
 Perhaps use separate files for Autoban?
 
 ## Music on hold
+
 - script that converts sound files to wav 8000 Hz mono
 
 ## Autoban

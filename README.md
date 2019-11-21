@@ -380,3 +380,6 @@ In a scenario where we don't have any configuration files yet we start/create a 
 
 The level of output for logging is in the range from 0 to 8. 1 means emergency logging only, 2 for alert messages, 3 for critical messages only, 4 for error or worse, 5 for warning or worse, 6 for notice or worse, 7 for info or worse, 8 debug. Default: `SYSLOG_LEVEL=4`
 
+# Networking
+## RTP
+

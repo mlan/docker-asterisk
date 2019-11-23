@@ -56,10 +56,12 @@ class Websms {
 		$this->config['websms'] = self::DEFAULT_CONF_VALS;
 		if (file_exists($config) === true) {
 			$config_ini = parse_ini_file($config,true);
-			$this->config['websmsd'] = array_merge($this->config['websmsd'],
-				$config_ini['websmsd']);
-			$this->config['websms'] = array_merge($this->config['websms'],
-				$config_ini['websms']);
+			if (!empty($config_ini['websmsd']))
+				$this->config['websmsd'] = array_merge($this->config['websmsd'],
+					$config_ini['websmsd']);
+			if (!empty($config_ini['websms']))
+				$this->config['websms'] = array_merge($this->config['websms'],
+					$config_ini['websms']);
 		}
 		foreach ($optconfig as $var => $val) {
 			$this->config['websms'][$var] = $val;

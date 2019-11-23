@@ -2,8 +2,15 @@
 
 AutoBan is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. It is written in PHP and listens to Asterisk security events on the AMI interface. Autoban is activated if there is an `autoban.conf` file and that the parameter `enabled` within is not set to `no`. When one of the `InvalidAccountID`, `InvalidPassword`, `ChallengeResponseFailed`, or `FailedACL` events occur Autoban start to watch the source IP address for `watchtime` seconds. If more than `maxcount` security events occurs within this time, all packages from the source IP address is dropped for `jailtime` seconds. When the `jailtime` expires packages are gain accepted from the source IP address, but for additional `watchtime` seconds this address is on "parole". Is a security event be detected from this address during the "parole" period it is immediately blocked again, for a progressively longer time. This progression is configured by `repeatmult`, which determines how many times longer the IP is blocked. To illustrate, first assume `jailtime=20m` and `repeatmult=6`, then the IP is blocked 20min the first time, 2h (120min) the second, 12h (720min) the third, 3days (4320min) the forth and so on. If no security event is detected during the "parole" the IP is no longer being watched.
 
-
 ## Configuration
+
+### Configuration files overview
+
+| File name        | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| autoban.conf     |                                                              |
+| manager.conf     |                                                              |
+
 #### `autoban.conf`
 
 ```ini

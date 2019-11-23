@@ -13,14 +13,10 @@ This (non official) repository provides dockerized PBX.
 
 Feature list follows below
 
-- [websms](srs/websms/README.md) service sends and receives HTTP SMS
 - Asterisk PBX
-- HomeDial, a easily customized asterisk configuration
-- PHP web-hook for (incoming) SMS http ISTP origination
-- dialplan PHP (outgoing) SMS http ISTP termination
-- dialplan ISTP originating (incoming) SIP voice call
-- dialplan ISTP termination (outgoing) SIP voice call
-- AutoBan, a built in intrusion detection and prevention system
+- [PrivateDial](src/privatedial/README.md), an easily customized asterisk configuration
+- [WebSMS](srs/websms/README.md), send and receive Instant Messages, SMS over HTTP
+- [AutoBan](src/autoban/README.md), a built in intrusion detection and prevention system
 - Alpine Linux
 
 ## Tags
@@ -30,7 +26,7 @@ used. In addition to the three number version number you can use two or
 one number versions numbers, which refers to the latest version of the 
 sub series. The tag `latest` references the build based on the latest commit to the repository.
 
-The `mlan/asterik` repository contains a multi staged built. You select which build using the appropriate tag from `mini`, `base`, `full` and `xtra`. The image `mini` only contain Asterisk.
+The `mlan/asterisk` repository contains a multi staged built. You select which build using the appropriate tag from `mini`, `base`, `full` and `xtra`. The image `mini` only contain Asterisk.
 To exemplify the usage of the tags, lets assume that the latest version is `1.0.0`. In this case `latest`, `1.0.0`, `1.0`, `1`, `full`, `full-1.0.0`, `full-1.0` and `full-1` all identify the same image.
 
 # Usage
@@ -84,6 +80,7 @@ services:
     ports:
       - "80:80"
       - "5060:5060/udp"
+      - "5060-5061:5060-5061"
       - "10000-10099:10000-10099/udp"
     environment:
       - SYSLOG_LEVEL=4
@@ -95,19 +92,15 @@ volumes:
 
 This repository WILL contain a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
 
-# WebSMS
-
-The [websms](src/websms/doc/websms.md) service is described [here](src/websms/doc/websms.md).
-
 ## Environment variables
 
 When you create the `mlan/asterisk` container, you can configure the services by passing one or more environment variables or arguments on the docker run command line. Once the services has been configured a lock file is created, to avoid repeating the configuration procedure when the container is restated. In the rare event that want to modify the configuration of an existing container you can override the default behavior by setting `FORCE_CONFIG` to a no-empty string.
 
 ## Configuration files
 
-Asterisk and its modules are configured using several configuration files which are typically found in `/etc/asterisk`. The `/mlan/astisk` image provides a collection of configuration files which can serve as starting point for your system. We will outline how we intend the default configuration files are structured.
+Asterisk and its modules are configured using several configuration files which are typically found in `/etc/asterisk`. The `/mlan/asterisk` image provides a collection of configuration files which can serve as starting point for your system. We will outline how we intend the default configuration files are structured.
 
-### Functional
+### Configuration files overview
 
 Some of the collection of configuration files provided does not contain any user specific data and might initially be left unmodified. These files are:
 
@@ -117,220 +110,14 @@ Some of the collection of configuration files provided does not contain any user
 | asterisk.conf    | asterisk logging, directory structure                        |
 | ccss.conf        |                                                              |
 | cli_aliases.conf | command line interface aliases convenience                   |
-| extensions.conf  | dialplan how incoming and outgoing calls and messages are handled |
+| extensions.conf  | dialplan from PrivateDial |
 | features.conf    | activation of special features                               |
 | indications.conf | dial tone local                                              |
 | logger.conf      | logfiles                                                     |
 | modules.conf     | activation of modules                                        |
 | musiconhold.conf | music on hold directory                                      |
 | pjproject.conf   | pjsip installation version                                   |
-
-### Personal
-
-| File name               | Description                                                  |
-| ----------------------- | ------------------------------------------------------------ |
-| extensions-globals.conf | Defines SIP trunk endpoint                                   |
-| minivm.conf             | Define mail sever URL and authentication credentials which voice mail email notifications will be sent |
-| pjsip.conf              | Defines SIP transport, protocol, port, host URL              |
-| pjsip_wizard.conf       | Defines endpoints, soft-phones, users, sip trunk             |
-| rtp.conf                | Define RTP port range                                        |
-| sms.conf                | Define HTTP SMS, incoming and outgoing                       |
-
-### `pjsip_wizard.conf` soft-phones and trunks
-
-### `extensions-local.conf ` sms termination
-
-### `pjsip.conf`, `rtp.conf` network
-
-### `minivm.conf` voice-mail
-
-#### `pjsip-local.conf`
-
-```ini
-;-------------------------------- GLOBAL ---------------------------------------
-
-[global]
-type = global
-user_agent = Platform PBX
-
-;-------------------------------- TRANSPORTS -----------------------------------
-
-[tpl_wan](!)
-type = transport
-bind = 0.0.0.0:5060
-cos = 3
-domain = example.com
-external_media_address = example.com
-external_signaling_address = example.com
-tos = cs3
-
-[udp](tpl_wan)
-type = transport
-protocol = udp
-
-[tcp](tpl_wan)
-type = transport
-protocol = tcp
-
-[tls](tpl_wan)
-type = transport
-bind = 0.0.0.0:5061
-cert_file = /etc/ssl/asterisk/asterisk.cert.pem
-priv_key_file = /etc/ssl/asterisk/asterisk.priv_key.pem
-protocol = tls
-```
-
-#### `extensions-local.conf`
-
-```ini
-;-------------------------------- globals --------------------------------------
-; include file providing dialing texting options used in context globals
-;
-;-------------------------------- dialing
-[globals]
-CONTRY_CODE = 46
-DIAL_TIMEOUT =,30
-TRUNK_ENDPOINT = trunk_example
-;-------------------------------- voice mail
-VOICEMAIL_TEMPLATE =,en_US_email
-VOICEMAIL_RECGAINDB =,g(12)
-
-;-------------------------------- entries --------------------------------------
-; Calls enter the dialplan in one of these entries
-;
-[dp_entry_user_calling]
-
-[dp_entry_trunk_calling]
-
-[dp_entry_user_texting]
-
-[dp_entry_trunk_texting]
-
-[dp_entry_channel_open]
-```
-
-#### `pjsip_wizard.conf`
-
-```ini
-;-------------------------------- TEMPLATES ------------------------------------
-
-[tpl_qos](!)
-type = wizard
-endpoint/cos_audio = 5
-endpoint/cos_video = 4
-endpoint/tos_audio = ef
-endpoint/tos_video = af41
-
-[tpl_nat](!)
-type = wizard
-endpoint/direct_media = no
-endpoint/force_rport = yes
-endpoint/rtp_symmetric = yes
-
-[tpl_sdes](!)
-type = wizard
-endpoint/media_encryption_optimistic = yes
-endpoint/media_encryption = sdes
-
-[tpl_trunk](!,tpl_nat,tpl_qos)
-type = wizard
-transport = udp
-endpoint/context = dp_entry_trunk_calling
-endpoint/allow = !all,ulaw
-endpoint/allow_subscribe = no
-aor/qualify_frequency = 60
-
-[tpl_trunkout](!,tpl_trunk)
-type = wizard
-sends_auth = yes
-
-[tpl_trunkin](!,tpl_trunk)
-type = wizard
-accepts_auth = yes
-
-[tpl_softphone](!,tpl_nat,tpl_qos,tpl_sdes)
-type = wizard
-accepts_auth = yes
-accepts_registrations = yes
-has_hint = yes
-hint_context = dp_lookup_user
-aor/max_contacts = 10
-aor/minimum_expiration = 120
-aor/qualify_frequency = 60
-aor/remove_existing = yes
-endpoint/allow = !all,ulaw,gsm,g722,speex,h263p,h263,h264
-endpoint/allow_subscribe = yes
-endpoint/context = dp_entry_user_calling
-endpoint/from_domain = example.com
-endpoint/language = en
-endpoint/message_context = dp_entry_user_texting
-endpoint/subscribe_context = dp_lookup_user
-
-;-------------------------------- SIP ITSP -------------------------------------
-
-[trunk_example](tpl_trunkout)
-remote_hosts = host.itsp.com
-outbound_auth/username = user
-outbound_auth/password = password
-
-;-------------------------------- SIP USERS ------------------------------------
-
-[john.doe](tpl_softphone)
-hint_exten = +12025550160
-endpoint/callerid = John Doe <+12025550160>
-endpoint/mailboxes = john.doe@example.com
-endpoint/from_user = +12025550160
-inbound_auth/username = john.doe
-inbound_auth/password = password
-
-[jane.doe](tpl_softphone)
-hint_exten = +12025550183
-endpoint/callerid = Jane Doe <+12025550183>
-endpoint/mailboxes = jane.doe@example.com
-endpoint/from_user = +12025550183
-inbound_auth/username = jane.doe
-inbound_auth/password = password
-```
-
-#### `rtp.conf`
-
-```ini
-[general]
-; RTP start and RTP end configure start and end addresses
-; docker will stall if we open a large range of ports, since it runs a
-; a proxy process of each exposed port
-rtpstart = 10000
-rtpend   = 10099
-;
-; Strict RTP protection will drop packets that have passed NAT. Disable to allow
-; remote endpoints connected to LANs.
-;
-strictrtp = no
-```
-
-#### `minivm.conf`
-
-```ini
-[general]
-;  DESCRIPTION
-;    This script simplifies smtps connections for sendmail
-;  USAGE
-;    minivm-send -H <host:port> [OPTIONS] < message
-;  OPTIONS
-;    -e                 Also send log messages to stdout
-;    -f <from addr>     For use in MAIL FROM
-;    -H <host:port>     Mail host/ip and port
-;    -h                 Print this text
-;    -P <protocol>      Choose from: smtp, smtps, tls, starttls
-;    -p <password>      Mail host autentication clear text password
-;    -u <username>      Mail host autentication username
-;
-mailcmd = minivm-send -H mx.example.com:587 -P starttls -u username -p password -f voicemail-noreply@example.com
-
-...
-```
-
-
+| rtp.conf         | Define RTP port range                                        |
 
 ## Persistent storage
 
@@ -397,7 +184,7 @@ The host name need to be set in three files:
 
 [Transport Layer Security](http://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS) provides encryption for call signaling. A excellent guide for setting up TLS between Asterisk and a SIP client, involving creating key files, modifying Asterisk's SIP configuration to enable TLS, creating a SIP endpoint/user that's capable of TLS, and modifying the SIP client to connect  to Asterisk over TLS, can be found here [Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial). 
 
-The "home-dial" configuration is already set up to provide both UDP and TCP. TLS and SDES SRTP are also prepared, but a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed for their activation. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key will automatically be generated. `TLS_KEYBITS=2048`, `TLS_CERTDAYS=30`.
+The PrivateDial configuration is already set up to provide both UDP and TCP. TLS and SDES SRTP are also prepared, but a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed for their activation. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key will automatically be generated. `TLS_KEYBITS=2048`, `TLS_CERTDAYS=30`.
 
 There is also a mechanism to use ACME lets encrypt certificates.
 
@@ -418,6 +205,18 @@ Please note that, relying on the the docker-proxy to map non-standard port to st
 
 It’s recommended that the minimum strength of a password used in a SIP digests are at least 8 characters long, preferably 10 characters, and have characters that include lower and upper case alphabetic, a number and a non-alphabetic, non-numeric ASCII character, see [SIP Password Security - How much is yours worth?](https://www.sipsorcery.com/mainsite/Help/SIPPasswordSecurity).
 
-# AutoBan
+# Add-ons
 
-[AutoBan](src/autoban/doc/autoban.md) is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. It is described [here](src/autoban/doc/autoban.md).
+The `mlan/asterisk` repository contains add-ons that utilizes and extends the already impressive capabilities of Asterisk.
+
+## PrivateDial
+
+[PrivateDial](src/privatedial/README.md), an easily customized asterisk configuration
+
+## AutoBan
+
+[AutoBan](src/autoban/README.md) is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. It is described [here](src/autoban/doc/autoban.md).
+
+## WebSMS
+
+The [websms](src/websms/README.md) service is described [here](src/websms/doc/websms.md).

@@ -4,6 +4,12 @@ The [SIP](wikipedia.org/wiki/Session_Initiation_Protocol) includes the [SIMPLE](
 
 ## Configuration
 
+### Configuration files overview
+
+| File name        | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| websms.conf      | Define HTTP SMS, incoming and outgoing                       |
+
 Most ITSP requires outgoing authentication and some accept outgoing  authentication.  
 
 Both the SMS receiving service and the SMS sending scripts are configured in the file `websms.conf`

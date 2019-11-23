@@ -1,11 +1,5 @@
 # Road map
 
-## Signaling Security
-
-- SIP message traffic via TLS
-- SDES-SRTP
-[Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial)
-
 ## Dial plan
 
 ## Documentation
@@ -26,8 +20,13 @@ Perhaps use separate files for Autoban?
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
 
 If autoban.conf does not have an `[nftables]` section we get the following warning
-autoban[43]: WARNING[8]: autoban.class.inc:55: Undefined index: nftables.
-autoban[43]: WARNING[2]: autoban.class.inc:55: array_merge(): Expected parameter 2 to be an array, null given.
+autoban.class.inc:55: Undefined index: nftables.
+autoban.class.inc:55: array_merge(): Expected parameter 2 to be an array, null given.
+
+BUG! Happens if we dont use persistent storage
+autoban.class.inc:250: array_merge(): Expected parameter 1 to be an array, null given.
+autoban.class.inc:251: implode(): Invalid arguments passed.
+autoban.class.inc:253: exec(): Cannot execute a blank command.
 
 
 ## WebSMS

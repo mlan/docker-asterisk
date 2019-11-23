@@ -16,7 +16,7 @@
  longer.
 */
 class Autoban {
-	private const DEFAULT_CONF_FILE = '/etc/asterisk/nft.conf';
+	private const DEFAULT_CONF_FILE = '/etc/asterisk/autoban.conf';
 	public const DEFAULT_CONF_VALS = [
 		'enabled'    => true,
 		'maxcount'   => 10,
@@ -49,10 +49,12 @@ class Autoban {
 		$this->config['nftables'] = self::DEFAULT_NFT_VALS;
 		if (file_exists($config) === true) {
 			$config_ini = parse_ini_file($config,true);
-			$this->config['autoban'] = array_merge($this->config['autoban'],
-				$config_ini['autoban']);
-			$this->config['nftables'] = array_merge($this->config['nftables'],
-				$config_ini['nftables']);
+			if (!empty($config_ini['autoban']))
+				$this->config['autoban'] = array_merge($this->config['autoban'],
+					$config_ini['autoban']);
+			if (!empty($config_ini['nftables']))
+				$this->config['nftables'] = array_merge($this->config['nftables'],
+					$config_ini['nftables']);
 		} else {
 			$this->config['autoban']['enabled'] = false;
 		}

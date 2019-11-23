@@ -1,3 +1,8 @@
+# 0.3.1
+
+- [autoban](src/autoban) Now don't crash if autoban.conf does not have both an `[autoban]` and an `[nftables]` section.
+- [asterisk](src/asterisk) Added Networking section in README.md.
+
 # 0.3.0
 
 - [acme](src/acme) New support for [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using [Traefik](https://traefik.io/) using `ACME_FILE=/acme/acme.json`.

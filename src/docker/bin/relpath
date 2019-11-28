@@ -1,0 +1,21 @@
+#!/bin/sh
+
+relpath() {
+	there="$1"
+	here="$(dirname $2)"
+	root=""
+	if [ ! -z $(echo "$there" | grep "^$here") ]; then
+		root="./"
+	else while [ -z $(echo "$there" | grep "^$here") ]; do
+		here=${here%/*}
+		root=${root}../
+		done
+	fi
+	echo $root$(echo "$there" | sed "s|^$here/||g")
+}
+
+#
+# run
+#
+
+relpath "$@"

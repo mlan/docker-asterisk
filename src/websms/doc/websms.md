@@ -10,7 +10,7 @@ The [SIP](wikipedia.org/wiki/Session_Initiation_Protocol) includes the [SIMPLE](
 | ---------------- | ------------------------------------------------------------ |
 | websms.conf      | Define HTTP SMS, incoming and outgoing                       |
 
-Most ITSP requires outgoing authentication and some accept outgoing  authentication.  
+Most ITSP requires outgoing authentication and some accept outgoing authentication.
 
 Both the SMS receiving service and the SMS sending scripts are configured in the file `websms.conf`
 
@@ -56,7 +56,9 @@ channel_context = default ;dialplan context to answer the call, ie set up the ch
 context         = default ;dialplan context to handle the sms
 priority        = 1       ;dialplan priority to handle the sms
 ```
+
 # Implementation
+
 ## websms
 The websms PHP script takes command line arguments and generates a (curl) HTTP
 request to the ITSP web API which will send SMS.

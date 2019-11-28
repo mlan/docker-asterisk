@@ -32,5 +32,6 @@ fi
 nft_file=$DOCKER_NFT_DIR/$DOCKER_NTF_FILE
 if [ -f "$nft_file" ]; then
 	printf "entrypoint[$$]: INFO:$(basename $0): nftables importing $nft_file.\n"
+	nft flush ruleset
 	nft -f ${nft_file}
 fi

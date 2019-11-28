@@ -112,7 +112,7 @@ RUN	apk --no-cache --update add \
 	"crond -f -c /etc/crontabs" \
 	"-q asterisk -pf" \
 	"-n websmsd php -S 0.0.0.0:80 -t $DOCKER_PHP_DIR websmsd.php" \
-	"$DOCKER_PHP_DIR/autoban.php" \
+	"$DOCKER_PHP_DIR/autoband.php" \
 	&& mkdir -p /var/spool/asterisk/staging
 
 #

@@ -6,6 +6,10 @@ Needed. :)
 
 Start with describing the seeding procedure(s).
 
+## PrivateDial
+
+- Note, Presence is only supported for Sangama/Digium phones, not for softphones.
+
 ## Music on hold
 
 - Script that converts sound files to wav 8000 Hz mono

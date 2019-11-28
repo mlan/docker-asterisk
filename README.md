@@ -75,8 +75,6 @@ services:
     cap_add:
       - net_admin
       - net_raw
-    networks:
-      - proxy
     ports:
       - "80:80"
       - "5060:5060/udp"

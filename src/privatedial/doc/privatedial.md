@@ -1,8 +1,8 @@
 # PrivateDial
 
-PrivateDial is an easily customized asterisk configuration. It is tailored to for private use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
+PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to for private use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
 
-It uses the PJSIP channel driver, and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
+It uses the [PJSIP channel driver](https://wiki.asterisk.org/wiki/display/AST/Configuring+res_pjsip), and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
 
 The underlying design idea is to separate the dial plan function form the user data. To achieve this all user specific data has been pushed out from the main file `extensions.conf`.
 
@@ -17,7 +17,7 @@ Feature list follows below
 
 ## Configuration files
 
-Asterisk and its modules are configured using several configuration files which are typically found in `/etc/asterisk`. The `/mlan/asterisk` image provides a collection of configuration files which can serve as starting point for your system. We will outline how we intend the default configuration files are structured.
+The suite of Asterisk configuration files making up PrivateDial is summarized below.
 
 ### Configuration files overview
 
@@ -34,7 +34,7 @@ Asterisk and its modules are configured using several configuration files which 
 
 ### SIP Trunk
 
-PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_wizard.conf` . For convenience the templates, `tpl_trunk`, `tpl_trunkout` and `tpl_trunkin` has been defined.
+PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_wizard.conf` . For convenience the templates, `tpl_trunk`, `tpl_trunkout` and `tpl_trunkin` has been defined.
 
 Add an endpoint entry in `pjsip_wizard.conf` based on the setup instructions provided by your trunk provider. This entry also hold your authentication credentials.
 

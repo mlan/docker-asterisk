@@ -72,7 +72,7 @@ class Autoban {
 
 	@param  string  $ip  eg "23.94.144.50"
 	@return boolean success
-	--------------------------------------------------------------------------*/
+	*/
 	public function book($ip) {
 		// if not already in jail but on parole or watch count > maxcount
 		// determine sentence and increment jail and parole counters
@@ -123,7 +123,7 @@ class Autoban {
 
 	@param  mixed   $time integer time in seconds or boolean false
 	@return integer time + 1
-	--------------------------------------------------------------------------*/
+	*/
 	private function incrementwatch($time) {
 		if($time === false) {
 			return $this->configsec('watchtime') + 1;
@@ -134,7 +134,7 @@ class Autoban {
 	/*--------------------------------------------------------------------------
 	@param  integer $time integer time in seconds
 	@return integer count
-	--------------------------------------------------------------------------*/
+	*/
 	private function countwatch($time) {
 		return $time - $this->configsec('watchtime');
 	}
@@ -147,7 +147,7 @@ class Autoban {
 	@param  mixed $jailtime integer time in seconds or boolean false
 	@param  mixed $paroletime integer time in seconds or boolean false
 	@return mixed integer sentence time in seconds or boolean false
-	--------------------------------------------------------------------------*/
+	*/
 	private function jailsec($watchtime,$jailtime,$paroletime) {
 		if ($jailtime !== false) return false;
 		if ($paroletime !== false) {
@@ -167,7 +167,7 @@ class Autoban {
 
 	@param  mixed &$sentence integer time in seconds or boolean false
 	@return mixed integer probation time in seconds or boolean false
-	--------------------------------------------------------------------------*/
+	*/
 	private function parolesec(&$sentence) {
 		if ($sentence === false) return false;
 		$watchtime = $this->configsec('watchtime');
@@ -186,7 +186,7 @@ class Autoban {
 	@param  string $ip  eg "23.94.144.50"
 	@param  mixed  $timeout int seconds eg 1200 or boolean false
 	@return mixed  exec return string or boolean false if unable to add element
-	--------------------------------------------------------------------------*/
+	*/
 	public function add($set,$ip,$timeout) {
 		if ($timeout === false) return true;
 		$args = ['sub'=>'add element','set'=>$set,'pre'=>'{ ','val'=>$ip,
@@ -200,7 +200,7 @@ class Autoban {
 	@param  string $set eg "jail"
 	@param  string $ip  eg "23.94.144.50"
 	@return mixed  exec return string or boolean false if unable to del element
-	--------------------------------------------------------------------------*/
+	*/
 	public function del($set,$ip) {
 		$args = ['sub'=>'delete element','set'=>$set,'pre'=>'{ ','val'=>$ip,
 			'pst'=>' }'];
@@ -212,7 +212,7 @@ class Autoban {
 	@param  string $set eg "jail"
 	@param  string $ip  eg "23.94.144.50"
 	@return mixed  time integer seconds or boolean false
-	--------------------------------------------------------------------------*/
+	*/
 	public function timeoutsec($set,$ip) {
 		if (($this->countelements($set) !== false) &&
 			isset($this->timeout[$set][$ip])) {
@@ -227,7 +227,7 @@ class Autoban {
 
 	@param  string $set eg "jail"
 	@return mixed  count integer elements or boolean false
-	--------------------------------------------------------------------------*/
+	*/
 	public function countelements($set) {
 		$args = ['sub'=>'list set','set'=>$set];
 		$ret = $this->exec($args);
@@ -247,7 +247,7 @@ class Autoban {
 	/*--------------------------------------------------------------------------
 	@param  array  $args NFT cli arguments eg ['sub'=>'list set','set'=>'jail']
 	@return mixed  NFT return string or boolean false if error status
-	--------------------------------------------------------------------------*/
+	*/
 	private function exec($args) {
 		$exec_array = array_merge($this->config['nftables'],$args);
 		$exec_string = implode(' ',$exec_array);
@@ -264,7 +264,7 @@ class Autoban {
 	/*--------------------------------------------------------------------------
 	@param  string $time eg, "1d9h40m1s"
 	@return mixed  $seconds int seconds or boolean false
-	--------------------------------------------------------------------------*/
+	*/
 	public function seconds($time) {
 		preg_match_all('/(\d+)([dhms])/',$time,$matches);
 		if (empty($matches[0])) return false;
@@ -278,7 +278,7 @@ class Autoban {
 	/*--------------------------------------------------------------------------
 	@param  integer $seconds
 	@return string  $time eg, "1d9h40m1s"
-	--------------------------------------------------------------------------*/
+	*/
 	public function timestr($seconds) {
 		$time = "";
 		foreach (self::TIMEUNIT as $unit => $scale) {
@@ -294,7 +294,7 @@ class Autoban {
 	Convert config times in sting format to seconds eg "20m" to 1200
 	@param  string  $param eg, "watchtime"
 	@return integer $seconds
-	--------------------------------------------------------------------------*/
+	*/
 	public function configsec($param) {
 		$time = $this->config['autoban'][$param];
 		if(!is_numeric($time)) $time = $this->seconds($time);
@@ -305,7 +305,7 @@ class Autoban {
 	@param  mixed   $error eg 404
 	@param  integer $level eg E_USER_WARNING
 	@return void
-	--------------------------------------------------------------------------*/
+	*/
 	public function log($message, $error = [], $level = E_USER_NOTICE) {
 		if (isset($error[0])) {
 			$message = $message.' error: '.$error[0];
@@ -321,13 +321,13 @@ class Autoban {
 	PLACEHOLDER
 	print table with headers: IP WATCH JAIL
 	@return void
-	--------------------------------------------------------------------------*/
+	*/
 	public function show() {
 	}
 	/*--------------------------------------------------------------------------
 	@param  mixed $param
 	@return void
-	--------------------------------------------------------------------------*/
+	*/
 	public function debug($data, $debug = false) {
 		if($debug || $this->debug) {
 			var_dump($data);

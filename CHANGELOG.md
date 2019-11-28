@@ -3,6 +3,8 @@
 - [privatedial](src/privatedial) Now keep main dial-plan conf files separate.
 - [privatedial](src/privatedial) Start to document the PrivateDial dial-plan.
 - [autoban](src/autoban) Now don't crash if autoban.conf does not have both an `[autoban]` and an `[nftables]` section.
+- [autoban](src/autoban) Renamed autoband.php (it was autoban.php)
+- [autoban](src/autoban) Updated documentation.
 - [asterisk](src/asterisk) Added Networking section in README.md.
 
 # 0.3.0

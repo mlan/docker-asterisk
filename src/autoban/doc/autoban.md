@@ -8,7 +8,7 @@ Asterisk generates security events which AutoBan listens to on the AMI interface
 
 When the `jailtime` expires packages are again accepted from the source IP address, but for an additional `watchtime` seconds this address is on "parole". Should a security event be detected (from this address) during the parole period it is immediately blocked again, and for a progressively longer time. This progression is configured by `repeatmult`, which determines how many times longer the address is blocked. If no security event is detected from this address during its parole time the IP is no longer being watched.
 
-To illustrate, first assume `jailtime=20m` and `repeatmult=6`, then the IP is blocked 20min the first time, 2h the second, 12h the third, 3days the forth and so on.
+To illustrate, first assume `jailtime=20m` and `repeatmult=6`, then the IP is blocked 20 minutes the first time, 2 hours the second, 12 hours the third, 3 days the forth and so on.
 
 ## Configuration
 
@@ -96,16 +96,41 @@ The sets; watch, jail and parole use timeout to keep track of how long the IP ad
 
 If you want to permanently whitelist or blacklist source IP addresses, you can add them to the sets; whitelist or blacklist. Packages from source IP addresses in the set whitelist will always be accepted, whereas they will always be dropped if they are in the set blacklist.
 
-## Command line utility, autoban
+## Command line utility, `autoban`
 
-Not implemented yet.
+In addition to the AutoBan daemon, `autoband.php` that listens to AMI events and controls the Linux kernel firewall, there is a shell utility `autoban`, that you can use within the container, that helps with managing the NFT state. It can add, delete, white list and black list IP addresses for example.
 
-In addition to the AutoBan daemon, `autoband.php` that listens to AMI events and controls the Linux kernel firewall, there is a command line tool `autoban.php` that you can use to do some house keeping with. the tool can add, remove, white list and black list IP addresses for example.
-
-You can get some help by, from within the container, typing:
+You can see the `autoban` help message by, from within the container, typing:
 
 ```bash
-autoban -h
+autoban help
+
+  DESCRIPTION
+    Shows an overview of the NFT state, which autoban uses to track IP adresses.
+    Addresses can also be added or deleted.
+
+  USAGE
+    autoban [SUBCOMMAND]
+      It is sufficeint to only give the first character of the subcommand.
+      If no subcommand is given use "show".
+
+  SUBCOMMAND
+    blacklist <saddr>    Add <saddr> to the blacklist set
+    blacklist <set>      Add all saddr in <set> to the blacklist set
+    delete    <saddr>    Delete <saddr> from all sets
+    delete    all        Delete all saddr from all sets
+    help                 Print this text
+    jail      <saddr>    Add <saddr> to the jail and parole sets
+    jail      <set>      Add all saddr in <set> to the jail and parole sets
+    list                 List element arrays, used for debugging
+    show                 Show overview of the NFT state
+    whitelist <saddr>    Add <saddr> to the whitelist set
+    whitelist <set>      Add all saddr in <set> to the whitelist set
+
+  EXAMPLES
+    autoban blacklist 77.247.110.24 jail 62.210.151.21
+    autoban d all
+
 ```
 
 You can watch the status of the `nftables` firewall by, from within the container, typing:
@@ -113,4 +138,3 @@ You can watch the status of the `nftables` firewall by, from within the containe
 ```bash
 nft list ruleset
 ```
-

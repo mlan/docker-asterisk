@@ -24,11 +24,10 @@ class Autoban extends Nft {
 		'maxcount'   => 10,
 		'watchtime'  => '20m',
 		'jailtime'   => '20m',
-		'repeatmult' => 6
+		'repeatmult' => 6,
 	];
 	private const TIME_MAXSEC = 99999999;
 	public $config;
-#	private $timeout = [ 'watch' => [], 'jail' => [], 'parole' => [] ];
 	public $debug = false;
 	public function __construct($config = null, array $optconfig = []) {
 		parent::__construct();
@@ -172,7 +171,7 @@ class Autoban extends Nft {
 	@return mixed  time integer seconds or boolean false
 	*/
 	public function timeoutsec($set,$ip) {
-		return $this->str2sec(get_timeout($set,$ip));
+		return $this->str2sec($this->get_timeout($set,$ip));
 	}
 	/*--------------------------------------------------------------------------
 	@param  string $set eg "jail"

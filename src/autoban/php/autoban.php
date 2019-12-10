@@ -20,7 +20,8 @@ $HELP_MESSAGE = <<<HELP_MESSAGE
     delete    <saddr>    Delete <saddr> from all sets
     delete    all        Delete all saddr from all sets
     help                 Print this text
-    jail      <saddr>    Add <saddr> to the watch, jail and parole sets
+    jail      <saddr>    Add <saddr> to the jail and parole sets
+    jail      <set>      Add all saddr in <set> to the jail and parole sets
     list                 List element arrays, used for debugging
     show                 Show overview of the NFT state
     whitelist <saddr>    Add <saddr> to the whitelist set

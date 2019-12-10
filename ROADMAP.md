@@ -4,7 +4,9 @@
 
 Needed. :)
 
-Start with describing the seeding procedure(s).
+- websms.md
+- privatedial.md
+- README.md
 
 ## PrivateDial
 
@@ -16,8 +18,6 @@ Start with describing the seeding procedure(s).
 
 ## AutoBan
 
-- Write to autoban.nft every time we get a security event and updates NFT, so that its state is always preserved.
-- Write shell utility to add/delete IPs from `nft` state. Use shell utility name `autoban` and rename service to `autoband.php`.
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
 
 ## WebSMS
@@ -26,4 +26,9 @@ Start with describing the seeding procedure(s).
 
 ## Asterisk modules
 
-check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
+- check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
+
+## Create demo
+
+- docker-compose.yml
+- Makefile, move test targets here

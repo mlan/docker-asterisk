@@ -5,7 +5,7 @@
 class Nft {
 	private const NFT_SYNTAX = [
 		'cmd'    => 'nft',
-		'opt'    => null,
+		'opt'    => '--stateless',
 		'sub'    => null,
 		'family' => 'inet',
 		'table'  => 'autoban',
@@ -60,11 +60,11 @@ class Nft {
 	/*--------------------------------------------------------------------------
 	Get array of all addr in set $set.
 	@param  string $set eg "jail"
-	@return array  [string addr => string time, ...] or boolean false
+	@return array  [string addr => string time, ...] or [] is set is empty
 	*/
 	public function list($set) {
 		$ret = $this->list_addr($set);
-		if ($ret === false) return false;
+		if ($ret === false) return [];
 		return $this->array_elem($ret);
 	}
 	/*--------------------------------------------------------------------------
@@ -75,7 +75,8 @@ class Nft {
 	*/
 	public function get_timeout($set,$addr) {
 		$timeout = $this->array_elem($this->get_addr($set,$addr));
-		return array_values($timeout)[0];
+		if (!empty($timeout)) return array_values($timeout)[0];
+		return false;
 	}
 	/*--------------------------------------------------------------------------
 	Add element $addr to NFT set $set with timeout $timeout seconds
@@ -129,7 +130,7 @@ class Nft {
 	@return mixed  exec return string or boolean false if unable to del element
 	*/
 	public function list_addr($set) {
-		$args = ['sub'=>'list set','set'=>$set,'opt'=>'--stateless'];
+		$args = ['sub'=>'list set','set'=>$set];
 		$ret = $this->exec($args);
 		return $ret;
 	}
@@ -138,13 +139,13 @@ class Nft {
 	We stuff this into $this->timeout[$set] = [string addr => string time, ...].
 
 	@param  array  $ret strings return from calling NFT
-	@return array  [string addr => string time, ...] or boolean false
+	@return array  [string addr => string time, ...] or [] is set is empty
 	*/
 	public function array_elem($ret) {
-		if ($ret === false) return false;
+		if ($ret === false) return [];
 		preg_match('/flags timeout/', implode($ret), $hastimeout);
 		preg_match('/elements = {([^}]+)}/', implode($ret), $matches);
-		if (empty($matches[1])) return false;
+		if (empty($matches[1])) return [];
 		$elements = preg_split('/,/', $matches[1]);
 		$timeout = [];
 		foreach ($elements as $element) {
@@ -162,8 +163,7 @@ class Nft {
 	@return mixed  state string or boolean false if unsuccessful
 	*/
 	public function save() {
-		$args = ['sub'=>'list ruleset','opt'=>'--stateless',
-			'family'=>null, 'table'=>null];
+		$args = ['sub'=>'list ruleset', 'family'=>null, 'table'=>null];
 		$ret = $this->exec($args);
 		if ($ret === false) return false;
 		if (file_put_contents($this->nft_statefile,implode(PHP_EOL, $ret))

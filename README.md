@@ -1,11 +1,12 @@
 # The `mlan/asterisk` repository
 
 ![travis-ci test](https://img.shields.io/travis/mlan/docker-asterisk.svg?label=build&style=popout-square&logo=travis)
+![docker build](https://img.shields.io/docker/cloud/build/mlan/asterisk.svg?label=build&style=popout-square&logo=docker)
 ![image size](https://img.shields.io/microbadger/image-size/mlan/asterisk.svg?label=size&style=popout-square&logo=docker)
 ![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=popout-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=popout-square&logo=docker)
 
-THIS DOCUMENT IS UNDER DEVELOPMENT AND CONTAIN ERRORS
+THIS DOCUMENT IS UNDER DEVELOPMENT.
 
 This (non official) repository provides dockerized PBX.
 
@@ -66,7 +67,7 @@ make test-down
 An example of how to configure an VoIP SIP server using docker compose is given below.
 
 ```yaml
-version: '3.7'
+version: '3'
 
 services:
   tele:
@@ -91,6 +92,8 @@ volumes:
 This repository WILL contain a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
 
 ## Environment variables
+
+FIX THIS SECTION!
 
 When you create the `mlan/asterisk` container, you can configure the services by passing one or more environment variables or arguments on the docker run command line. Once the services has been configured a lock file is created, to avoid repeating the configuration procedure when the container is restated. In the rare event that want to modify the configuration of an existing container you can override the default behavior by setting `FORCE_CONFIG` to a no-empty string.
 
@@ -129,7 +132,7 @@ docker run -d --name pbx-mta -v pbx-mta:/srv -p 127.0.0.1:25:25 mlan/asterisk
 
 ## Initialization procedure
 
-The `mlan/asterisk` image is compiled without any configuration files. When a container is created using the `mlan/asterisk` image default configuration files are copied to the configuration directory `etc/asteroisk` if it is found to be empty. This behavior is intended to support the following initialization procedures.
+The `mlan/asterisk` image is compiled without any configuration files. When a container is created using the `mlan/asterisk` image default configuration files are copied to the configuration directory `etc/asterisk` if it is found to be empty. This behavior is intended to support the following initialization procedures.
 
 In scenarios where you already have a collection of configuration files on a docker volume, start/create a `mlan/asterisk` container with this volume mounted. At startup these configuration files are recognized and left untouched and asterisk is stated. The same will happen when the container is restarted. 
 
@@ -211,7 +214,7 @@ The `mlan/asterisk` repository contains add-ons that utilizes and extends the al
 
 ## PrivateDial
 
-[PrivateDial](src/privatedial/README.md), an easily customized asterisk configuration
+[PrivateDial](src/privatedial/README.md), an easily customized asterisk configuration. It is described [here](src/privatedial/doc/privatedial.md).
 
 ## AutoBan
 

@@ -5,6 +5,7 @@
 - [autoban](src/autoban) Updated documentation.
 - [autoban](src/autoban) Now write to autoban.nft every time we get a security event and update NFT, so that its state is always preserved.
 - [autoban](src/autoban) Code base now refactored and split into autoban.class.inc and nft.class.inc
+- [websms](src/websms) Updated documentation.
 
 # 0.4.0
 

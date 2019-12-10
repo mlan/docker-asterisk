@@ -21,6 +21,18 @@
 */
 class Websms {
 	const DEFAULT_CONF_FILE = '/etc/asterisk/websms.conf';
+	const DEFAULT_CONF_VALS = [
+		'host'            => "",
+		'path'            => "",
+		'key_to'          => "To",
+		'key_from'        => "From",
+		'key_body'        => "Body",
+		'auth_user'       => "",
+		'auth_passwd'     => "",
+		'auth_method'     => "basic",
+		'response_check'  => null,
+		'number_format'   => "",
+	];
 	const DEFAULT_CONFD_VALS = [
 		'key_to'          => "To",
 		'key_from'        => "From",
@@ -31,18 +43,6 @@ class Websms {
 		'permit_addr'     => null,
 		'proxy_addr'      => "172.16.0.0/12",
 		'proxy_header'    => "HTTP_X_FORWARDED_FOR",
-	];
-	const DEFAULT_CONF_VALS = [
-		'host'            => "https://api.example.com",
-		'path'            => "/sms/send/",
-		'key_to'          => "To",
-		'key_from'        => "From",
-		'key_body'        => "Body",
-		'auth_user'       => "usename",
-		'auth_passwd'     => "passwd",
-		'auth_method'     => "basic",
-		'response_check'  => null,
-		'number_format'   => "",
 	];
 	private $config;
 	private $message;

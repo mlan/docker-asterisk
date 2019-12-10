@@ -8,27 +8,27 @@
 ;
 ;
 ;[websms]
-;host            = "https://api.example.com" ;protocol and host name to send sms to
-;path            = "/sms/send/" ;complete url will be <host><path>
-;key_to          = "To"   ;http POST key name holding sms destination phone number
-;key_from        = "From" ;http POST key name holding sms orignating phone number
-;key_body        = "Body" ;http POST key name holding the sms message
-;auth_user       = "usename" ;autentcion username/key
-;auth_passwd     = "passwd"  ;authentication password/secret
-;auth_method     = "basic"   ;eg "zadarma" method to authenticate sms request
-;response_check  = ""        ;http POST key=value to check, eg "status=success"
-;number_format   = ""        ;eg "omit+" omit leading "+" in phone numbers
+;host            = ""      ;protocol and host name to send sms to
+;path            = ""      ;complete url will be <host><path>
+;key_to          = "To"    ;http POST key name holding sms destination phone number
+;key_from        = "From"  ;http POST key name holding sms originating phone number
+;key_body        = "Body"  ;http POST key name holding the sms message
+;auth_user       = ""      ;authentication username/key
+;auth_passwd     = ""      ;authentication password/secret
+;auth_method     = "basic" ;eg "zadarma" method to authenticate sms request
+;response_check  = ""      ;http POST key=value to check, eg "status=success"
+;number_format   = ""      ;eg "omit+" omit leading "+" in phone numbers
 ;
 ;[websmsd]
-;key_to          = "To"   ;http POST key name holding sms destination phone number
-;key_from        = "From" ;http POST key name holding sms orignating phone number
-;key_body        = "Body" ;http POST key name holding the sms message
-;key_echo        = "" ;some ITSP test that the client respond by echoing it value, eg "zd_echo"
-;key_account     = "" ;
-;report_success  = "" ;report success, eg, "<Response></Response>"
-;permit_addr     = "" ;if defined, only listed addrs are accepted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24
-;proxy_addr      = "172.16.0.0/12" ; Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-;proxy_header    = "HTTP_X_FORWARDED_FOR" ; Behind a proxy this header hold the real client IP
+;key_to          = "To"    ;http POST key name holding sms destination phone number
+;key_from        = "From"  ;http POST key name holding sms origination phone number
+;key_body        = "Body"  ;http POST key name holding the sms message
+;key_echo        = ""      ;some ITSP test that the client respond by echoing it value, eg "zd_echo"
+;key_account     = ""      ;
+;report_success  = ""      ;report success, eg, "<Response></Response>"
+;permit_addr     = ""      ;if defined, only listed addrs are accepted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24
+;proxy_addr      = "172.16.0.0/12" ;Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+;proxy_header    = "HTTP_X_FORWARDED_FOR" ;Behind a proxy this header hold the real client IP
 
 ;
 ;[astqueue]

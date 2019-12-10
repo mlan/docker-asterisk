@@ -84,6 +84,7 @@ function del($sets, $args) {
 }
 /*------------------------------------------------------------------------------
  Start code execution.
+ Scrape off command and sub-command and pass the rest of the arguments.
 */
 $subcmd=@$argv[1];
 unset($argv[0],$argv[1]);

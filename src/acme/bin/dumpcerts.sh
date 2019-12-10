@@ -58,21 +58,32 @@ case "$(uname)" in
 		;;
 esac
 
+inform() {
+	local script=$(basename $0)
+	local level=$1
+	shift
+	if [ -t 1 ]; then
+		echo "$@"
+		case $level in
+			emerg|alert|crit|err|warning) printf "\n${USAGE}" ;;
+		esac
+	else
+		if command -v logger >/dev/null; then
+			logger -t "${script}[${$}]" -p "auth.$level" "$@"
+		else
+			echo "${script}[${$}]: $@"
+		fi
+	fi
+}
+
 # Allow us to exit on a missing jq binary
 exit_jq() {
-	echo "
-You must have the binary 'jq' to use this.
-jq is available at: https://stedolan.github.io/jq/download/
-
-${USAGE}" >&2
+	inform warn "You must have the binary jq to use this."
 	exit 1
 }
 
 bad_acme() {
-	echo "
-There was a problem parsing your acme.json file.
-
-${USAGE}" >&2
+	inform warn "There was a problem parsing your acme.json file."
 	exit 2
 }
 
@@ -92,21 +103,13 @@ readonly acmefile="${1-$ACME_FILE}"
 readonly certdir="${2-$DOCKER_ACME_SSL_DIR}"
 
 if [ ! -r "${acmefile}" ]; then
-	echo "
-There was a problem reading from '${acmefile}'
-We need to read this file to explode the JSON bundle... exiting.
-
-${USAGE}" >&2
+	inform warn "There was a problem reading from (${acmefile}). We need to read this file to explode the JSON bundle... exiting."
 	exit 2
 fi
 
 
 if [ ! -d "${certdir}" ]; then
-	echo "
-Path ${certdir} does not seem to be a directory
-We need a directory in which to explode the JSON bundle... exiting.
-
-${USAGE}" >&2
+	inform warn "Path ${certdir} does not seem to be a directory. We need a directory in which to explode the JSON bundle... exiting."
 	exit 4
 fi
 
@@ -115,9 +118,7 @@ jq=$(command -v jq) || exit_jq
 priv=$(${jq} -e -r '.Account.PrivateKey' "${acmefile}") || bad_acme
 
 if [ ! -n "${priv}" ]; then
-	echo "
-There didn't seem to be a private key in ${acmefile}.
-Please ensure that there is a key in this file and try again." >&2
+	inform warn "There didn't seem to be a private key in ${acmefile}. Please ensure that there is a key in this file and try again."
 	exit 8
 fi
 
@@ -159,20 +160,24 @@ trap 'umask ${oldumask}' EXIT
 # *because* of openssl combined with the fact that it will refuse to write the
 # key if it does not parse out correctly. The other mechanisms were left as
 # comments so that the user can choose the mechanism most appropriate to them.
-printf "-----BEGIN RSA PRIVATE KEY-----\n${priv}\n-----END RSA PRIVATE KEY-----\n" \
-	| fold -w 65 | openssl rsa -inform pem -out "${pdir}/letsencrypt.key"
+printf -- \
+	"-----BEGIN RSA PRIVATE KEY-----\n%s\n-----END RSA PRIVATE KEY-----\n" \
+	${priv} | fold -w 65 | \
+	openssl rsa -inform pem -out "${pdir}/letsencrypt.key" 2>/dev/null
 
 # Process the certificates for each of the domains in acme.json
 domains=$(jq -r '.Certificates[].Domain.Main' ${acmefile}) || bad_acme
+
+inform notice "Extracting private keys and cert bundles in ${acmefile}"
+inform debug  "Extracting private key and cert bundle for domains" ${domains}
+
 for domain in $domains; do
 	# Traefik stores a cert bundle for each domain.  Within this cert
 	# bundle there is both proper the certificate and the Let's Encrypt CA
-	echo "Extracting cert bundle for ${domain}"
 	cert=$(jq -e -r --arg domain "$domain" '.Certificates[] |
 		select (.Domain.Main == $domain )| .Certificate' ${acmefile}) || bad_acme
 	echo "${cert}" | ${CMD_DECODE_BASE64} > "${cdir}/${domain}.crt"
 
-	echo "Extracting private key for ${domain}"
 	key=$(jq -e -r --arg domain "$domain" '.Certificates[] |
 		select (.Domain.Main == $domain )| .Key' ${acmefile}) || bad_acme
 	echo "${key}" | ${CMD_DECODE_BASE64} > "${pdir}/${domain}.key"

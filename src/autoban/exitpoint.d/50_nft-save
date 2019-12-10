@@ -2,18 +2,27 @@
 #
 # 50_nft-save
 #
+# Save current NFT state to file.
 #
+
 #
+# Configuration
+# Note that the templates are in /etc/nftables and the actual state file is kept
+# in /var/lib/nftables, which might be perceived to be counter intuitive.
+#
+
 DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
 DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
 DOCKER_NTF_FILE=${DOCKER_NTF_FILE-autoban.nft}
 
 #
-# Save current ntf state to file. Remove any "expires timesrt" since nfs refuse
-# to load files with them.
+# Save current NFT state to file. Omit any "expires time-string" by using
+# the option --stateless, since NFT refuse to load files with them.
 #
+
 nft_file=$DOCKER_NFT_DIR/$DOCKER_NTF_FILE
 if [ -n "$nft_file" ]; then
 	printf "entrypoint[$$]: INFO:$(basename $0): nftables saving config to $nft_file.\n"
-	nft list ruleset | sed 's/expires [[:alnum:]]*//g' > ${nft_file}
+	nft --stateless list ruleset > ${nft_file}
+#	nft list ruleset | sed 's/expires [[:alnum:]]*//g' > ${nft_file}
 fi

@@ -124,6 +124,7 @@ test-up-net:
 test-upgrade:
 #	docker cp src/*/bin/. $(CNT_NAME):/usr/local/bin
 #	docker cp src/*/entrypoint.d/. $(CNT_NAME):/etc/entrypoint.d
+	docker cp src/autoban/php/. $(CNT_NAME):/usr/share/php7
 	docker cp src/asterisk/php/. $(CNT_NAME):/usr/share/php7
 	docker cp src/websms/php/. $(CNT_NAME):/usr/share/php7
 #	docker cp dep/*/php/. $(CNT_NAME):/usr/share/php7

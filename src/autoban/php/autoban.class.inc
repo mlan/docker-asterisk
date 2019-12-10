@@ -15,7 +15,9 @@
  during the parole time the IP is immediately jailed again and now 'repeatmult'
  longer.
 */
-class Autoban {
+require_once 'nft.class.inc';
+
+class Autoban extends Nft {
 	private const DEFAULT_CONF_FILE = '/etc/asterisk/autoban.conf';
 	public const DEFAULT_CONF_VALS = [
 		'enabled'    => true,
@@ -24,37 +26,21 @@ class Autoban {
 		'jailtime'   => '20m',
 		'repeatmult' => 6
 	];
-	private const DEFAULT_NFT_VALS = [
-		'cmd'    => 'nft',
-		'sub'    => null,
-		'family' => 'inet',
-		'table'  => 'autoban',
-		'chain'  => null,
-		'set'    => null,
-		'pre'    => null,
-		'val'    => null,
-		'pst'    => null,
-		'opt'    => null
-	];
-	private const TIMEUNIT = ['d' => 86400, 'h' => 3600, 'm' => 60, 's' => 1];
-	private const MAXTIME = 99999999;
+	private const TIME_MAXSEC = 99999999;
 	public $config;
-	private $timeout = [ 'watch' => [], 'jail' => [], 'parole' => [] ];
+#	private $timeout = [ 'watch' => [], 'jail' => [], 'parole' => [] ];
 	public $debug = false;
 	public function __construct($config = null, array $optconfig = []) {
+		parent::__construct();
 		if (is_string($config) !== true) {
 			$config = self::DEFAULT_CONF_FILE;
 		}
 		$this->config['autoban'] = self::DEFAULT_CONF_VALS;
-		$this->config['nftables'] = self::DEFAULT_NFT_VALS;
 		if (file_exists($config) === true) {
 			$config_ini = parse_ini_file($config,true);
 			if (!empty($config_ini['autoban']))
 				$this->config['autoban'] = array_merge($this->config['autoban'],
 					$config_ini['autoban']);
-			if (!empty($config_ini['nftables']))
-				$this->config['nftables'] = array_merge($this->config['nftables'],
-					$config_ini['nftables']);
 		} else {
 			$this->config['autoban']['enabled'] = false;
 		}
@@ -171,42 +157,14 @@ class Autoban {
 	private function parolesec(&$sentence) {
 		if ($sentence === false) return false;
 		$watchtime = $this->configsec('watchtime');
-		if ($watchtime > 0.5*self::MAXTIME) $watchtime = 0.5*self::MAXTIME;
+		if ($watchtime > 0.5*self::TIME_MAXSEC) $watchtime = 0.5*self::TIME_MAXSEC;
 		$parole = $sentence + $watchtime;
-		if ($parole > self::MAXTIME) {
-			$parole = self::MAXTIME;
+		if ($parole > self::TIME_MAXSEC) {
+			$parole = self::TIME_MAXSEC;
 			$sentence = $parole - $watchtime;
 		}
 		$sentence = round($sentence);
 		return round($parole);
-	}
-	/*--------------------------------------------------------------------------
-	Add element $ip to NFT set $set with timeout $timeout seconds
-	@param  string $set eg "jail"
-	@param  string $ip  eg "23.94.144.50"
-	@param  mixed  $timeout int seconds eg 1200 or boolean false
-	@return mixed  exec return string or boolean false if unable to add element
-	*/
-	public function add($set,$ip,$timeout) {
-		if ($timeout === false) return true;
-		$args = ['sub'=>'add element','set'=>$set,'pre'=>'{ ','val'=>$ip,
-			'pst'=>'timeout '.$timeout.'s }'];
-		$ret = $this->exec($args);
-		if ($ret === false) return false;
-		return $ret;
-	}
-	/*--------------------------------------------------------------------------
-	Delete element $ip from NFT set $set
-	@param  string $set eg "jail"
-	@param  string $ip  eg "23.94.144.50"
-	@return mixed  exec return string or boolean false if unable to del element
-	*/
-	public function del($set,$ip) {
-		$args = ['sub'=>'delete element','set'=>$set,'pre'=>'{ ','val'=>$ip,
-			'pst'=>' }'];
-		$ret = $this->exec($args);
-		if ($ret === false) return false;
-		return $ret;
 	}
 	/*--------------------------------------------------------------------------
 	@param  string $set eg "jail"
@@ -214,81 +172,27 @@ class Autoban {
 	@return mixed  time integer seconds or boolean false
 	*/
 	public function timeoutsec($set,$ip) {
-		if (($this->countelements($set) !== false) &&
-			isset($this->timeout[$set][$ip])) {
-				return $this->seconds($this->timeout[$set][$ip]);
-		} else {
-			return false;
-		}
+		return $this->str2sec(get_timeout($set,$ip));
 	}
 	/*--------------------------------------------------------------------------
-	NFT returns elements = { 23.94.144.50 timeout 40m expires 31m8s696ms, ...}
-	We stuff this into $this->timeout[$set] = [sting addr => string time, ...].
-
 	@param  string $set eg "jail"
-	@return mixed  count integer elements or boolean false
+	@return mixed  time integer seconds or boolean false
 	*/
-	public function countelements($set) {
-		$args = ['sub'=>'list set','set'=>$set];
-		$ret = $this->exec($args);
-		if ($ret === false) return false;
-		preg_match('/elements = {([^}]+)}/', implode($ret), $matches);
-		if (empty($matches[1])) return false;
-		$elementsexpires = preg_split('/,/', $matches[1]);
-		$elements = preg_replace('/ expires .*/','',$elementsexpires);
-		$timeout = [];
-		foreach ($elements as $element) {
-			$addrntime = explode(' timeout ',$element);
-			$timeout += [trim($addrntime[0]) => trim($addrntime[1])];
+	public function configtime($set) {
+		switch ($set) {
+		case 'watch':
+			$sec = $this->configsec('watchtime');
+			break;
+		case 'jail':
+			$sec = $this->configsec('jailtime');
+			break;
+		case 'parole':
+			$sec = $this->configsec('jailtime') + $this->configsec('watchtime');
+			break;
+		default:
+			$sec = null;
 		}
-		$this->timeout[$set]=$timeout;
-		return count($timeout);
-	}
-	/*--------------------------------------------------------------------------
-	@param  array  $args NFT cli arguments eg ['sub'=>'list set','set'=>'jail']
-	@return mixed  NFT return string or boolean false if error status
-	*/
-	private function exec($args) {
-		$exec_array = array_merge($this->config['nftables'],$args);
-		$exec_string = implode(' ',$exec_array);
-		$this->debug($exec_string);
-		exec($exec_string,$return,$status);
-		if ($status === 0) {
-			return $return;
-		} else {
-			$this->log('('.$exec_array['sub'].')', $return, E_USER_WARNING);
-			$this->debug($exec_string);
-			return false;
-		}
-	}
-	/*--------------------------------------------------------------------------
-	@param  string $time eg, "1d9h40m1s"
-	@return mixed  $seconds int seconds or boolean false
-	*/
-	public function seconds($time) {
-		preg_match_all('/(\d+)([dhms])/',$time,$matches);
-		if (empty($matches[0])) return false;
-		$unitvalue = array_combine($matches[2],$matches[1]);
-		$seconds = 0;
-		foreach ($unitvalue as $unit => $value) {
-			$seconds += self::TIMEUNIT[$unit] * $value;
-		}
-		return $seconds;
-	}
-	/*--------------------------------------------------------------------------
-	@param  integer $seconds
-	@return string  $time eg, "1d9h40m1s"
-	*/
-	public function timestr($seconds) {
-		$time = "";
-		foreach (self::TIMEUNIT as $unit => $scale) {
-			$number = floor($seconds / $scale);
-			if ($number > 0) {
-				$time .= sprintf('%d%s',$number,$unit);
-				$seconds = $seconds % $scale;
-			}
-		}
-		return $time;
+		return $this->sec2str($sec);
 	}
 	/*--------------------------------------------------------------------------
 	Convert config times in sting format to seconds eg "20m" to 1200
@@ -297,7 +201,7 @@ class Autoban {
 	*/
 	public function configsec($param) {
 		$time = $this->config['autoban'][$param];
-		if(!is_numeric($time)) $time = $this->seconds($time);
+		if(!is_numeric($time)) $time = $this->str2sec($time);
 		return $time;
 	}
 	/*--------------------------------------------------------------------------
@@ -310,28 +214,12 @@ class Autoban {
 		if (isset($error[0])) {
 			$message = $message.' error: '.$error[0];
 		} else {
-			$nr_watch = $this->countelements('watch');
-			$nr_jail = $this->countelements('jail');
+			$nr_watch = count($this->list('watch'));
+			$nr_jail = count($this->list('jail'));
 			$message = sprintf('%s (watch %-3d jail %-3d)',
 				$message,$nr_watch,$nr_jail);
 		}
 		trigger_error($message, $level);
-	}
-	/*--------------------------------------------------------------------------
-	PLACEHOLDER
-	print table with headers: IP WATCH JAIL
-	@return void
-	*/
-	public function show() {
-	}
-	/*--------------------------------------------------------------------------
-	@param  mixed $param
-	@return void
-	*/
-	public function debug($data, $debug = false) {
-		if($debug || $this->debug) {
-			var_dump($data);
-		}
 	}
 }
 ?>

@@ -178,6 +178,8 @@ The host name need to be set in three files:
 - `pjsip-local.conf` `domain = sip.example.com`, `external_media_address = sip.example.com`, and `external_signaling_address = sip.example.com`
 - `pjsip_wizard.conf` `endpoint/from_domain = sip.example.com`
 
+With these settings you should not need ICE, STUN or TURN.
+
 ## Security - Privacy and integrity
 
 [Transport Layer Security](http://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS) provides encryption for call signaling. A excellent guide for setting up TLS between Asterisk and a SIP client, involving creating key files, modifying Asterisk's SIP configuration to enable TLS, creating a SIP endpoint/user that's capable of TLS, and modifying the SIP client to connect  to Asterisk over TLS, can be found here [Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial). 

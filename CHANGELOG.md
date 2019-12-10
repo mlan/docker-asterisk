@@ -1,3 +1,9 @@
+# 0.5.0
+
+- [acme](src/acme) Fixed dumpcert.sh leaking to stdout. Have it write to logger instead.
+- [autoban](src/autoban) Added utility autoban, which helps to manage the NFT state
+- [autoban](src/autoban) Code base now refactored and split into autoban.class.inc and nft.class.inc
+
 # 0.4.0
 
 - [privatedial](src/privatedial) Now keep main dial-plan conf files separate.

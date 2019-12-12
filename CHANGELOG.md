@@ -1,3 +1,7 @@
+# 0.5.1
+
+- [docker](Makefile) Enable PHP profiling using xdebug.
+
 # 0.5.0
 
 - [acme](src/acme) Fixed dumpcert.sh leaking to stdout. Have it write to logger instead.

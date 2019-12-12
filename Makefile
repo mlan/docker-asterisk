@@ -185,6 +185,16 @@ test-debugtools:
 	docker exec -it $(CNT_NAME) apk --no-cache --update add \
 	nano less lsof htop openldap-clients bind-tools iputils strace
 
+test-xdebug_install:
+	docker exec -it $(CNT_NAME) apk --no-cache --update add \
+	php7-pecl-xdebug
+	docker exec -it $(CNT_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/php7/php.ini
+	docker exec -it $(CNT_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/php7/conf.d/xdebug.ini
+	docker exec -it $(CNT_NAME) sv restart websmsd autoband
+
+test-xdebug_getdata:
+	docker cp $(CNT_NAME):tmp/. local/xdebug
+
 test-tz:
 	docker cp /usr/share/zoneinfo/$(CNT_TZ) $(CNT_NAME):/etc/localtime
 	docker exec -it $(CNT_NAME) sh -c 'echo $(CNT_TZ) > /etc/timezone'

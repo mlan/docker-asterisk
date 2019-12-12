@@ -62,13 +62,15 @@ inform() {
 	local script=$(basename $0)
 	local level=$1
 	shift
+	# Assume interactive if we have stdout open and print usage message if needed.
 	if [ -t 1 ]; then
 		echo "$@"
 		case $level in
 			emerg|alert|crit|err|warning) printf "\n${USAGE}" ;;
 		esac
 	else
-		if command -v logger >/dev/null; then
+		# If we have /dev/log socket send message to logger otherwise to stdout.
+		if [ -S /dev/log ]; then
 			logger -t "${script}[${$}]" -p "auth.$level" "$@"
 		else
 			echo "${script}[${$}]: $@"

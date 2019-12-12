@@ -37,8 +37,8 @@ setup_runit_acme_dump() {
 		inform "Setup ACME TLS certificate monitoring"
 		setup-runit.sh "-n acme $(which inotifyd) $(which dumpcerts.sh) $ACME_FILE:c"
 		# run dumpcerts.sh on cnt creation (and every time the json file changes)
-		local message="$(dumpcerts.sh $ACME_FILE $DOCKER_ACME_SSL_DIR 2>&1 | sed ':a;N;$!ba;s/\n/ - /g')"
-		inform "$message"
+		# dumpcerts.sh reports to logger but it is yet to be started so this run will be quiet
+		dumpcerts.sh $ACME_FILE $DOCKER_ACME_SSL_DIR
 	fi
 }
 

@@ -1,6 +1,7 @@
 # 0.5.1
 
 - [docker](Makefile) Enable PHP profiling using xdebug.
+- [autoban](src/autoban) Optimized code with respect to efficiency and speed.
 
 # 0.5.0
 

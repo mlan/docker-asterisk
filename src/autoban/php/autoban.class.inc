@@ -76,15 +76,15 @@ class Autoban extends Nft {
 			if($jail_new !== false) {
 				$log = 'jail';
 				$watch_new = false;
-				if ($parole_nft !== false) $this->del('parole',$ip);
+				if ($parole_nft !== false) $this->del_addrs('parole',$ip);
 			} else {
 				$log = 'watch';
-				if ($watch_nft !== false) $this->del('watch',$ip);
+				if ($watch_nft !== false) $this->del_addrs('watch',$ip);
 			}
 		}
-		if ($this->add('watch',$ip,$watch_new) === false) return false;
-		if ($this->add('jail',$ip,$jail_new) === false) return false;
-		if ($this->add('parole',$ip,$parole_new) === false) return false;
+		if ($this->add_addrs('watch',$ip,$watch_new) === false) return false;
+		if ($this->add_addrs('jail',$ip,$jail_new) === false) return false;
+		if ($this->add_addrs('parole',$ip,$parole_new) === false) return false;
 		switch ($log) {
 			case 'watch':
 				$this->log(sprintf('Watching %15s %-8d',$ip,
@@ -95,6 +95,7 @@ class Autoban extends Nft {
 					$this->timestr($jail_new)),null,E_USER_WARNING);
 				break;
 		}
+		if ($this->save() === false) return false;
 		return true;
 	}
 	/*--------------------------------------------------------------------------

@@ -52,17 +52,17 @@ Add elements $addr to NFT set $set
 @param  array of strings $args eg ["23.94.144.50", "jail"]
 @return boolean false if unable to add element else true
 */
-function add($set, $args) {
+function add($theset, $args) {
 	global $ban;
-	$timeout = $ban->configtime($set);
-	foreach ($args as $arg) {
-		if (in_array($arg,Autoban::NFT_SETS)) {
-			$addrs = array_keys($ban->list($arg));
-			foreach ($addrs as $addr) $ban->add($set, $addr, $timeout);
-		} else {
-			$ban->add($set, $arg, $timeout, true);
-		}
+	$timeout = $ban->configtime($theset);
+	$assume_sets = array_intersect($args,Autoban::NFT_SETS);
+	$assume_addrs = array_diff($args,Autoban::NFT_SETS);
+	foreach ($assume_sets as $set) {
+		$addrs = array_keys($ban->list($set));
+		$ban->add_addrs($theset, $addrs, $timeout);
 	}
+	$ban->add_addrs($theset, $assume_addrs, $timeout, true);
+	$ban->save();
 }
 /*--------------------------------------------------------------------------
 Delete elements $args from NFT sets $sets
@@ -72,22 +72,26 @@ Delete elements $args from NFT sets $sets
 */
 function del($sets, $args) {
 	global $ban;
-	foreach ($args as $arg) {
-		foreach ($sets as $set) {
-			if ($arg === 'all') {
-				$ban->del($set);
-			} else {
-				$ban->del($set, $arg, true);
-			}
+	foreach ($sets as $set) {
+		if(array_search('all', $args) === false) {
+			$ban->del_addrs($set, $args);
+		} else {
+			$ban->del_addrs($set);
 		}
 	}
+	$ban->save();
 }
 /*------------------------------------------------------------------------------
  Start code execution.
  Scrape off command and sub-command and pass the rest of the arguments.
+ We only care about the first character of the sub-command.
 */
+#$ban->debug = true;
 $subcmd=@$argv[1];
 unset($argv[0],$argv[1]);
+#if(!empty($subcmd))
+#	trigger_error(sprintf('Running %s %s', $subcmd, implode(' ',$argv)),
+#		E_USER_NOTICE);
 switch (@$subcmd[0]) {
 	case 'b':
 		add('blacklist', @$argv);

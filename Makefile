@@ -152,7 +152,7 @@ test-smsd3:
 test-down:
 	docker stop $(CNT_NAME) 2>/dev/null || true
 	docker rm $(CNT_NAME) 2>/dev/null || true
-	docker network rm $(TST_NET) || true
+	docker network rm $(TST_NET) 2>/dev/null || true
 
 test-start:
 	docker start $(CNT_NAME)
@@ -176,7 +176,7 @@ test-nft:
 	docker exec -it $(CNT_NAME) nft list ruleset
 
 test-autoban:
-	docker exec -it $(CNT_NAME) autoban
+	docker exec -it $(CNT_NAME) autoban show
 
 test-htop: test-debugtools
 	docker exec -it $(CNT_NAME) htop

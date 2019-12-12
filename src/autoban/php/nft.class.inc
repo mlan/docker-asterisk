@@ -41,7 +41,7 @@ class Nft {
 	public function add($set, $addr, $timeout = null, $check = false) {
 		if ($check && !$this->is_addr($addr)) return false;
 		if (!empty($timeout)) $timeout = $this->timestr($timeout);
-		if ($this->add_addr($set,$addr,$timeout) === false) return false;
+		if ($this->add_addrs($set,$addr,$timeout) === false) return false;
 		if ($this->save() === false) return false;
 		return true;
 	}
@@ -53,7 +53,7 @@ class Nft {
 	*/
 	public function del($set, $addr = null, $check = false) {
 		if ($check) if (!$this->is_addr($addr)) return false;
-		if ($this->del_addr($set,$addr) === false) return false;
+		if ($this->del_addrs($set,$addr) === false) return false;
 		if ($this->save() === false) return false;
 		return true;
 	}
@@ -81,35 +81,41 @@ class Nft {
 	/*--------------------------------------------------------------------------
 	Add element $addr to NFT set $set with timeout $timeout seconds
 	@param  string $set eg "jail"
-	@param  string $addr eg "23.94.144.50"
+	@param  mixed  $addrs string eg "23.94.144.50" or array ["23.94.144.50",...] or null or false
 	@param  mixed  $timeout int seconds eg 1200 or boolean false
-	@return mixed  exec return string or boolean false if unable to add element
+	@return mixed  exec return string or boolean false if unable to add elements
 	*/
-	public function add_addr($set,$addr,$timeout = null) {
-		if ($timeout === false) return true;
-		$args = ['sub'=>'add element','set'=>$set];
-		if (empty($timeout)) {
-			$args['val'] = '{'.$addr.'}';
+	public function add_addrs($set,$addrs,$timeout = null) {
+		if (empty($addrs) || $timeout === false) return true;
+		$suffix = (empty($timeout)) ? '' : ' timeout '.$timeout;
+		if(is_array($addrs)) {
+			$addrs = array_map(function($a) use ($suffix) { return $a.$suffix; }, $addrs);
+			$val = implode(', ', $addrs);
 		} else {
-			$args['val'] = '{'.$addr.' timeout '.$timeout.'}';
+			$val = $addrs.$suffix;
 		}
+		$args = ['sub'=>'add element', 'set'=>$set, 'val'=>'{'.$val.'}'];
 		$ret = $this->exec($args);
 		return $ret;
 	}
 	/*--------------------------------------------------------------------------
 	Delete element $addr from NFT set $set
 	@param  string $set eg "jail"
-	@param  string $addr eg "23.94.144.50"
-	@return mixed  exec return string or boolean false if unable to del element
+	@param  mixed  $addrs string eg "23.94.144.50" or array ["23.94.144.50",...] or null
+	@return mixed  exec return string or boolean false if unable to del elements
 	*/
-	public function del_addr($set, $addr = null) {
-		if (empty($addr)) {
+	public function del_addrs($set, $addrs = null) {
+		if (empty($addrs)) {
 			$args = ['sub'=>'flush set','set'=>$set];
 		} else {
-			$args = ['sub'=>'delete element','set'=>$set,'val'=>'{'.$addr.'}'];
+			$given_addrs = (is_array($addrs)) ? $addrs : [$addrs];
+			$valid_addrs = array_keys($this->list($set));
+			$the_addrs = array_intersect($given_addrs, $valid_addrs);
+			if (empty($the_addrs)) return true;
+			$val = implode(', ', $the_addrs);
+			$args = ['sub'=>'delete element','set'=>$set,'val'=>'{'.$val.'}'];
 		}
-		$ret = $this->get_addr($set,$addr);
-		if ($ret !== false) $ret = $this->exec($args);
+		$ret = $this->exec($args);
 		return $ret;
 	}
 	/*--------------------------------------------------------------------------
@@ -159,13 +165,15 @@ class Nft {
 		return $timeout;
 	}
 	/*--------------------------------------------------------------------------
-	Save NFT state to file.
+	Save NFT state to file. Rename the old state file by appending "~" to the
+	filename before saving the NFT state.
 	@return mixed  state string or boolean false if unsuccessful
 	*/
 	public function save() {
 		$args = ['sub'=>'list ruleset', 'family'=>null, 'table'=>null];
 		$ret = $this->exec($args);
 		if ($ret === false) return false;
+		@rename($this->nft_statefile, $this->nft_statefile.'~');
 		if (file_put_contents($this->nft_statefile,implode(PHP_EOL, $ret))
 			=== false) {
 			$this->log('('.$this->nft_statefile.')', [ 'Unable to write' ],

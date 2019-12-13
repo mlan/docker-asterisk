@@ -40,7 +40,6 @@ class Nft {
 	*/
 	public function add($set, $addr, $timeout = null, $check = false) {
 		if ($check && !$this->is_addr($addr)) return false;
-		if (!empty($timeout)) $timeout = $this->timestr($timeout);
 		if ($this->add_addrs($set,$addr,$timeout) === false) return false;
 		if ($this->save() === false) return false;
 		return true;
@@ -87,7 +86,7 @@ class Nft {
 	*/
 	public function add_addrs($set,$addrs,$timeout = null) {
 		if (empty($addrs) || $timeout === false) return true;
-		$suffix = (empty($timeout)) ? '' : ' timeout '.$timeout;
+		$suffix = (empty($timeout)) ? '' : ' timeout '.$this->timestr($timeout);
 		if(is_array($addrs)) {
 			$addrs = array_map(function($a) use ($suffix) { return $a.$suffix; }, $addrs);
 			$val = implode(', ', $addrs);

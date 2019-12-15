@@ -64,9 +64,9 @@ class Nft {
 	@return array  [string addr => string time, ...] or [] is set is empty
 	*/
 	public function list($set) {
-		$ret = $this->list_addr($set);
-		if ($ret === false) return [];
-		return $this->array_elem($ret);
+		$return = $this->list_addr($set);
+		if ($return === false) return [];
+		return $this->array_elem($return);
 	}
 	/*--------------------------------------------------------------------------
 	Get timeout for $addr from NFT set $set
@@ -96,8 +96,7 @@ class Nft {
 			$val = $addrs.$suffix;
 		}
 		$args = ['sub'=>'add element', 'set'=>$set, 'val'=>'{'.$val.'}'];
-		$ret = $this->exec($args);
-		return $ret;
+		return $this->exec($args);
 	}
 	/*--------------------------------------------------------------------------
 	Delete element $addr from NFT set $set
@@ -107,18 +106,17 @@ class Nft {
 	*/
 	public function del_addrs($set, $addrs = null) {
 		if (empty($addrs)) return true;
-		if (array_search('all', $addrs) !== false) {
+		$given_addrs = (is_array($addrs)) ? $addrs : [$addrs];
+		if (array_search('all', $given_addrs) !== false) {
 			$args = ['sub'=>'flush set','set'=>$set];
 		} else {
-			$given_addrs = (is_array($addrs)) ? $addrs : [$addrs];
 			$valid_addrs = array_keys($this->list($set));
 			$the_addrs = array_intersect($given_addrs, $valid_addrs);
 			if (empty($the_addrs)) return true;
 			$val = implode(', ', $the_addrs);
 			$args = ['sub'=>'delete element','set'=>$set,'val'=>'{'.$val.'}'];
 		}
-		$ret = $this->exec($args);
-		return $ret;
+		return $this->exec($args);
 	}
 	/*--------------------------------------------------------------------------
 	Get element $addr from NFT set $set
@@ -129,8 +127,7 @@ class Nft {
 	public function get_addr($set,$addr) {
 		if (empty($addr)) return true;
 		$args = ['sub'=>'get element','set'=>$set,'val'=>'{'.$addr.'}'];
-		$ret = $this->exec($args, false);
-		return $ret;
+		return $this->exec($args, false);
 	}
 	/*--------------------------------------------------------------------------
 	List elements in NFT set $set
@@ -139,20 +136,19 @@ class Nft {
 	*/
 	public function list_addr($set) {
 		$args = ['sub'=>'list set','set'=>$set];
-		$ret = $this->exec($args);
-		return $ret;
+		return $this->exec($args);
 	}
 	/*--------------------------------------------------------------------------
 	NFT returns elements = { 23.94.144.50 timeout 40m, ...}
 	We stuff this into $this->timeout[$set] = [string addr => string time, ...].
 
-	@param  array  $ret strings return from calling NFT
+	@param  array  $return strings return from calling NFT
 	@return array  [string addr => string time, ...] or [] is set is empty
 	*/
-	public function array_elem($ret) {
-		if ($ret === false) return [];
-		preg_match('/flags timeout/', implode($ret), $hastimeout);
-		preg_match('/elements = {([^}]+)}/', implode($ret), $matches);
+	public function array_elem($return) {
+		if ($return === false) return [];
+		preg_match('/flags timeout/', implode($return), $hastimeout);
+		preg_match('/elements = {([^}]+)}/', implode($return), $matches);
 		if (empty($matches[1])) return [];
 		$elements = preg_split('/,/', $matches[1]);
 		$timeout = [];
@@ -173,16 +169,16 @@ class Nft {
 	*/
 	public function save() {
 		$args = ['sub'=>'list ruleset', 'family'=>null, 'table'=>null];
-		$ret = $this->exec($args);
-		if ($ret === false) return false;
+		$return = $this->exec($args);
+		if ($return === false) return false;
 		@rename($this->nft_statefile, $this->nft_statefile.'~');
-		if (file_put_contents($this->nft_statefile,implode(PHP_EOL, $ret))
+		if (file_put_contents($this->nft_statefile,implode(PHP_EOL, $return))
 			=== false) {
 			$this->log('('.$this->nft_statefile.')', [ 'Unable to write' ],
 				E_USER_WARNING);
 			return false;
 		}
-		return $ret;
+		return $return;
 	}
 	/*--------------------------------------------------------------------------
 	@param  array  $args NFT cli arguments eg ['sub'=>'list set','set'=>'jail']

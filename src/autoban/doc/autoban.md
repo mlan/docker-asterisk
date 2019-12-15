@@ -111,26 +111,32 @@ autoban help
 
   USAGE
     autoban [SUBCOMMAND]
-      It is sufficeint to only give the first character of the subcommand.
       If no subcommand is given use "show".
 
   SUBCOMMAND
-    blacklist <saddr>    Add <saddr> to the blacklist set
-    blacklist <set>      Add all saddr in <set> to the blacklist set
-    delete    <saddr>    Delete <saddr> from all sets
-    delete    all        Delete all saddr from all sets
-    help                 Print this text
-    jail      <saddr>    Add <saddr> to the jail and parole sets
-    jail      <set>      Add all saddr in <set> to the jail and parole sets
-    list                 List element arrays, used for debugging
-    show                 Show overview of the NFT state
-    whitelist <saddr>    Add <saddr> to the whitelist set
-    whitelist <set>      Add all saddr in <set> to the whitelist set
+    add <dsets> = <ssets> <addrs>   Add to <dsets>, <addrs> and/or
+                                    addrs from <ssets>.
+    del <dsets> = <ssets> <addrs>   Delete from <dsets>, <addrs> and/or
+                                    addrs from <ssets>.
+    list <sets>                     List addrs from <sets>.
+    help                            Print this text.
+    show                            Show overview of the NFT state.
 
   EXAMPLES
-    autoban blacklist 77.247.110.24 jail 62.210.151.21
-    autoban d all
+    Blacklist 77.247.110.24 and 62.210.151.21 and all addresses from jail
+      autoban add blacklist = 77.247.110.24 jail 62.210.151.21
 
+    Add all addresses in the watch set to the jail and parole sets
+      autoban add jail parole = watch
+
+    Delete 37.49.230.37 and all addresses in blacklist from jail parole
+      autoban del jail parole = 37.49.230.37 blacklist
+
+    Delete 45.143.220.72 from all sets
+      autoban del all = 45.143.220.72
+
+    Delete all addresses from all sets
+      autoban del all = all
 ```
 
 You can watch the status of the `nftables` firewall by, from within the container, typing:

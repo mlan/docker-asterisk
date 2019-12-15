@@ -11,25 +11,32 @@ $HELP_MESSAGE = <<<HELP_MESSAGE
 
   USAGE
     autoban [SUBCOMMAND]
-      It is sufficeint to only give the first character of the subcommand.
       If no subcommand is given use "show".
 
   SUBCOMMAND
-    blacklist <saddr>    Add <saddr> to the blacklist set
-    blacklist <set>      Add all saddr in <set> to the blacklist set
-    delete    <saddr>    Delete <saddr> from all sets
-    delete    all        Delete all saddr from all sets
-    help                 Print this text
-    jail      <saddr>    Add <saddr> to the jail and parole sets
-    jail      <set>      Add all saddr in <set> to the jail and parole sets
-    list                 List element arrays, used for debugging
-    show                 Show overview of the NFT state
-    whitelist <saddr>    Add <saddr> to the whitelist set
-    whitelist <set>      Add all saddr in <set> to the whitelist set
+    add <dsets> = <ssets> <addrs>   Add to <dsets>, <addrs> and/or
+                                    addrs from <ssets>.
+    del <dsets> = <ssets> <addrs>   Delete from <dsets>, <addrs> and/or
+                                    addrs from <ssets>.
+    list <sets>                     List addrs from <sets>.
+    help                            Print this text.
+    show                            Show overview of the NFT state.
 
   EXAMPLES
-    autoban blacklist 77.247.110.24 jail 62.210.151.21
-    autoban d all
+    Blacklist 77.247.110.24 and 62.210.151.21 and all addresses from jail
+      autoban add blacklist = 77.247.110.24 jail 62.210.151.21
+
+    Add all addresses in the watch set to the jail and parole sets
+      autoban add jail parole = watch
+
+    Delete 37.49.230.37 and all addresses in blacklist from jail parole
+      autoban del jail parole = 37.49.230.37 blacklist
+
+    Delete 45.143.220.72 from all sets
+      autoban del all = 45.143.220.72
+
+    Delete all addresses from all sets
+      autoban del all = all
 
 
 HELP_MESSAGE;
@@ -48,43 +55,93 @@ $ban = new Autoban();
 
 /*--------------------------------------------------------------------------
 Add elements $addr to NFT set $set
-@param  string $set eg "blacklist"
-@param  array of strings $args eg ["23.94.144.50", "jail"]
+@param  array of strings $args eg ["blacklist", "=", "77.247.110.24", "jail"]
 @return boolean false if unable to add element else true
 */
-function add($theset, $args) {
+function add($args) {
 	global $ban;
-	$timeout = $ban->configtime($theset);
-	$assume_sets = array_intersect($args,Autoban::NFT_SETS);
-	$assume_addrs = array_diff($args,Autoban::NFT_SETS);
-	foreach ($assume_sets as $set) {
-		$addrs = array_keys($ban->list($set));
-		$ban->add_addrs($theset, $addrs, $timeout);
+	parse($args,$dargs,$sargs,'blacklist');
+	foreach ($dargs as $dset) {
+		$timeout = $ban->configtime($dset);
+		$assume_ssets = array_intersect($sargs,Autoban::NFT_SETS);
+		$assume_saddrs = array_diff($sargs,Autoban::NFT_SETS);
+		foreach ($assume_ssets as $sset) {
+			$saddrs = array_keys($ban->list($sset));
+			$ban->add_addrs($dset, $saddrs, $timeout);
+		}
+		$ban->add_addrs($dset, $assume_saddrs, $timeout, true);
 	}
-	$ban->add_addrs($theset, $assume_addrs, $timeout, true);
 	$ban->save();
 }
+
 /*--------------------------------------------------------------------------
 Delete elements $args from NFT sets $sets
-@param  array of strings $sets eg ["blacklist"]
-@param  array of strings $args eg ["23.94.144.50", "all"]
+@param  array of strings $args eg ["blacklist", "=", "77.247.110.24", "jail"]
 @return boolean false if unable to delete element else true
 */
-function del($sets, $args) {
+function del($args) {
 	global $ban;
-	foreach ($sets as $set) {
-		if(array_search('all', $args) === false) {
-			$ban->del_addrs($set, $args);
-		} else {
-			$ban->del_addrs($set);
+	parse($args,$dargs,$sargs,'all');
+	if (array_search('all', $dargs) !== false) $dargs = Autoban::NFT_SETS;
+	foreach ($dargs as $dset) {
+		$assume_ssets = array_intersect($sargs,Autoban::NFT_SETS);
+		foreach ($assume_ssets as $sset) {
+			$saddrs = array_keys($ban->list($sset));
+			$ban->del_addrs($dset, $saddrs);
 		}
+		$assume_saddrs = array_diff($sargs,Autoban::NFT_SETS);
+		$ban->del_addrs($dset, $assume_saddrs);
 	}
 	$ban->save();
+}
+
+/*--------------------------------------------------------------------------
+List elements in NFT sets $sets
+@param  array of strings $args eg ["blacklist", "jail"]
+@return void
+*/
+function ls($args) {
+	global $ban;
+	if (empty($args) || array_search('all', $args) !== false)
+		$args = Autoban::NFT_SETS;
+	foreach ($args as $set)
+		if (count($args) === 1)
+			printf("%s\n", implode(' ',array_keys($ban->list($set))));
+		else
+			printf("%s: %s\n", $set, implode(' ',array_keys($ban->list($set))));
+}
+
+/*--------------------------------------------------------------------------
+Separates argument in to $dargs and $sargs using the separator
+@param  array of strings $args eg ["blacklist", "=", "77.247.110.24", "jail"]
+@param  array of strings $dargs eg ["blacklist"]
+@param  array of strings $sargs eg ["77.247.110.24", "jail"]
+@return void
+*/
+function parse($args, &$dargs, &$sargs, $default = 'all', $separators = ':+-=') {
+	$left = []; $right = [];
+	foreach ($args as $arg) {
+		if (strlen($arg) === 1 && strstr($separators, $arg) !== false) {
+			$mid = $arg;
+		} else {
+			if (empty($mid)) {
+				array_push($left, $arg);
+			} else {
+				array_push($right, $arg);
+			}
+		}
+	}
+	if (empty($right)) {
+		$dargs = [$default];
+		$sargs = $left;
+	} else {
+		$dargs = $left;
+		$sargs = $right;
+	}
 }
 /*------------------------------------------------------------------------------
  Start code execution.
  Scrape off command and sub-command and pass the rest of the arguments.
- We only care about the first character of the sub-command.
 */
 #$ban->debug = true;
 $subcmd=@$argv[1];
@@ -92,28 +149,27 @@ unset($argv[0],$argv[1]);
 #if(!empty($subcmd))
 #	trigger_error(sprintf('Running %s %s', $subcmd, implode(' ',$argv)),
 #		E_USER_NOTICE);
-switch (@$subcmd[0]) {
-	case 'b':
-		add('blacklist', @$argv);
+switch (@$subcmd) {
+	case 'add':
+	case 'a':
+		add(@$argv);
 		break;
+	case 'delete':
+	case 'del':
 	case 'd':
-		del(Autoban::NFT_SETS,@$argv);
+		del(@$argv);
 		break;
-	case 'j':
-		add('jail', @$argv);
-		add('parole', @$argv);
-		break;
+	case 'list':
+	case 'ls':
 	case 'l':
-		foreach (Autoban::NFT_SETS as $set) var_dump($ban->list($set));
+		ls(@$argv);
 		break;
-	case '':
+	case 'show':
 	case 's':
+	case '':
 		$ban->show();
 		break;
-	case 'w':
-		add('whitelist', @$argv);
-		break;
-	case 'h':
+	case 'help':
 	default:
 		print $HELP_MESSAGE;
 		break;

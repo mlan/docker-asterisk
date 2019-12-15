@@ -16,6 +16,8 @@ class Nft {
 	];
 	public const NFT_SETS = ['watch','jail','parole','blacklist','whitelist'];
 	private const TIME_UNITS = ['d' => 86400, 'h' => 3600, 'm' => 60, 's' => 1];
+	private const SHOW_MARK = 'X';
+	private const SHOW_ID = 'addr';
 	private const NFT_DIR = '/var/lib/nftables';
 	private const NFT_FILE = 'autoban.nft';
 	private $nft_statefile;
@@ -100,11 +102,12 @@ class Nft {
 	/*--------------------------------------------------------------------------
 	Delete element $addr from NFT set $set
 	@param  string $set eg "jail"
-	@param  mixed  $addrs string eg "23.94.144.50" or array ["23.94.144.50",...] or null
+	@param  mixed  $addrs string eg "23.94.144.50" or array ["23.94.144.50","all",...] or null
 	@return mixed  exec return string or boolean false if unable to del elements
 	*/
 	public function del_addrs($set, $addrs = null) {
-		if (empty($addrs)) {
+		if (empty($addrs)) return true;
+		if (array_search('all', $addrs) !== false) {
 			$args = ['sub'=>'flush set','set'=>$set];
 		} else {
 			$given_addrs = (is_array($addrs)) ? $addrs : [$addrs];
@@ -155,7 +158,7 @@ class Nft {
 		$timeout = [];
 		foreach ($elements as $element) {
 			if (empty($hastimeout)) {
-				$timeout += [trim($element) => 'X'];
+				$timeout += [trim($element) => Self::SHOW_MARK];
 			} else {
 				$addrntime = explode(' timeout ',$element);
 				$timeout += [trim($addrntime[0]) => trim($addrntime[1])];
@@ -279,35 +282,39 @@ class Nft {
 		trigger_error($message, $level);
 	}
 	/*--------------------------------------------------------------------------
-	print table with headers: SADDR WATCH JAIL PAROLE BLACKLIST WHITELIST
+	print table with headers: addr watch jail parole blacklist whitelist
 	@return void
 	*/
 	public function show() {
-		$list = [];
-		$format = "%15s%13s%13s%13s%13s%13s\n";
+		$db = [];
+		$id = self::SHOW_ID;
+		$headers = array_merge([$id],self::NFT_SETS);
+		$sets_num = count(self::NFT_SETS);
+		$form = "%15s".str_repeat("%13s", $sets_num)."\n";
 		foreach (self::NFT_SETS as $set) {
-			$tmp = $this->list($set);
-			if (empty($tmp)) {
-				$list[$set] = [];
-			} else {
-				$list[$set] = $tmp;
+			$elems = $this->list($set);
+			if (!empty($elems)) foreach ($elems as $addr => $time) {
+				$db_index = array_search($addr, array_column($db, $id));
+				if ($db_index === false) {
+					$db_index = -1 + array_push($db, array_merge([$id => $addr],
+						array_combine(self::NFT_SETS,
+						array_fill(0,$sets_num,null))));
+				}
+				$db[$db_index][$set] = $time;
 			}
 		}
-		$addrs = array_keys(array_merge($list['watch'],$list['jail'],
-			$list['parole'],$list['blacklist'],$list['whitelist']));
-		usort($addrs, function($a,$b) { return ip2long($a) <=> ip2long($b); });
-		printf ($format,'SADDR','WATCH','JAIL','PAROLE','BLACKLIST',
-			'WHITELIST');
-		if (!empty($addrs)) {
-			foreach ($addrs as $addr) {
-				$elements[$addr] = [@$list['watch'][$addr],
-					@$list['jail'][$addr],@$list['parole'][$addr],
-					@$list['blacklist'][$addr], @$list['whitelist'][$addr]];
-				printf ($format, $addr, @$list['watch'][$addr],
-					@$list['jail'][$addr], @$list['parole'][$addr],
-					@$list['blacklist'][$addr], @$list['whitelist'][$addr]);
-			}
+		usort($db, function($a,$b) use ($id) {
+			return ip2long($a[$id]) <=> ip2long($b[$id]);
+		});
+		$db_sums = array_map(function($head) use ($db) {
+			return count(array_filter(array_column($db, $head)));
+		}, $headers);
+		vprintf($form,$headers);
+		if (!empty($db)) foreach ($db as $elem) {
+				vprintf($form,array_values($elem));
 		}
+		vprintf($form,$db_sums);
+
 	}
 	/*--------------------------------------------------------------------------
 	@param  mixed $param

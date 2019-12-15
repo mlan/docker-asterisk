@@ -26,6 +26,7 @@ class Autoban extends Nft {
 		'jailtime'   => '20m',
 		'repeatmult' => 6,
 	];
+	public const NFT_SETS = ['watch','jail','parole','blacklist','whitelist'];
 	private const TIME_MAXSEC = 99999999;
 	public $config;
 	public $debug = false;

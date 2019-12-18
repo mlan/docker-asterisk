@@ -14,10 +14,10 @@ To illustrate, first assume `jailtime=20m` and `repeatmult=6`, then the IP is bl
 
 The function of AutoBan is controlled by two configuration files; `autoban.conf` and `manager.conf`. Additionally, the docker container needs extra capabilities to be able to control networking.
 
-| File name    | Description                           |
-| ------------ | ------------------------------------- |
-| autoban.conf | AutoBan configurations                |
-| manager.conf | AMI configurations, server and client |
+| File name    | Description                                                  |
+| ------------ | ------------------------------------------------------------ |
+| autoban.conf | Configurations which are unique to the AutoBan service       |
+| manager.conf | Read by the Asterisk Manager Interface (AMI), configuring both the server and client(s) |
 
 ### Docker, runtime privileges
 
@@ -39,7 +39,7 @@ AutoBan is activated if there is an `autoban.conf` file and that the parameter `
 | [autoban]   | jailtime   | 20m       | string, integer followed by unit; d, h, m, s | Time to drop packets from IP in seconds or time string example: 1d2h3m4s |
 | [autoban]   | repeatmult | 6         | integer or float                             | Repeat offenders get jailtime multiplied by this factor      |
 
-### Configuring AMI, manager.conf
+### Configuring the AMI, manager.conf
 
 The AMI interface is configured in `manager.conf`.The table below does only describe to most relevant keys. Please refer to [AMI Configuration](https://wiki.asterisk.org/wiki/display/AST/AMI+v2+Specification#AMIv2Specification-AMIConfiguration), for full details.
 
@@ -98,7 +98,7 @@ If you want to permanently whitelist or blacklist source IP addresses, you can a
 
 ## Command line utility, `autoban`
 
-In addition to the AutoBan daemon, `autoband.php` that listens to AMI events and controls the Linux kernel firewall, there is a shell utility `autoban`, that you can use within the container, that helps with managing the NFT state. It can add, delete, white list and black list IP addresses for example.
+In addition to the AutoBan daemon, `autoband.php` that listens to AMI events and controls the Linux kernel firewall, there is a shell utility `autoban`, that you can use within the container, that helps with managing the NFT state. It can add, delete, white list and black list IP addresses for example.
 
 You can see the `autoban` help message by, from within the container, typing:
 

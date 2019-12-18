@@ -313,12 +313,14 @@ class Nft {
 
 	}
 	/*--------------------------------------------------------------------------
-	@param  mixed $param
+	Print variable if $debug or $this->debug is true
+	@param  mixed   $var
+	@param  boolean $debug
 	@return void
 	*/
-	public function debug($data, $debug = false) {
+	public function debug($var, $debug = false) {
 		if($debug || $this->debug) {
-			var_dump($data);
+			var_dump($var);
 		}
 	}
 }

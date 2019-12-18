@@ -10,10 +10,10 @@ The underlying design idea is to separate the dial plan function form the user d
 
 Feature list follows below
 
-- PHP web-hook for (incoming) SMS http ISTP origination
-- dialplan PHP (outgoing) SMS http ISTP termination
-- dialplan ISTP originating (incoming) SIP voice call
-- dialplan ISTP termination (outgoing) SIP voice call
+- PHP web-hook for (incoming) SMS http ITSP origination
+- dialplan PHP (outgoing) SMS http ITSP termination
+- dialplan ITSP originating (incoming) SIP voice call
+- dialplan ITSP termination (outgoing) SIP voice call
 
 ## Configuration files
 

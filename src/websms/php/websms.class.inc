@@ -32,6 +32,7 @@ class Websms {
 		'auth_method'     => "basic",
 		'response_check'  => null,
 		'number_format'   => "",
+		'charset'         => null,
 	];
 	const DEFAULT_CONFD_VALS = [
 		'key_to'          => "To",
@@ -155,8 +156,8 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	Initially assume 'REMOTE_ADDR' is the real IP of the HTTP client. But if it
-	is a 'proxy_addr' then trust that  'proxy_header' hold the real IP of the
+	Initially assume 'REMOTE_ADDR' is the original IP of the HTTP client. But if
+	it is a 'proxy_addr' then trust that 'proxy_header' hold the real IP of the
 	client instead. Now that we have the real IP of the client check if it is
 	permitted.
 	@return Boolean true if $saddr is permitted otherwise false
@@ -198,7 +199,7 @@ class Websms {
 		return false;
 	}
 	/*--------------------------------------------------------------------------
-	receive an additional header "Signature",
+	Receive an additional header "Signature",
 	$signatureTest = base64_encode(hash_hmac('sha1', $_POST['result'], API_SECRET));
 	@param array $post HTTP POST
 	@return Boolean true if HTTP request was verified
@@ -234,7 +235,7 @@ class Websms {
 				$this->config['websms']['key_body'] ];
 			$vals = [ $this->filter_number($args[1]),
 				$this->filter_number($args[2]),
-				$args[3] ];
+				$this->filter_message($args[3]) ];
 			$this->message = array_combine($keys,$vals);
 			ksort($this->message);
 			$this->debug($this->message);
@@ -253,7 +254,7 @@ class Websms {
 	@return string $number
 	*/
 	private function filter_number($number) {
-		switch ($this->config['websms']['number_format']) {
+		switch (strtolower($this->config['websms']['number_format'])) {
 		case 'no+':
 		case 'omit+':
 			return preg_replace('/[+]/', '', $number);
@@ -262,7 +263,23 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
+	Filter message, since some API only accept unicode up to xFFFF BMP (UCS-2)
+	replace charaters in SMP with the replacement charater U+FFFD, when needed.
+	@param string $message
+	@return string $message
+	*/
+	private function filter_message($message) {
+		switch (strtolower($this->config['websms']['charset'])) {
+		case 'ucs-2':
+			return preg_replace('/[\x{10000}-\x{10FFFF}]/u','\xFFFD',$message);
+		case 'utf-8':
+		default:
+			return $message;
+		}
+	}
+	/*--------------------------------------------------------------------------
 	Init curl.
+	@return void
 	*/
 	private function curl_init() {
 		$url = $this->config['websms']['host'].$this->config['websms']['path'];
@@ -372,9 +389,15 @@ class Websms {
 		}
 		return true;
 	}
-	public function debug($data, $debug = false) {
+	/*--------------------------------------------------------------------------
+	Print variable if $debug or $this->debug is true
+	@param  mixed   $var
+	@param  boolean $debug
+	@return void
+	*/
+	public function debug($var, $debug = false) {
 		if($debug || $this->debug) {
-			var_dump($data);
+			var_dump($var);
 		}
 	}
 }

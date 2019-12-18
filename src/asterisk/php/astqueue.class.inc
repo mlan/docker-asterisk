@@ -16,7 +16,7 @@ class Astqueue {
 		'archive'         => 'no',
 		'channel_context' => 'default',
 		'context'         => 'default',
-		'priority'        => 1
+		'priority'        => 1,
 		];
 	private $config;
 	private $name;
@@ -48,9 +48,12 @@ class Astqueue {
 			trigger_error("unable create directory ($dir)", E_USER_WARNING);
 	}
 	/*--------------------------------------------------------------------------
-	$message['to'] : The SMS destination
-	$message['from'] : The SMS originator
-	$message['body'] : The SMS message
+	Generate call file with message
+	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello']
+		$message['to'] : The SMS destination
+		$message['from'] : The SMS originator
+		$message['body'] : The SMS message
+	@return boolean true if sucessful otherwise false
 	*/
 	public function text($message) {
 		if (isset($message['to']) && isset($message['from']) && isset($message['body'])) {
@@ -65,6 +68,10 @@ class Astqueue {
 		}
 	}
 	/*--------------------------------------------------------------------------
+	Generate call file with call
+	@param string $exten callee phone number, eg '+12025550160'
+	@param string $callid caller phone number, eg '+12025550125'
+	@return boolean true if sucessful otherwise false
 	*/
 	public function call($exten,$callid) {
 		if (isset($exten) && isset($callid)) {
@@ -79,13 +86,14 @@ class Astqueue {
 	Create new call file in the staging directory.
 	Using staging directory to avoid Asterisk reading an unfinished file.
 	Move the call file to the outgoing directory, so that Asterisk pick it up.
+	@return boolean true if sucessful otherwise false
 	*/
 	private function write() {
-		$strings  = $this->strings($this->call,'call');
-		$strings .= $this->strings($this->mess,'mess');
+		$lines  = $this->gen_callline($this->call,'call');
+		$lines .= $this->gen_callline($this->mess,'mess');
 		$stagingfile  = $this->config['astqueue']['stagingdir'].'/'.$this->name;
 		$outgoingfile = $this->config['astqueue']['outgoingdir'].'/'.$this->name;
-		if (file_put_contents($stagingfile,$strings) === false) {
+		if (file_put_contents($stagingfile,$lines) === false) {
 			trigger_error("unable to open call file ($stagingfile)", E_USER_WARNING);
 			return false;
 		}
@@ -110,6 +118,8 @@ class Astqueue {
 	/*--------------------------------------------------------------------------
 	Generate call file name.
 	Format: <EXTEN>.<seconds since the Unix Epoch>.<3 digit random>.call
+	@param string $exten callee phone number, eg '+12025550160'
+	@return void
 	*/
 	private function gen_name($exten) {
 		$this->name = sprintf("%s.%d.%03d.call",$exten,time(),rand(0,999));
@@ -126,6 +136,9 @@ class Astqueue {
 		Setvar: MESSAGE(to)= The SMS destination
 		Setvar: MESSAGE(from)= The SMS originator
 		Setvar: MESSAGE(body)= The SMS message
+	@param string $exten callee phone number, eg '+12025550160'
+	@param string $callid caller phone number, eg '+12025550125'
+	@return void
 	*/
 	private function gen_call($exten,$callid) {
 		$this->call = [
@@ -148,10 +161,16 @@ class Astqueue {
 				$value = $this->config['astqueue'][$key_lower];
 			}
 		}
-		$this->debug($this->call);
 		unset($value);
+		$this->debug($this->call);
 	}
 	/*--------------------------------------------------------------------------
+	Assign class variable mess.
+	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello']
+		$message['to'] : The SMS destination
+		$message['from'] : The SMS originator
+		$message['body'] : The SMS message
+	@return boolean true if sucessful otherwise false
 	*/
 	private function gen_mess($message) {
 		if (isset($message['to']) && isset($message['from']) && isset($message['body'])) {
@@ -163,49 +182,72 @@ class Astqueue {
 		}
 	}
 	/*--------------------------------------------------------------------------
+	Generate channel string
+	@param string $exten callee phone number, eg '+12025550160'
+	@return string channel
 	*/
 	private function gen_channel($exten) {
 		return sprintf('Local/%s@%s',$exten,$this->config['astqueue']['channel_context']);
 	}
 	/*--------------------------------------------------------------------------
+	Generate callid string
+	@param string $number caller phone number, eg '+12025550183'
+	@param string $display caller display, eg 'Jane Doe'
+	@return string callid, eg '"Jane Doe" <+12025550183>'
 	*/
-	private function gen_callid($num,$name = '') {
-		return sprintf('"%s" <%s>',$name,$num);
+	private function gen_callid($number,$display = '') {
+		return sprintf('"%s" <%s>',$display,$number);
 	}
 	/*--------------------------------------------------------------------------
+	Generate call file line format
+	@param  array  $array, eg ['body'=>'hello']
+	@param  string $type, eg 'mess'
+	@return string format string, eg 'setvar: MESSAGE(body)="Hello"
 	*/
-	private function strings($array,$type = '') {
-		$strings = null;
-		$format = $this->format($type);
+	public function gen_callline($array,$type = '') {
+		$return = null;
+		$format = $this->gen_callformat($type);
 		foreach ($array as $key => $value) {
 			if (isset($value)) {
-				$strings .= sprintf("$format",$key,$value);
+				$return .= sprintf($format,$key,$this->escapespecial($value));
 			}
 		}
-		return $strings;
+		return $return;
 	}
 	/*--------------------------------------------------------------------------
+	Generate call file line format
+	@param string $type, eg 'mess'
+	@return string format string, eg 'setvar: MESSAGE(%s)="%s"'
 	*/
-	private function format($type) {
+	private function gen_callformat($type) {
 		switch ($type) {
 			case 'mess':
-				$format = "setvar: MESSAGE(%s)=%s\n";
-				break;
+				return 'setvar: MESSAGE(%s)="%s"'.PHP_EOL;
 			case 'setvar':
-				$format = "setvar: %s=%s\n";
-				break;
+				return 'setvar: %s=%s'.PHP_EOL;
 			case 'call':
 			default:
-				$format = "%s: %s\n";
-				break;
+				return '%s: %s'.PHP_EOL;
 		}
-		return $format;
 	}
 	/*--------------------------------------------------------------------------
+	In an Astrisk dialplan (extensions.conf) the following characters must be
+	escaped when used in a variable: []$"\
+	@param string $string to escape
+	@return string escaped string
 	*/
-	public function debug($data, $debug = false) {
+	private function escapespecial($string) {
+		return preg_replace('/([\[\]$"\\\\])/',"\\\\\\1",$string);
+	}
+	/*--------------------------------------------------------------------------
+	Print variable if $debug or $this->debug is true
+	@param  mixed   $var
+	@param  boolean $debug
+	@return void
+	*/
+	public function debug($var, $debug = false) {
 		if($debug || $this->debug) {
-			var_dump($data);
+			var_dump($var);
 		}
 	}
 }

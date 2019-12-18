@@ -1,3 +1,9 @@
+# 0.5.2
+
+- [websms](src/websms) Fixing bugs related to special characters in SMS messages
+- [websms](src/websms) Added `charset` parameter. Set to `ucs-2` to make sure all characters are within the Unicode BMP (up to U+FFFF).
+- [websms](src/websms) Updating documentation.
+
 # 0.5.1
 
 - [docker](Makefile) Enable PHP profiling using xdebug.

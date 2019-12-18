@@ -41,7 +41,7 @@ CNT_TZ   ?= UTC
 SMS_FROM ?= +15017122661
 SMS_TO   ?= +15558675310
 SMS_ACCT ?= 10T9M37yvSc
-SMS_BODY ?= This is the ship that made the Kessel Run in fourteen parsecs?
+SMS_BODY ?= Test SMS with special chars: []$$\"\\
 
 TST_W8S1 ?= 1
 TST_W8S2 ?= 40

@@ -6,7 +6,7 @@
 ; "yes" and "no" have to be within quotation marks otherwise they will be 
 ; interpreted as Boolean.
 ;
-;
+
 ;[websms]
 ;host            = ""      ;protocol and host name to send sms to
 ;path            = ""      ;complete url will be <host><path>
@@ -18,7 +18,8 @@
 ;auth_method     = "basic" ;eg "zadarma" method to authenticate sms request
 ;response_check  = ""      ;http POST key=value to check, eg "status=success"
 ;number_format   = ""      ;eg "omit+" omit leading "+" in phone numbers
-;
+;charset         = ""      ;set to "UCS-2" to limit Unicode characters to U+FFFF
+
 ;[websmsd]
 ;key_to          = "To"    ;http POST key name holding sms destination phone number
 ;key_from        = "From"  ;http POST key name holding sms origination phone number
@@ -30,7 +31,6 @@
 ;proxy_addr      = "172.16.0.0/12" ;Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 ;proxy_header    = "HTTP_X_FORWARDED_FOR" ;Behind a proxy this header hold the real client IP
 
-;
 ;[astqueue]
 ;outgoingdir     = /var/spool/asterisk/outgoing ;directory where asterisk picks up call files
 ;stagingdir      = /var/spool/asterisk/staging  ;create call file here and then move to outgoing

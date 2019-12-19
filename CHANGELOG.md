@@ -3,6 +3,8 @@
 - [websms](src/websms) Fixing bugs related to special characters in SMS messages
 - [websms](src/websms) Added `charset` parameter. Set to `ucs-2` to make sure all characters are within the Unicode BMP (up to U+FFFF).
 - [websms](src/websms) Updating documentation.
+- [websms](src/websms) Refactoring of `astqueue.class.ini` to better cope with message encoding.
+- [privatedial](src/privatedial) added `sub_decode_body` to cope with encoded messages.
 
 # 0.5.1
 

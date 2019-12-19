@@ -41,3 +41,5 @@
 ;channel_context = default ;dialplan context to answer the call, ie set up the channel
 ;context         = default ;dialplan context to handle the sms
 ;priority        = 1       ;dialplan priority to handle the sms
+;message_encode  = rfc3986 ;only single line allowed in call file so url-encoding message
+

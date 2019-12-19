@@ -2,6 +2,18 @@
 /*------------------------------------------------------------------------------
  The Astqueue class provides functions for creating Astrisk call files
 
+	Syntax of the Asterisk call file:
+		Channel: The channel to use for the new call
+		CallerID: The caller id to use
+		Maxretries: Number of retries before failing
+		RetryTime: How many seconds to wait before retry
+		Context: The context in the dialplan
+		Extension: The extension in the specified context
+		Priority: The priority of the specified extension
+		Setvar: MESSAGE(to)= The SMS destination
+		Setvar: MESSAGE(from)= The SMS originator
+		Setvar: MESSAGE(body)= The SMS message
+
 */
 class Astqueue {
 	const DEFAULT_CONF_FILE = '/etc/asterisk/astqueue.conf';
@@ -17,11 +29,29 @@ class Astqueue {
 		'channel_context' => 'default',
 		'context'         => 'default',
 		'priority'        => 1,
+		'message_encode'  => 'rfc3986',
+		];
+	const CALLFILE_SYNTAX = [
+		'Channel'         => 'channel',
+		'CallerID'        => 'callid',
+		'WaitTime'        => 'config',
+		'MaxRetries'      => 'config',
+		'RetryTime'       => 'config',
+		'Account'         => 'config',
+		'Application'     => 'config',
+		'Data'            => 'config',
+		'Context'         => 'config',
+		'Extension'       => 'to',
+		'Priority'        => 'config',
+		'Archive'         => 'config',
+		];
+	const CALLFILE_SETVAR = [
+		'MESSAGE(to)'     => 'to',
+		'MESSAGE(from)'   => 'from',
+		'MESSAGE(body)'   => 'body',
+		'MESSAGE_ENCODE'  => 'config',
 		];
 	private $config;
-	private $name;
-	private $call;
-	private $mess;
 	public $debug = false;
 	public function __construct($config = null, array $optconfig = []) {
 		if (is_string($config) !== true) {
@@ -40,29 +70,19 @@ class Astqueue {
 		$this->mkdir($this->config['astqueue']['stagingdir']);
 	}
 	/*--------------------------------------------------------------------------
-	@param string $dir full path to direcory
-	@return void
-	*/
-	private function mkdir($dir) {
-		if (!is_dir($dir) && !mkdir($dir))
-			trigger_error("unable create directory ($dir)", E_USER_WARNING);
-	}
-	/*--------------------------------------------------------------------------
 	Generate call file with message
-	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello!']
-		$message['to'] : The SMS destination
-		$message['from'] : The SMS originator
-		$message['body'] : The SMS message
+	@param  array   $data, eg ['to'=>'+1...60','from'=>'+1...25','body'=>'Hello!']
+		$data['to'] : The SMS destination
+		$data['from'] : The SMS originator
+		$data['body'] : The SMS message
 	@return boolean true if sucessful otherwise false
 	*/
-	public function text($message) {
-		if (isset($message['to']) && isset($message['from']) && isset($message['body'])) {
-			$exten = $message['to'];
-			$callid = $message['from'];
-			$this->gen_name($exten);
-			$this->gen_call($exten,$callid);
-			$this->gen_mess($message);
-			return $this->write();
+	public function text($data) {
+		if (isset($data['to']) && isset($data['from']) && isset($data['body'])) {
+			$lines = $this->gen_lines(Self::CALLFILE_SYNTAX,$data);
+			$lines .= $this->gen_lines(Self::CALLFILE_SETVAR,$data,true);
+			$basename = $this->gen_basename($data);
+			return $this->write($basename, $lines);
 		} else {
 			return false;
 		}
@@ -75,110 +95,74 @@ class Astqueue {
 	*/
 	public function call($exten,$callid) {
 		if (isset($exten) && isset($callid)) {
-			$this->gen_name($exten);
-			$this->gen_call($exten,$callid);
-			return $this->write();
+			$data = ['to'=>$exten,'from'=>$callid];
+			$lines = $this->gen_lines(Self::CALLFILE_SYNTAX,$message);
+			$basename = $this->gen_basename($data);
+			return $this->write($basename, $lines);
 		} else {
 			return false;
 		}
 	}
 	/*--------------------------------------------------------------------------
-	Create new call file in the staging directory.
-	Using staging directory to avoid Asterisk reading an unfinished file.
-	Move the call file to the outgoing directory, so that Asterisk pick it up.
-	@return boolean true if sucessful otherwise false
+	@param  array   $syntax, eg ['Channel'=>'channel','CallerID'=>'callid',...]
+	@param  array   $data, eg ['to'=>'+1...60','from'=>'+1...25','body'=>'Hello!']
+	@param  boolean $setvar use setvar syntax if true
+	@return string  lines
 	*/
-	private function write() {
-		$lines  = $this->gen_callline($this->call,'call');
-		$lines .= $this->gen_callline($this->mess,'mess');
-		$stagingfile  = $this->config['astqueue']['stagingdir'].'/'.$this->name;
-		$outgoingfile = $this->config['astqueue']['outgoingdir'].'/'.$this->name;
-		if (file_put_contents($stagingfile,$lines) === false) {
-			trigger_error("unable to open call file ($stagingfile)", E_USER_WARNING);
-			return false;
-		}
-		if (rename($stagingfile, $outgoingfile) === false) {
-			trigger_error("unable to move file ($stagingfile) to file ($outgoingfile)", E_USER_WARNING);
-			return false;
-		}
-		return true;
-	}
-	/*--------------------------------------------------------------------------
-	NOT WORKING DUE TO PHP NOT HAVING ROOT ASSESS
-	*/
-	private function chmod() {
-		$outgoingfile = $this->config['astqueue']['outgoingdir'].'/'.$this->name;
-		if (!empty($this->config['astqueue']['filemode'])) {
-			chmod($outgoingfile, octdec($this->config['astqueue']['filemode']));
-		}
-		if (!empty($this->config['astqueue']['fileowner'])) {
-			chmod($outgoingfile, chown($this->config['astqueue']['fileowner']));
-		}
-	}
-	/*--------------------------------------------------------------------------
-	Generate call file name.
-	Format: <EXTEN>.<seconds since the Unix Epoch>.<3 digit random>.call
-	@param string $exten callee phone number, eg '+12025550160'
-	@return void
-	*/
-	private function gen_name($exten) {
-		$this->name = sprintf("%s.%d.%03d.call",$exten,time(),rand(0,999));
-	}
-	/*--------------------------------------------------------------------------
-	Syntax of the Asterisk call file:
-		Channel: The channel to use for the new call
-		CallerID: The caller id to use
-		Maxretries: Number of retries before failing
-		RetryTime: How many seconds to wait before retry
-		Context: The context in the dialplan
-		Extension: The extension in the specified context
-		Priority: The priority of the specified extension
-		Setvar: MESSAGE(to)= The SMS destination
-		Setvar: MESSAGE(from)= The SMS originator
-		Setvar: MESSAGE(body)= The SMS message
-	@param string $exten callee phone number, eg '+12025550160'
-	@param string $callid caller phone number, eg '+12025550125'
-	@return void
-	*/
-	private function gen_call($exten,$callid) {
-		$this->call = [
-		'Channel'     => $this->gen_channel($exten),
-		'CallerID'    => $this->gen_callid($callid),
-		'WaitTime'    => null,
-		'MaxRetries'  => null,
-		'RetryTime'   => null,
-		'Account'     => null,
-		'Application' => null,
-		'Data'        => null,
-		'Context'     => null,
-		'Extension'   => $exten,
-		'Priority'    => null,
-		'Archive'     => null
-		];
-		foreach ($this->call as $key => &$value) {
-			$key_lower = strtolower($key);
-			if(empty($value) && array_key_exists($key_lower,$this->config['astqueue'])) {
-				$value = $this->config['astqueue'][$key_lower];
+	private function gen_lines($syntax,$data,$setvar = false) {
+		$return = null;
+		$to = $data['to'];
+		$from = $data['from'];
+		$body = $data['body'];
+		foreach ($syntax as $key => $type) {
+			switch ($type) {
+			case 'to':
+				$return .= $this->gen_line($key,$to,$setvar);
+				break;
+			case 'from':
+				$return .= $this->gen_line($key,$from,$setvar);
+				break;
+			case 'body':
+				$return .= $this->gen_line($key,$this->gen_body($body),true);
+				break;
+			case 'channel':
+				$return .= $this->gen_line($key,$this->gen_channel($to));
+				break;
+			case 'callid':
+				$return .= $this->gen_line($key,$this->gen_callid($from));
+				break;
+			case 'config':
+				$return .= $this->gen_line($key,$this->gen_config($key),$setvar);
+				break;
 			}
 		}
-		unset($value);
-		$this->debug($this->call);
+		return $return;
 	}
 	/*--------------------------------------------------------------------------
-	Assign class variable mess.
-	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello!']
-		$message['to'] : The SMS destination
-		$message['from'] : The SMS originator
-		$message['body'] : The SMS message
-	@return boolean true if sucessful otherwise false
+	@param  string  $key, eg 'archive'
+	@param  string  $value, eg 'yes'
+	@param  boolean $setvar use setvar syntax if true
+	@return string  or null, eg 'archive: yes'
 	*/
-	private function gen_mess($message) {
-		if (isset($message['to']) && isset($message['from']) && isset($message['body'])) {
-			$this->mess = $message;
-			$this->debug($this->mess);
-			return true;
+	private function gen_line($key,$value,$setvar = false) {
+		if (!isset($key) || !isset($value)) return null;
+		if ($setvar) {
+			return sprintf('setvar: %s=%s', $key, $value).PHP_EOL;
 		} else {
-			return false;
+			return sprintf('%s: %s', $key, $value).PHP_EOL;
+		}
+	}
+	/*--------------------------------------------------------------------------
+	Get config value
+	@param string $key, eg 'waittime'
+	@return mixed config value, eg 45
+	*/
+	public function gen_config($key) {
+		$key_lower = strtolower($key);
+		if(array_key_exists($key_lower,$this->config['astqueue'])) {
+			return $this->config['astqueue'][$key_lower];
+		} else {
+			return null;
 		}
 	}
 	/*--------------------------------------------------------------------------
@@ -199,46 +183,68 @@ class Astqueue {
 		return sprintf('"%s" <%s>',$display,$number);
 	}
 	/*--------------------------------------------------------------------------
-	Generate call file line format
-	@param  array  $array, eg ['body'=>'Hello!']
-	@param  string $type, eg 'mess'
-	@return string format string, eg 'setvar: MESSAGE(body)=Hello%21
+	Generate call file basename.
+	Format: <EXTEN>.<seconds since the Unix Epoch>.<3 digit random>.call
+	@param  array $data['to'] callee phone number, eg '+12025550160'
+	@return void
 	*/
-	public function gen_callline($array,$type = '') {
-		$return = null;
-		$format = $this->gen_callformat($type);
-		foreach ($array as $key => $value) {
-			if (isset($value)) {
-				if ($key === 'body') $value = $this->escapespecial($value);
-				$return .= sprintf($format,$key,$value);
-			}
-		}
-		return $return;
-	}
-	/*--------------------------------------------------------------------------
-	Generate call file line format
-	@param string $type, eg 'mess'
-	@return string format string, eg 'setvar: MESSAGE(%s)=%s
-	*/
-	private function gen_callformat($type) {
-		switch ($type) {
-			case 'mess':
-				return 'setvar: MESSAGE(%s)=%s'.PHP_EOL;
-			case 'setvar':
-				return 'setvar: %s=%s'.PHP_EOL;
-			case 'call':
-			default:
-				return '%s: %s'.PHP_EOL;
-		}
+	private function gen_basename($data) {
+		return sprintf("%s.%d.%03d.call",$data['to'],time(),rand(0,999));
 	}
 	/*--------------------------------------------------------------------------
 	The message cannot span multiple lines in an Astrisk call file. To work
-	arround that we URL encode (RFC3986 which superseeds RFC2396) the message.
+	arround that we encode the message (RFC3986, which superseeds RFC2396).
 	@param string $string to escape
 	@return string escaped string
 	*/
-	private function escapespecial($string) {
-		return rawurlencode($string);
+	private function gen_body($string) {
+		if ($this->config['astqueue']['message_encode'] === 'rfc3986') {
+			return rawurlencode($string);
+		} else {
+			return $string;
+		}
+	}
+	/*--------------------------------------------------------------------------
+	Create new call file in the staging directory.
+	Using staging directory to avoid Asterisk reading an unfinished file.
+	Move the call file to the outgoing directory, so that Asterisk pick it up.
+	@param string $basename
+	@param string $lines file contents
+	@return boolean true if sucessful otherwise false
+	*/
+	private function write($basename, $lines) {
+		$stagingfile  = $this->config['astqueue']['stagingdir'].'/'.$basename;
+		$outgoingfile = $this->config['astqueue']['outgoingdir'].'/'.$basename;
+		if (file_put_contents($stagingfile,$lines) === false) {
+			trigger_error("unable to open call file ($stagingfile)", E_USER_WARNING);
+			return false;
+		}
+		if (rename($stagingfile, $outgoingfile) === false) {
+			trigger_error("unable to move file ($stagingfile) to file ($outgoingfile)",
+				E_USER_WARNING);
+			return false;
+		}
+		return true;
+	}
+	/*--------------------------------------------------------------------------
+	@param string $dir full path to direcory
+	@return void
+	*/
+	private function mkdir($dir) {
+		if (!is_dir($dir) && !mkdir($dir))
+			trigger_error("unable create directory ($dir)", E_USER_WARNING);
+	}
+	/*--------------------------------------------------------------------------
+	NOT WORKING DUE TO PHP NOT HAVING ROOT ASSESS
+	*/
+	private function chmod() {
+		$outgoingfile = $this->config['astqueue']['outgoingdir'].'/'.$this->name;
+		if (!empty($this->config['astqueue']['filemode'])) {
+			chmod($outgoingfile, octdec($this->config['astqueue']['filemode']));
+		}
+		if (!empty($this->config['astqueue']['fileowner'])) {
+			chmod($outgoingfile, chown($this->config['astqueue']['fileowner']));
+		}
 	}
 	/*--------------------------------------------------------------------------
 	Print variable if $debug or $this->debug is true

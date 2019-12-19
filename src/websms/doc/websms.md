@@ -144,6 +144,7 @@ One difference is that the strings, "yes", "no", "true", "false" and "null" have
 | [astqueue] | channel_context | default                      | string  | Dialplan context to answer the call, ie set up the channel.  |
 | [astqueue] | context         | default                      | string  | Dialplan context to handle the SMS.                          |
 | [astqueue] | priority        | 1                            | integer | Dialplan priority to handle the SMS.                         |
+| [astqueue] | message_encode  | rfc3986                      | string  | Only single line allowed in call file so url-encoding message. |
 
 ### Default configuration
 

@@ -39,9 +39,9 @@ CNT_DRV  ?=
 CNT_TZ   ?= UTC
 
 SMS_FROM ?= +15017122661
-SMS_TO   ?= +15558675310
+SMS_TO   ?= +12025550160
 SMS_ACCT ?= 10T9M37yvSc
-SMS_BODY ?= Test SMS with special chars:[$$];; and %0Anew line
+SMS_BODY ?= This is a test message,sent $$(date), with special chars: ☺ [$$\"\\];; and 4 additional lines:%0A1%0A2%0A3%0A4.
 
 TST_W8S1 ?= 1
 TST_W8S2 ?= 40
@@ -133,15 +133,15 @@ test-upgrade:
 
 test-smsd1:
 	curl -i $(TST_SMSU) -X POST \
-	--data-urlencode "caller_did=$(SMS_FROM)" \
-	--data-urlencode "caller_id=$(SMS_TO)" \
+	--data-urlencode "caller_did=$(SMS_TO)" \
+	--data-urlencode "caller_id=$(SMS_FROM)" \
 	--data-urlencode "text=$(SMS_BODY)" \
 	--data-urlencode "account_sid=$(SMS_ACCT)"
 
 test-smsd2:
 	curl -i $(TST_SMSU) -X POST \
-	--data-urlencode "To=$(SMS_FROM)" \
-	--data-urlencode "From=$(SMS_TO)" \
+	--data-urlencode "To=$(SMS_TO)" \
+	--data-urlencode "From=$(SMS_FROM)" \
 	--data "Body=$(SMS_BODY)"
 
 test-smsd3:
@@ -171,6 +171,9 @@ test-diff:
 
 test-top:
 	docker container top $(CNT_NAME)
+
+test-env:
+	docker exec -it $(CNT_NAME) env
 
 test-nft:
 	docker exec -it $(CNT_NAME) nft list ruleset

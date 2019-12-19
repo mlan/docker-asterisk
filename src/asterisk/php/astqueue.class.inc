@@ -49,7 +49,7 @@ class Astqueue {
 	}
 	/*--------------------------------------------------------------------------
 	Generate call file with message
-	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello']
+	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello!']
 		$message['to'] : The SMS destination
 		$message['from'] : The SMS originator
 		$message['body'] : The SMS message
@@ -166,7 +166,7 @@ class Astqueue {
 	}
 	/*--------------------------------------------------------------------------
 	Assign class variable mess.
-	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello']
+	@param array $message, eg ['to'=>'+12025550160','from'=>'+12025550125','body'=>'Hello!']
 		$message['to'] : The SMS destination
 		$message['from'] : The SMS originator
 		$message['body'] : The SMS message
@@ -200,16 +200,17 @@ class Astqueue {
 	}
 	/*--------------------------------------------------------------------------
 	Generate call file line format
-	@param  array  $array, eg ['body'=>'hello']
+	@param  array  $array, eg ['body'=>'Hello!']
 	@param  string $type, eg 'mess'
-	TODO @return string format string, eg 'setvar: MESSAGE(body)="Hello"
+	@return string format string, eg 'setvar: MESSAGE(body)=Hello%21
 	*/
 	public function gen_callline($array,$type = '') {
 		$return = null;
 		$format = $this->gen_callformat($type);
 		foreach ($array as $key => $value) {
 			if (isset($value)) {
-				$return .= sprintf($format,$key,$this->escapespecial($value));
+				if ($key === 'body') $value = $this->escapespecial($value);
+				$return .= sprintf($format,$key,$value);
 			}
 		}
 		return $return;
@@ -217,7 +218,7 @@ class Astqueue {
 	/*--------------------------------------------------------------------------
 	Generate call file line format
 	@param string $type, eg 'mess'
-	TODO @return string format string, eg 'setvar: MESSAGE(%s)="%s"'
+	@return string format string, eg 'setvar: MESSAGE(%s)=%s
 	*/
 	private function gen_callformat($type) {
 		switch ($type) {
@@ -231,18 +232,13 @@ class Astqueue {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	In an Astrisk dialplan (extensions.conf) the following characters must be
-	escaped when used in a variable: []$"\
-	replace LF/CR with VT or FF
+	The message cannot span multiple lines in an Astrisk call file. To work
+	arround that we URL encode (RFC3986 which superseeds RFC2396) the message.
 	@param string $string to escape
 	@return string escaped string
 	*/
 	private function escapespecial($string) {
-		$patterns = ['/\R/','/([;])/'];
-		$replacements = ["\u{000c}","\\\\\\1"];
-		return preg_replace($patterns, $replacements, $string);
-#		return preg_replace('/\R/','\x000A',$string);
-#		return preg_replace('/([\[\]$"\\\\])/',"\\\\\\1",$string);
+		return rawurlencode($string);
 	}
 	/*--------------------------------------------------------------------------
 	Print variable if $debug or $this->debug is true

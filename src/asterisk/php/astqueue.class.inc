@@ -202,7 +202,7 @@ class Astqueue {
 	Generate call file line format
 	@param  array  $array, eg ['body'=>'hello']
 	@param  string $type, eg 'mess'
-	@return string format string, eg 'setvar: MESSAGE(body)="Hello"
+	TODO @return string format string, eg 'setvar: MESSAGE(body)="Hello"
 	*/
 	public function gen_callline($array,$type = '') {
 		$return = null;
@@ -217,12 +217,12 @@ class Astqueue {
 	/*--------------------------------------------------------------------------
 	Generate call file line format
 	@param string $type, eg 'mess'
-	@return string format string, eg 'setvar: MESSAGE(%s)="%s"'
+	TODO @return string format string, eg 'setvar: MESSAGE(%s)="%s"'
 	*/
 	private function gen_callformat($type) {
 		switch ($type) {
 			case 'mess':
-				return 'setvar: MESSAGE(%s)="%s"'.PHP_EOL;
+				return 'setvar: MESSAGE(%s)=%s'.PHP_EOL;
 			case 'setvar':
 				return 'setvar: %s=%s'.PHP_EOL;
 			case 'call':
@@ -233,11 +233,16 @@ class Astqueue {
 	/*--------------------------------------------------------------------------
 	In an Astrisk dialplan (extensions.conf) the following characters must be
 	escaped when used in a variable: []$"\
+	replace LF/CR with VT or FF
 	@param string $string to escape
 	@return string escaped string
 	*/
 	private function escapespecial($string) {
-		return preg_replace('/([\[\]$"\\\\])/',"\\\\\\1",$string);
+		$patterns = ['/\R/','/([;])/'];
+		$replacements = ["\u{000c}","\\\\\\1"];
+		return preg_replace($patterns, $replacements, $string);
+#		return preg_replace('/\R/','\x000A',$string);
+#		return preg_replace('/([\[\]$"\\\\])/',"\\\\\\1",$string);
 	}
 	/*--------------------------------------------------------------------------
 	Print variable if $debug or $this->debug is true

@@ -271,7 +271,7 @@ class Websms {
 	private function filter_message($message) {
 		switch (strtolower($this->config['websms']['charset'])) {
 		case 'ucs-2':
-			return preg_replace('/[\x{10000}-\x{10FFFF}]/u','\xFFFD',$message);
+			return preg_replace('/[\x{10000}-\x{10FFFF}]/u',"\u{FFFD}",$message);
 		case 'utf-8':
 		default:
 			return $message;

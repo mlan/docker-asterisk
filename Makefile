@@ -41,7 +41,7 @@ CNT_TZ   ?= UTC
 SMS_FROM ?= +15017122661
 SMS_TO   ?= +15558675310
 SMS_ACCT ?= 10T9M37yvSc
-SMS_BODY ?= Test SMS with special chars: []$$\"\\
+SMS_BODY ?= Test SMS with special chars:[$$];; and %0Anew line
 
 TST_W8S1 ?= 1
 TST_W8S2 ?= 40
@@ -142,7 +142,7 @@ test-smsd2:
 	curl -i $(TST_SMSU) -X POST \
 	--data-urlencode "To=$(SMS_FROM)" \
 	--data-urlencode "From=$(SMS_TO)" \
-	--data-urlencode "Body=$(SMS_BODY)"
+	--data "Body=$(SMS_BODY)"
 
 test-smsd3:
 	curl -i $(TST_SMSU) -G \

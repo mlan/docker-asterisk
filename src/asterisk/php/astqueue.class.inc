@@ -1,6 +1,6 @@
 <?php
 /*------------------------------------------------------------------------------
- The Astqueue class provides functions for creating Astrisk call files
+ The Astqueue class provides functions for creating Asterisk call files
 
 	Syntax of the Asterisk call file:
 		Channel: The channel to use for the new call
@@ -75,7 +75,7 @@ class Astqueue {
 		$data['to'] : The SMS destination
 		$data['from'] : The SMS originator
 		$data['body'] : The SMS message
-	@return boolean true if sucessful otherwise false
+	@return boolean true if successful otherwise false
 	*/
 	public function text($data) {
 		if (isset($data['to']) && isset($data['from']) && isset($data['body'])) {
@@ -91,7 +91,7 @@ class Astqueue {
 	Generate call file with call
 	@param string $exten callee phone number, eg '+12025550160'
 	@param string $callid caller phone number, eg '+12025550125'
-	@return boolean true if sucessful otherwise false
+	@return boolean true if successful otherwise false
 	*/
 	public function call($exten,$callid) {
 		if (isset($exten) && isset($callid)) {
@@ -192,8 +192,8 @@ class Astqueue {
 		return sprintf("%s.%d.%03d.call",$data['to'],time(),rand(0,999));
 	}
 	/*--------------------------------------------------------------------------
-	The message cannot span multiple lines in an Astrisk call file. To work
-	arround that we encode the message (RFC3986, which superseeds RFC2396).
+	The message cannot span multiple lines in an Asterisk call file. To work
+	around that we encode the message (RFC3986, which supersedes RFC2396).
 	@param string $string to escape
 	@return string escaped string
 	*/
@@ -210,7 +210,7 @@ class Astqueue {
 	Move the call file to the outgoing directory, so that Asterisk pick it up.
 	@param string $basename
 	@param string $lines file contents
-	@return boolean true if sucessful otherwise false
+	@return boolean true if successful otherwise false
 	*/
 	private function write($basename, $lines) {
 		$stagingfile  = $this->config['astqueue']['stagingdir'].'/'.$basename;
@@ -227,7 +227,7 @@ class Astqueue {
 		return true;
 	}
 	/*--------------------------------------------------------------------------
-	@param string $dir full path to direcory
+	@param string $dir full path to directory
 	@return void
 	*/
 	private function mkdir($dir) {

@@ -263,8 +263,8 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	Filter message, since some API only accept unicode up to xFFFF BMP (UCS-2)
-	replace charaters in SMP with the replacement charater U+FFFD, when needed.
+	Filter message, since some API only accept Unicode up to xFFFF BMP (UCS-2)
+	replace characters in SMP with the replacement character U+FFFD, when needed.
 	@param string $message
 	@return string $message
 	*/

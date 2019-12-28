@@ -1,6 +1,6 @@
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.10
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.11
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
@@ -76,11 +76,10 @@ variables:
 ps:
 	docker ps -a
 
-pw:
-	dd if=/dev/random count=1 bs=8 2>/dev/null | base64 | sed -e 's/=*$$//'
-	#od -vAn -N4 -tu4 < /dev/urandom
-
 prune:
+	docker image prune -f
+
+prune-all:
 	docker image prune
 	docker container prune
 	docker volume prune
@@ -131,76 +130,3 @@ test-upgrade:
 #	docker cp src/*/config/. $(CNT_NAME):/etc/asterisk
 #	docker cp src/*/nft/. $(CNT_NAME):/var/lib/nftables
 
-test-smsd1:
-	curl -i $(TST_SMSU) -X POST \
-	--data-urlencode "caller_did=$(SMS_TO)" \
-	--data-urlencode "caller_id=$(SMS_FROM)" \
-	--data-urlencode "text=$(SMS_BODY)" \
-	--data-urlencode "account_sid=$(SMS_ACCT)"
-
-test-smsd2:
-	curl -i $(TST_SMSU) -X POST \
-	--data-urlencode "To=$(SMS_TO)" \
-	--data-urlencode "From=$(SMS_FROM)" \
-	--data "Body=$(SMS_BODY)"
-
-test-smsd3:
-	curl -i $(TST_SMSU) -G \
-	--data-urlencode "zd_echo=$(shell date)"
-	@echo
-
-test-down:
-	docker stop $(CNT_NAME) 2>/dev/null || true
-	docker rm $(CNT_NAME) 2>/dev/null || true
-	docker network rm $(TST_NET) 2>/dev/null || true
-
-test-start:
-	docker start $(CNT_NAME)
-
-test-logs:
-	docker container logs $(CNT_NAME)
-
-test-sh:
-	docker exec -it $(CNT_NAME) bash
-
-test-cli:
-	docker exec -it $(CNT_NAME) $(CNT_CLI)
-
-test-diff:
-	docker container diff $(CNT_NAME)
-
-test-top:
-	docker container top $(CNT_NAME)
-
-test-env:
-	docker exec -it $(CNT_NAME) env
-
-test-nft:
-	docker exec -it $(CNT_NAME) nft list ruleset
-
-test-autoban:
-	docker exec -it $(CNT_NAME) autoban show
-
-test-htop: test-debugtools
-	docker exec -it $(CNT_NAME) htop
-
-test-debugtools:
-	docker exec -it $(CNT_NAME) apk --no-cache --update add \
-	nano less lsof htop openldap-clients bind-tools iputils strace
-
-test-xdebug_install:
-	docker exec -it $(CNT_NAME) apk --no-cache --update add \
-	php7-pecl-xdebug
-	docker exec -it $(CNT_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/php7/php.ini
-	docker exec -it $(CNT_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/php7/conf.d/xdebug.ini
-	docker exec -it $(CNT_NAME) sv restart websmsd autoband
-
-test-xdebug_getdata:
-	docker cp $(CNT_NAME):tmp/. local/xdebug
-
-test-tz:
-	docker cp /usr/share/zoneinfo/$(CNT_TZ) $(CNT_NAME):/etc/localtime
-	docker exec -it $(CNT_NAME) sh -c 'echo $(CNT_TZ) > /etc/timezone'
-
-test-tls:
-	docker run --rm -it --network $(TST_NET) drwetter/testssl.sh $(CNT_NAME):$(TST_SIPS) || true

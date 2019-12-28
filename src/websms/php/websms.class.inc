@@ -1,6 +1,6 @@
 <?php
 /*------------------------------------------------------------------------------
- The Websms class provides functions for creating Asterisk call files
+ The Websms class provides functions for
 
  <websmsd.php>
  listen()

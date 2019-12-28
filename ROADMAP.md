@@ -10,6 +10,11 @@ Needed. :)
 
 ## PrivateDial
 
+- Make IVR custom-able
+- Debug MiniVM access messages.
+
+### Put in documentation
+
 - Note, Presence is only supported for Sangama/Digium phones, not for softphones.
 
 ## Music on hold
@@ -28,7 +33,6 @@ Needed. :)
 
 - check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
 
-## Create demo
+## Dependencies
 
-- docker-compose.yml
-- Makefile, move test targets here
+- Reorganize. Use git submodules?

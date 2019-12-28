@@ -34,18 +34,51 @@ To exemplify the usage of the tags, lets assume that the latest version is `1.0.
 
 Often you want to configure Asterisk and its components. There are different methods available to achieve this. Moreover docker volumes or host directories with desired configuration files can be mounted in the container. And finally you can `docker exec` into a running container and modify configuration files directly.
 
-If you want to test the image right away, probably the best way is to use the `Makefile` that comes with this repository.
-
-To build, and then start a test container you simply have to `cd` into the repository directory and type
+If you want to test the image right away, probably the best way is to clone the github repository and run the demo therein.
 
 ```bash
-make build test-up
+git clone https://github.com/mlan/docker-asterisk.git
+```
+
+## Docker compose example
+
+An example of how to configure an VoIP SIP server using docker compose is given below.
+
+```yaml
+version: '3'
+
+services:
+  tele:
+    image: mlan/asterisk
+    cap_add:
+      - net_admin
+      - net_raw
+    ports:
+      - "${SMS_PORT-8080}:80"
+      - "9960:9960/udp"
+      - "9960:9960"
+      - "9961:9961"
+      - "10000-10099:10000-10099/udp"
+    environment:
+      - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
+      - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
+    volumes:
+      - tele-conf:/srv
+
+volumes:
+  tele-conf:
+```
+
+This repository contains a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
+
+```bash
+make up
 ```
 
 The you can connect to the asterisk command line interface (CLI) running inside the container by typing
 
 ```bash
-make test-cli
+make cli
 ```
 
 From the Asterisk CLI you can type
@@ -59,37 +92,8 @@ to see the endpoints (soft phones) that are configured in the `/etc/asterisk/pjs
 When you are done testing you can destroy the test container by typing
 
 ```bash
-make test-down
+make destroy
 ```
-
-## Docker compose example
-
-An example of how to configure an VoIP SIP server using docker compose is given below.
-
-```yaml
-version: '3'
-
-services:
-  tele:
-    image: mlan/asterisk
-    restart: unless-stopped
-    cap_add:
-      - net_admin
-      - net_raw
-    ports:
-      - "80:80"
-      - "5060:5060/udp"
-      - "5060-5061:5060-5061"
-      - "10000-10099:10000-10099/udp"
-    environment:
-      - SYSLOG_LEVEL=4
-    volumes:
-      - tele-conf:/srv
-volumes:
-  tele-conf:
-```
-
-This repository WILL contain a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
 
 ## Environment variables
 

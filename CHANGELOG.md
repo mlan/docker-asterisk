@@ -1,3 +1,10 @@
+# 0.6.0
+
+- [docker](src/docker) Now use alpine:3.11 (asterisk:16.6.2).
+- [repo](demo) Added demo.
+- [websms](src/websms) Updating documentation.
+- [privatedial](src/privatedial) Added demo-echotest in IVR.
+
 # 0.5.2
 
 - [websms](src/websms) Fixing bugs related to special characters in SMS messages

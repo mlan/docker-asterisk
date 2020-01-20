@@ -2,7 +2,7 @@
 
 PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to for private use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
 
-It uses the [PJSIP channel driver](https://wiki.asterisk.org/wiki/display/AST/Configuring+res_pjsip), and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
+It uses the [PJSIP](https://www.pjsip.org/) [channel driver](https://wiki.asterisk.org/wiki/display/AST/Configuring+res_pjsip) and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
 
 The underlying design idea is to separate the dial plan function form the user data. To achieve this all user specific data has been pushed out from the main file `extensions.conf`.
 
@@ -10,8 +10,10 @@ The underlying design idea is to separate the dial plan function form the user d
 
 Feature list follows below
 
-- PHP web-hook for (incoming) SMS http ITSP origination
-- dialplan PHP (outgoing) SMS http ITSP termination
+- [MiniVoiceMail](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmRecord)
+- WebSMS
+- [PHP](https://en.wikipedia.org/wiki/PHP) web-hook for (incoming) SMS HTTP ITSP origination
+- dialplan PHP (outgoing) SMS HTTP ITSP termination
 - dialplan ITSP originating (incoming) SIP voice call
 - dialplan ITSP termination (outgoing) SIP voice call
 
@@ -21,14 +23,14 @@ The suite of Asterisk configuration files making up PrivateDial is summarized be
 
 ### Configuration files overview
 
-| File name               | Description                                                  |
-| ----------------------- | ------------------------------------------------------------ |
-| extensions.conf  | dialplan how incoming and outgoing calls and messages are handled |
+| File name             | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| extensions.conf       | dialplan how incoming and outgoing calls and messages are handled |
 | extensions_local.conf | Defines SIP trunk endpoint                                   |
-| minivm.conf             | Define mail sever URL and authentication credentials which voice mail email notifications will be sent |
-| pjsip.conf |  |
+| minivm.conf           | Define mail sever URL and authentication credentials which voice mail email notifications will be sent |
+| pjsip.conf            |  |
 | pjsip_transport.conf  | Defines SIP transport, protocol, port, host URL              |
-| pjsip_wizard.conf       | Defines endpoints, soft-phones, users, sip trunk             |
+| pjsip_wizard.conf     | Defines endpoints, soft-phones, users, sip trunk             |
 
 ## Usage
 

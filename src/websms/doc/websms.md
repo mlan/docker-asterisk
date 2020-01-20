@@ -20,7 +20,7 @@ Not all ITSP offer [virtual numbers (DID)](https://en.wikipedia.org/wiki/Virtual
 
 Modern phones support [Unicode](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set) for non-GSM (GSM-7) characters; Unicode UCS-2. This gives a larger set of characters at a cost in [message length](https://en.wikipedia.org/wiki/SMS#Message_size). To be able to send and receive SMS with emoticons, the ITSP's API needs to support the UCS-2 encoding which is not always the case.
 
-Nowadays most smart phones uses UTF-16 in setad of UCS-2.
+Nowadays most smart phones uses UTF-16 in stead of UCS-2.
 
 ### Reverse proxy
 

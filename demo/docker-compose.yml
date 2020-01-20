@@ -10,9 +10,9 @@ services:
       - net_raw
     ports:
       - "${SMS_PORT-8080}:80"
-      - "9960:9960/udp"
-      - "9960:9960"
-      - "9961:9961"
+      - "5060:5060/udp"
+      - "5060:5060"
+      - "5061:5061"
       - "10000-10099:10000-10099/udp"
     environment:
       - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}

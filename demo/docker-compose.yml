@@ -17,8 +17,15 @@ services:
     environment:
       - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
       - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
+      - PULSE_SERVER=unix:/tmp/pulseaudio.socket
+      - PULSE_COOKIE=/tmp/pulseaudio.cookie
     volumes:
       - tele-conf:/srv
+      - ${XDG_RUNTIME_DIR}/pulse/native:/tmp/pulseaudio.socket
+      - ${HOME}/.config/pulse/cookie:/tmp/pulseaudio.cookie
+#    devices:
+#      - /dev/snd
+#    privileged: true
 
 volumes:
   tele-conf:

@@ -6,7 +6,7 @@ _ip       = $(shell docker inspect -f \
 
 SRV_NAME ?= tele
 CNT_NAME ?= $(COMPOSE_PROJECT_NAME)_$(SRV_NAME)_1
-CNT_CLI  ?= asterisk -r -vvvddd
+CNT_CLI  ?= asterisk -rvvvddd
 
 SIPS_URL ?= $(call _ip,$(CNT_NAME)):5061
 
@@ -20,13 +20,19 @@ SMS_BODY ?= This is a test message, sent $$(date), with special chars: ☺ [$$\"
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
 
+init: up
+
 ps:
 	docker-compose ps
 
-init: up
-
 up:
 	docker-compose up -d
+
+start:
+	docker-compose start
+
+stop:
+	docker-compose stop
 
 down:
 	docker-compose down
@@ -87,7 +93,8 @@ apk_list:
 
 tools_install:
 	docker-compose exec $(SRV_NAME) apk --no-cache --update add \
-	nano less lsof htop openldap-clients bind-tools iputils strace
+	nano less lsof htop openldap-clients bind-tools iputils strace \
+	pulseaudio pulseaudio-alsa alsa-plugins-pulse pulseaudio-utils alsa-utils
 
 xdebug_install:
 	docker-compose exec $(SRV_NAME) apk --no-cache --update add \
@@ -105,3 +112,22 @@ tz_update:
 
 sips_test:
 	docker run --rm -it --network bridge drwetter/testssl.sh $(SIPS_URL) || true
+
+sound_1:
+	docker-compose exec $(SRV_NAME) play -nq -t alsa synth 1 sine 300
+
+sound_2:
+	docker-compose exec $(SRV_NAME) play -q /var/lib/asterisk/sounds/en/hello-world.gsm
+
+sound_3:
+	docker-compose exec $(SRV_NAME) speaker-test
+
+logger:
+	docker-compose exec $(SRV_NAME) asterisk -rx \
+	'logger add channel console notice,warning,error,verbose'
+
+orignate:
+	docker-compose exec $(SRV_NAME) asterisk -rx \
+	'channel originate console/+12025550160@dp_entry_user_calling application playback hello-world'
+
+

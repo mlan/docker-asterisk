@@ -142,8 +142,8 @@ FROM	base AS full
 # Install
 
 RUN	apk --no-cache --update add \
+	asterisk-alsa \
 	asterisk-sounds-en
-#	php7-sockets
 
 #
 #
@@ -159,7 +159,6 @@ FROM	full AS xtra
 # Install
 
 RUN	apk --no-cache --update add \
-	asterisk-alsa \
 	asterisk-cdr-mysql \
 	asterisk-dahdi \
 	asterisk-doc \

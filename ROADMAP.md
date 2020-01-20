@@ -10,8 +10,10 @@ Needed. :)
 
 ## PrivateDial
 
-- Make IVR custom-able
+- Check that callid is set correctly on incoming calls (from trunk).
+- Test MiniVM functionality.
 - Debug MiniVM access messages.
+- Make IVR custom-able
 
 ### Put in documentation
 
@@ -19,7 +21,7 @@ Needed. :)
 
 ## Music on hold
 
-- Script that converts sound files to wav 8000 Hz mono
+- Script that converts sound files to wav 8000 Hz mono.
 
 ## AutoBan
 
@@ -36,3 +38,8 @@ Needed. :)
 ## Dependencies
 
 - Reorganize. Use git submodules?
+
+## Docker
+
+- Implement TZ
+- Harmonize script stdout messages. Separate script /usr/local/bin/inform ?

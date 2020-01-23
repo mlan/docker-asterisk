@@ -126,6 +126,19 @@ tz_update:
 sips_test:
 	docker run --rm -it --network bridge drwetter/testssl.sh $(SIPS_URL) || true
 
+sound_enable: pulse/socket
+	ln -f $${PUSLE_COOKIE-$$HOME/.config/pulse/cookie} pulse/cookie
+	sudo mount --bind $$(pactl info | sed '1!d;s/.*:\s*//g') pulse/socket
+	docker-compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so' || true
+
+sound_disable:
+	rm pulse/cookie
+	sudo umount pulse/socket
+
+pulse/socket:
+	mkdir -p pulse
+	touch pulse/socket
+
 sound_1:
 	docker-compose exec $(SRV_NAME) play -nq -t alsa synth 1 sine 300
 

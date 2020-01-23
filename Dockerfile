@@ -97,7 +97,6 @@ RUN	apk --no-cache --update add \
 	asterisk-curl \
 	asterisk-speex \
 	asterisk-srtp \
-	sox \
 	openssl \
 	curl \
 	php7 \
@@ -144,7 +143,8 @@ FROM	base AS full
 RUN	apk --no-cache --update add \
 	asterisk-alsa \
 	alsa-plugins-pulse \
-	asterisk-sounds-en
+	asterisk-sounds-en \
+	sox
 
 #
 #

@@ -132,7 +132,7 @@ HEALTHCHECK CMD sv status ${DOCKER_RUNSV_DIR}/*
 #
 # target: full
 #
-#
+# Add sounds and configure ALSA pluging to PulseAudio
 #
 #
 
@@ -143,6 +143,7 @@ FROM	base AS full
 
 RUN	apk --no-cache --update add \
 	asterisk-alsa \
+	alsa-plugins-pulse \
 	asterisk-sounds-en
 
 #

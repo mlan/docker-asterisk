@@ -88,13 +88,26 @@ autoban:
 htop: tools_install
 	docker-compose exec $(SRV_NAME) htop
 
+ipcs:
+	docker-compose exec $(SRV_NAME) ipcs
+
+logger:
+	docker-compose exec $(SRV_NAME) asterisk -rx \
+	'logger add channel console notice,warning,error,verbose'
+
+restart:
+	docker-compose exec $(SRV_NAME) sv restart asterisk
+
 apk_list:
 	docker-compose exec $(SRV_NAME) /bin/sh -c 'for pkg in $$(apk info 2>/dev/null); do printf "%9s  %s\n" $$(apk info -s $$pkg 2>/dev/null | sed -n "2{p;q}") $$pkg; done | sort'
 
+apk_add_%:
+	docker-compose exec $(SRV_NAME) apk -q --no-cache --update add $*
+
 tools_install:
 	docker-compose exec $(SRV_NAME) apk --no-cache --update add \
-	nano less lsof htop openldap-clients bind-tools iputils strace \
-	pulseaudio pulseaudio-alsa alsa-plugins-pulse pulseaudio-utils alsa-utils
+	nano lsof htop openldap-clients bind-tools iputils strace util-linux \
+	pulseaudio-utils alsa-utils
 
 xdebug_install:
 	docker-compose exec $(SRV_NAME) apk --no-cache --update add \
@@ -119,15 +132,16 @@ sound_1:
 sound_2:
 	docker-compose exec $(SRV_NAME) play -q /var/lib/asterisk/sounds/en/hello-world.gsm
 
-sound_3:
-	docker-compose exec $(SRV_NAME) speaker-test
+sound_3: apk_add_alsa-utils
+	docker-compose exec $(SRV_NAME) aplay -Dpulse /usr/share/sounds/alsa/Front_Right.wav
 
-logger:
-	docker-compose exec $(SRV_NAME) asterisk -rx \
-	'logger add channel console notice,warning,error,verbose'
+sound_4: apk_add_pulseaudio-utils
+	docker-compose exec $(SRV_NAME) paplay /usr/share/sounds/alsa/Front_Center.wav
 
-orignate:
+sound_5:
 	docker-compose exec $(SRV_NAME) asterisk -rx \
 	'channel originate console/+12025550160@dp_entry_user_calling application playback hello-world'
 
+sound_6:
+	docker-compose exec $(SRV_NAME) asterisk -rx 'console dial t@dp_ivr_recgreet'
 

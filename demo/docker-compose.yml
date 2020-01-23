@@ -10,22 +10,19 @@ services:
       - net_raw
     ports:
       - "${SMS_PORT-8080}:80"
-      - "9960:9960/udp"
-      - "9960:9960"
-      - "9961:9961"
+      - "5060:5060/udp"
+      - "5060:5060"
+      - "5061:5061"
       - "10000-10099:10000-10099/udp"
     environment:
       - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
       - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
-      - PULSE_SERVER=unix:/tmp/pulseaudio.socket
-      - PULSE_COOKIE=/tmp/pulseaudio.cookie
+      - PULSE_SERVER=unix:/tmp/pulseaudio.socket               # Use host audio
+      - PULSE_COOKIE=/tmp/pulseaudio.cookie                    # Use host audio
     volumes:
       - tele-conf:/srv
-      - ${XDG_RUNTIME_DIR}/pulse/native:/tmp/pulseaudio.socket
-      - ${HOME}/.config/pulse/cookie:/tmp/pulseaudio.cookie
-#    devices:
-#      - /dev/snd
-#    privileged: true
+      - ${XDG_RUNTIME_DIR}/pulse/native:/tmp/pulseaudio.socket # Use host audio
+      - ${HOME}/.config/pulse/cookie:/tmp/pulseaudio.cookie    # Use host audio
 
 volumes:
   tele-conf:

@@ -30,10 +30,11 @@ Needed. :)
 ## WebSMS
 
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
+- Handle "Invalid request" errors.
 
 ## Asterisk modules
 
-- check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
+- Check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
 
 ## Dependencies
 

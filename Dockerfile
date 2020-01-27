@@ -97,7 +97,6 @@ RUN	apk --no-cache --update add \
 	asterisk-curl \
 	asterisk-speex \
 	asterisk-srtp \
-	sox \
 	openssl \
 	curl \
 	php7 \
@@ -132,7 +131,7 @@ HEALTHCHECK CMD sv status ${DOCKER_RUNSV_DIR}/*
 #
 # target: full
 #
-#
+# Add sounds and configure ALSA pluging to PulseAudio
 #
 #
 
@@ -142,8 +141,10 @@ FROM	base AS full
 # Install
 
 RUN	apk --no-cache --update add \
-	asterisk-sounds-en
-#	php7-sockets
+	asterisk-alsa \
+	alsa-plugins-pulse \
+	asterisk-sounds-en \
+	sox
 
 #
 #
@@ -159,7 +160,6 @@ FROM	full AS xtra
 # Install
 
 RUN	apk --no-cache --update add \
-	asterisk-alsa \
 	asterisk-cdr-mysql \
 	asterisk-dahdi \
 	asterisk-doc \

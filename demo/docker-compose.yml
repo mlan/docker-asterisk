@@ -17,8 +17,11 @@ services:
     environment:
       - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
       - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
+      - PULSE_SERVER=unix:/run/pulse/socket # Use host audio
+      - PULSE_COOKIE=/run/pulse/cookie      # Use host audio
     volumes:
       - tele-conf:/srv
+      - ./pulse:/run/pulse:rshared          # Use host audio
 
 volumes:
   tele-conf:

@@ -10,8 +10,10 @@ Needed. :)
 
 ## PrivateDial
 
-- Make IVR custom-able
+- Check that callid is set correctly on incoming calls (from trunk).
+- Test MiniVM functionality.
 - Debug MiniVM access messages.
+- Make IVR custom-able
 
 ### Put in documentation
 
@@ -19,7 +21,7 @@ Needed. :)
 
 ## Music on hold
 
-- Script that converts sound files to wav 8000 Hz mono
+- Script that converts sound files to wav 8000 Hz mono.
 
 ## AutoBan
 
@@ -28,11 +30,17 @@ Needed. :)
 ## WebSMS
 
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
+- Handle "Invalid request" errors.
 
 ## Asterisk modules
 
-- check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
+- Check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
 
 ## Dependencies
 
 - Reorganize. Use git submodules?
+
+## Docker
+
+- Implement TZ
+- Harmonize script stdout messages. Separate script /usr/local/bin/inform ?

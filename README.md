@@ -212,6 +212,29 @@ Please note that, relying on the the docker-proxy to map non-standard port to st
 
 It’s recommended that the minimum strength of a password used in a SIP digests are at least 8 characters long, preferably 10 characters, and have characters that include lower and upper case alphabetic, a number and a non-alphabetic, non-numeric ASCII character, see [SIP Password Security - How much is yours worth?](https://www.sipsorcery.com/mainsite/Help/SIPPasswordSecurity).
 
+# Console PulseAudio
+
+`/etc/pulse/daemon.conf`
+
+```ini
+default-fragments = 5
+default-fragment-size-msec = 1
+```
+
+```bash
+pulseaudio -k
+```
+
+`/usr/share/applications/asterisk.desktop`
+
+```ini
+[Desktop Entry]
+Name=Asterisk
+Type=Application
+Categories=Telephony
+X-PulseAudio-Properties=media.role=phone
+```
+
 # Add-ons
 
 The `mlan/asterisk` repository contains add-ons that utilizes and extends the already impressive capabilities of Asterisk.

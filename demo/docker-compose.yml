@@ -22,6 +22,7 @@ services:
     volumes:
       - tele-conf:/srv
       - ./pulse:/run/pulse:rshared          # Use host audio
+      - /etc/localtime:/etc/localtime:ro    # Use host timezone
 
 volumes:
   tele-conf:

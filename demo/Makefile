@@ -95,8 +95,8 @@ logger:
 	docker-compose exec $(SRV_NAME) asterisk -rx \
 	'logger add channel console notice,warning,error,verbose'
 
-restart:
-	docker-compose exec $(SRV_NAME) sv restart asterisk
+restart_%:
+	docker-compose exec $(SRV_NAME) sv restart $*
 
 apk_list:
 	docker-compose exec $(SRV_NAME) /bin/sh -c 'for pkg in $$(apk info 2>/dev/null); do printf "%9s  %s\n" $$(apk info -s $$pkg 2>/dev/null | sed -n "2{p;q}") $$pkg; done | sort'
@@ -118,10 +118,6 @@ xdebug_install:
 
 xdebug_getdata:
 	docker cp $(CNT_NAME):tmp/. local/xdebug
-
-tz_update:
-	docker cp /usr/share/zoneinfo/$(CNT_TZ) $(CNT_NAME):/etc/localtime
-	docker exec -it $(CNT_NAME) sh -c 'echo $(CNT_TZ) > /etc/timezone'
 
 sips_test:
 	docker run --rm -it --network bridge drwetter/testssl.sh $(SIPS_URL) || true

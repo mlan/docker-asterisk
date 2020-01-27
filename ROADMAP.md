@@ -26,6 +26,7 @@ Needed. :)
 ## AutoBan
 
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
+- Perhaps replace entrypoint.d/ with /etc/conf.d/nftables?
 
 ## WebSMS
 
@@ -42,5 +43,4 @@ Needed. :)
 
 ## Docker
 
-- Implement TZ
 - Harmonize script stdout messages. Separate script /usr/local/bin/inform ?

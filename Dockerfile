@@ -28,7 +28,7 @@ ENV	DOCKER_RUNSV_DIR=/etc/service \
 	DOCKER_SEED_NFT_DIR=/etc/nftables \
 	DOCKER_SSL_DIR=/etc/ssl \
 	SYSLOG_LEVEL=4 \
-	SYSLOG_OPTIONS='-S -D'
+	SYSLOG_OPTIONS=-SDt
 ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh \
 	DOCKER_ACME_SSL_DIR=${DOCKER_SSL_DIR}/acme \
 	DOCKER_AST_SSL_DIR=${DOCKER_SSL_DIR}/asterisk
@@ -107,7 +107,7 @@ RUN	apk --no-cache --update add \
 	nftables \
 	jq \
 	&& setup-runit.sh \
-	"syslogd -n -O - -l $SYSLOG_LEVEL $SYSLOG_OPTIONS" \
+	"syslogd -nO- -l$SYSLOG_LEVEL $SYSLOG_OPTIONS" \
 	"crond -f -c /etc/crontabs" \
 	"-q asterisk -pf" \
 	"-n websmsd php -S 0.0.0.0:80 -t $DOCKER_PHP_DIR websmsd.php" \

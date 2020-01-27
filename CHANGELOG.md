@@ -4,6 +4,7 @@
 - [docker](src/docker) Now use alpine:3.11 (asterisk:16.6.2).
 - [demo](demo) Added demo.
 - [demo](demo) Enabled audio via PulseAudio socket and cookie.
+- [demo](demo) Use host timezone by mounting /etc/localtime.
 - [websms](src/websms) Updating documentation.
 - [privatedial](src/privatedial) Added demo-echotest in IVR.
 - [privatedial](src/privatedial) Fixed initiation issue for minivm.

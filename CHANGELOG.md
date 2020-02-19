@@ -1,3 +1,7 @@
+# 0.6.1
+
+- [websms](src/websms) Complete documentation.
+
 # 0.6.0
 
 - [docker](Dockerfile) Audio via PulseAudio.

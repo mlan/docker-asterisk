@@ -4,7 +4,6 @@
 
 Needed. :)
 
-- websms.md
 - privatedial.md
 - README.md
 

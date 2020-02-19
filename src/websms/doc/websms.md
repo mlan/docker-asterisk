@@ -4,11 +4,11 @@ The [Short Message Service (SMS)](https://en.wikipedia.org/wiki/SMS) [text messa
 
 Asterisk supports [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) natively. Still many [Internet Telephony Service Providers](wikipedia.org/wiki/Internet_telephony_service_provider) (ITSP) does not offer SIMPLE but instead sends and receives SMS using a web [API](https://en.wikipedia.org/wiki/Application_programming_interface) based on [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) requests. This leaves Asterisk without a mechanisms to exchange SMS externally.
 
-The WebSMS service bridges this imitation, with the help of two components. One, `websmsd`, waits for incoming SMS to be sent from your ITSP and once received, forward it to Asterisk. The other, `websms`, is used by Asterisk to send outgoing SMS to your ITSP.
+The WebSMS service bridges this limitation, with the help of two components. One, `websmsd`, waits for incoming SMS to be sent from your ITSP and once received, forward it to Asterisk. The other, `websms`, is used by Asterisk to send outgoing SMS to your ITSP.
 
 ## Operation
 
-Asterisk natively handles SMS in between soft-phones using  the [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) protocol. When SMS is sent out to your ITSP Asterisk uses an utility, `websms`, to send a HTTP [POST](https://en.wikipedia.org/wiki/POST_(HTTP)) request, containing the extension number, caller id and the message text, to the ITSP web [API](https://en.wikipedia.org/wiki/Application_programming_interface). Normally this request need to be authenticated using credentials provided by the ITSP.
+Asterisk natively handles SMS in between soft-phones using  the [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) protocol. When SMS is sent out to your ITSP Asterisk it uses an utility, `websms`, to send a HTTP [POST](https://en.wikipedia.org/wiki/POST_(HTTP)) request, containing the extension number, caller id and the message text, to the ITSP web [API](https://en.wikipedia.org/wiki/Application_programming_interface). Normally this request need to be authenticated using credentials provided by the ITSP.
 
 The `websmsd` client listens for HTTP POST request which your ITSP will issue when there is an incoming SMS. The request includes the extension number, caller id and the message text. Once received, this message is placed in the Asterisk call queue, using a [call file](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Call+FIles). Asterisk will pick up the queued message and forward it to the relevant soft-phone using the SIMPLE protocol. For this to work you need to provide your ITSP with the URL to the `websmsd` client.
 
@@ -18,17 +18,17 @@ Not all ITSP offer [virtual numbers (DID)](https://en.wikipedia.org/wiki/Virtual
 
 ### Emoticons and encoding
 
-Modern phones support [Unicode](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set) for non-GSM (GSM-7) characters; Unicode UCS-2. This gives a larger set of characters at a cost in [message length](https://en.wikipedia.org/wiki/SMS#Message_size). To be able to send and receive SMS with emoticons, the ITSP's API needs to support the UCS-2 encoding which is not always the case.
+Modern phones support [Unicode](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set) for non-GSM (GSM-7) characters; Historically this was the Unicode UCS-2, but modern systems use UTF-16, which in addition supports 4 byte characters, that is emoticons. Since the maximum SMS message byte length is fixed, Unicode provides a larger set of characters at a cost in [message length](https://en.wikipedia.org/wiki/SMS#Message_size).
 
-Nowadays most smart phones uses UTF-16 in stead of UCS-2.
+Nowadays most smart phones uses UTF-16 encoding in stead of UCS-2. Consequently, to be able to send and receive SMS with all types of emoticons, the ITSP's API needs to support the UTF-16 encoding which is not always the case.
 
 ### Reverse proxy
 
-I some scenarios it can be beneficial to use a [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) like [traefik](https://containo.us/traefik/), also providing [HTTPS](https://en.wikipedia.org/wiki/HTTPS), to route the HTTP(S) requests to the `websmsd` client.
+I some scenarios it can be beneficial to use a [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) like [traefik](https://containo.us/traefik/), which is also providing [HTTPS](https://en.wikipedia.org/wiki/HTTPS), to route the HTTP(S) requests to the `websmsd` client.
 
 ## Configuration
 
-The function of WebSMS is controlled by the configuration file; `websms.conf` and the configuration in your account with the ITSP. The configuration file has three sections, they are: `[websms]` configuring outgoing SMS to the ITSP, `[websmsd]` configuring incoming SMS from the ITSP, and `[astqueue]` configuring the call queue, using call files, where incoming SMS are placed so that Asterisk can pick them up.
+Some functions of WebSMS are configurable by using a configuration file; `websms.conf`. Typically this file need to include the details of your account with the ITSP. The configuration file has three sections, they are: `[websms]` configuring outgoing SMS to the ITSP, `[websmsd]` configuring incoming SMS from the ITSP, and `[astqueue]` configuring the call queue, using call files, where incoming SMS are placed so that Asterisk can pick them up.
 
 
 | File name   | Description                                            |
@@ -36,7 +36,7 @@ The function of WebSMS is controlled by the configuration file; `websms.conf` an
 | websms.conf | Configurations which are unique to the WebSMS services |
 ### HTTP request header keys
 
-ITSP has implemented their SMS API a little differently. Study the ITSP documentation and configure the `key_to`, `key_from` and `key_body` appropriately.
+ITSPs have implemented their SMS API a little differently. Study the ITSP documentation and configure the `key_to`, `key_from` and `key_body` appropriately.
 
 ```ini
 key_to          = To
@@ -46,7 +46,7 @@ key_body        = Body
 
 ### Outgoing authentication method
 
-Most ITSP requires `websms` to authenticate when sending outgoing SMS to their API. When you set up an account with the ITSP they will provide you with the appropriate user/id and password/secret.
+Most ITSP requires `websms` to authenticate when sending outgoing SMS via their API. When you set up an account with the ITSP they will provide you with the appropriate user/id and password/secret.
 
 ```ini
 [websms]
@@ -88,17 +88,27 @@ proxy_header    = HTTP_X_FORWARDED_FOR
 
 ### Quirks
 
-`response_check`
+Despite the API of different ITSP all serve a similar purpose, they all differ somewhat. To allow for this the WebSMS behavior can be modified to accommodate some of such peculiarities.
 
-`number_format`
+#### Outgoing response check
 
-`charset`
+Some API respond with a status message to the HTTP request that we send, which can be used to check if the message was sent successfully. We can configure WebSMS to check if the response include the expected "key=value" pair. For example; `response_check = "status=success"`
 
-`key_echo`
+#### Outgoing number format
 
-`report_success`
+While most API accept any number format, some don't. We can  omit the leading "+" in international numbers, by defining `number_format = "omit+"`.
 
+#### Outgoing character encoding
 
+Many API accepts UTF-16 character encoding, but some do not. In case the API only support UCS-2, it might be required to force WebSMS to use it and thereby limit Unicode character range to `U+FFFF`. This is achieved by defining `charset = UCS-2`.
+
+#### Incoming echo
+
+Some API test that it can access your WebSMS web server, by sending a special HTTP request and expecting a the response to echo a key value. Configure such echo response by defining the HTTP request key used by the API. For example `key_echo = "zd_echo"`.
+
+#### Incoming response
+
+Some API expects a specific response when sending a HTTP request to know that the transfer was successful. The response to incoming SMS is configured by using `report_success`. For example ` report_success = "<Response></Response>"`.
 
 ### Call queue contexts
 
@@ -175,7 +185,7 @@ Currently there can only be one WebSMS configuration, so it is not possible to s
 
 ### websms.php sending SMS to ITSP
 
-The function of `websms.php` in the SMS data flow is to transfer the message out of Asterisk on to the system of the ITSP. The underlying mechanism for this is a HTTP(S) request executed using [cURL](https://curl.haxx.se/). Admittedly, since Asterisk comes with integrated support for cURL using [libcurl](https://curl.haxx.se/libcurl/) it would be possible to implement the  `websms` functionality without of going the route of calling a PHP script. The main motivation of `websms` is therefore "ease of use" since it can better leverage the companion function `websmsd`.
+The function of `websms.php` in the SMS data flow is to transfer the message out of Asterisk onto the system of the ITSP. The underlying mechanism for this is a HTTP(S) request executed using [cURL](https://curl.haxx.se/). Admittedly, since Asterisk comes with integrated support for cURL using [libcurl](https://curl.haxx.se/libcurl/) it would be possible to implement the  `websms` functionality without of going the route of calling a PHP script. The main motivation of `websms` is therefore "ease of use" since it can better leverage the companion function `websmsd`.
 
 To describe the data flow we walk trough an example where a soft-phone (endpoint) user sends a SMS to a destination outside of the PBX. The endpoint sends a SIP MESSAGE request [RFC3428](https://tools.ietf.org/html/rfc3428) to Asterisk and a [channel](https://wiki.asterisk.org/wiki/display/AST/Channels) is set up and placed in the dial-plan. The channel variables include the, `EXTEN`, `MESSAGE(to)`, `MESSAGE(from)`, and `MESSAGE(body)`. The external destination is identified in the dial-plan and `websms.php` is call via [Asterisk Gateway Interface (AGI)](https://wiki.asterisk.org/wiki/pages/viewpage.action?pageId=32375589) in the dial-plan (extensions.conf):
 
@@ -199,32 +209,30 @@ For testing purposes, you can use `websms.php` to send a SMS from the command li
 
 ### websmsd.php receiving SMS from ITSP
 
-This PHP script listens to HTTP requests, representing incoming SMS,
-from your ITSP and generate call files which will be picked up by asterisk.
+Using the PHP built-in web-server, the `websmsd.php` script listens to HTTP requests, representing incoming SMS,
+from your ITSP. One such request is received a call file is generated, which will automatically be picked up by asterisk.
 
-Run with the PHP built-in web server:
+The PHP built-in web-server is started by issuing this command:
 
 ```bash
 php -S 0.0.0.0:80 /path/websmsd.php
 ```
-The ITSP receives a SMS addressed to your virtual number, so the API sends a HTTP request to `websmsd.php` with the following payload.
+Now we describe the data flow of receiving a SMS from the ITSP for illustrative purposes. Assume that your ITSP receives a SMS addressed to your virtual number. Your ITSP forwards this SMS to your server by via its API which sends a HTTP request to the URL that you have registered with them and to which you have configured `websmsd.php` to listen to. The payload of such HTTP request might look like this:
 
 ```json
 {"to":"+12025550160","from":"+15017122661","body":"Incoming message!"}
 ```
 
-With the payload received we need to forward the SMS data to Asterisk so it can send to the endpoint.
+`websmsd.php` forwards the received SMS data, contained in the HTTP payload, to Asterisk, allowing it to pass it on to the endpoint, that is the soft-phone, by using the call file mechanism that we will describe next.
 
-The method to 
+### Call files
 
-#### Call files
+[Call files](http://the-asterisk-book.com/1.6/call-file.html) are like a shell script for Asterisk. A user or application writes a call file into the directory `/var/spool/asterisk/outgoing/` where Asterisk processes it immediately. The call file contains all parameters needed by Asterisk to set up a channel able to carry a call or a message.
 
-[Call files](http://the-asterisk-book.com/1.6/call-file.html) are like a shell script for Asterisk. A user or application writes a call file into `/var/spool/asterisk/outgoing/` where Asterisk processes it immediately.
+One practical limitation to consider in our case is that a message cannot span multiple lines in an Asterisk call file. To work
+around that we encode ([RFC3986](https://tools.ietf.org/html/rfc3986), which obsolete [RFC2396](https://tools.ietf.org/html/rfc2396)) the message, including any special characters like line breaks it may contain. 
 
-The message cannot span multiple lines in an Asterisk call file. To work
-around that we encode the message ([RFC3986](https://tools.ietf.org/html/rfc3986), which obsolete [RFC2396](https://tools.ietf.org/html/rfc2396)).
-
-This is an example [call file](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Call+FIles) with encoded MESSAGE(body).
+The structure of a [call file](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Call+FIles) is illustrated by the example below, which includes a encoded MESSAGE(body).
 ```ini
 Channel: Local/+12025550160@dp_entry_channel_open
 CallerID: "" <+15017122661>
@@ -241,22 +249,6 @@ setvar: MESSAGE(body)=Incoming%20message%21.
 setvar: MESSAGE_ENCODE=rfc3986
 ```
 
-To make sure Asterisk does not tries to read the call file before it is fully written...
+To make sure Asterisk does not tries to read the call file before it is fully written,`websmsd.php`first writes to the file in a staging directory before it is moved to the directory where Asterisk pick it up.
 
-Asterisk uses the function [`MESSAGE()`](https://wiki.asterisk.org/wiki/display/AST/Asterisk+17+Function_MESSAGE) to access the SMS data.
-
-#### Outline
-
-Define error handler and load variable values.
-
-Respond to echo requests.
-
-Read the post header data.
-
-Generate call file name.
-
-Create new call file in the staging directory.
-
-Move the call file to the outgoing directory, so that Asterisk pick it up.
-
-Respond with a status message.
+Once Asterisk pick up the call file it creates a channel and start to execute it according what is specified in the dial plan. In the dial plan, defined by `extensions.conf` the function [`MESSAGE()`](https://wiki.asterisk.org/wiki/display/AST/Asterisk+17+Function_MESSAGE) is used to access the SMS data.

@@ -13,7 +13,7 @@
 
 DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
 DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
-DOCKER_NTF_FILE=${DOCKER_NTF_FILE-autoban.nft}
+DOCKER_NFT_FILE=${DOCKER_NFT_FILE-autoban.nft}
 
 #
 # Make sure that we have the required directory structure in place under
@@ -32,14 +32,14 @@ mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR}
 
 if [ -z "$(ls -A $DOCKER_NFT_DIR 2>/dev/null)" ]; then
 	printf "entrypoint[$$]: INFO:$(basename $0): nftables seeding configuration.\n"
-	cp -p -u $DOCKER_SEED_NFT_DIR/$DOCKER_NTF_FILE $DOCKER_NFT_DIR
+	cp -p -u $DOCKER_SEED_NFT_DIR/$DOCKER_NFT_FILE $DOCKER_NFT_DIR
 fi
 
 #
 # If nft_file exists have NFT import it
 #
 
-nft_file=$DOCKER_NFT_DIR/$DOCKER_NTF_FILE
+nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
 if [ -f "$nft_file" ]; then
 	printf "entrypoint[$$]: INFO:$(basename $0): nftables importing $nft_file.\n"
 	nft flush ruleset

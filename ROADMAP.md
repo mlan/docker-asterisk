@@ -2,8 +2,6 @@
 
 ## Documentation
 
-Needed. :)
-
 - privatedial.md
 - README.md
 
@@ -43,3 +41,4 @@ Needed. :)
 ## Docker
 
 - Harmonize script stdout messages. Separate script /usr/local/bin/inform ?
+- Clean up src/notused/.

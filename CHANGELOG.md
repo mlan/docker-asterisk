@@ -1,6 +1,8 @@
 # 0.6.1
 
 - [websms](src/websms) Complete documentation.
+- [privatedial](src/privatedial) Advancing documentation.
+- [docker](README.md) Advancing documentation.
 
 # 0.6.0
 

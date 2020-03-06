@@ -29,8 +29,8 @@ class Nft {
 	public function __construct() {
 		$nft_dir = (getenv('DOCKER_NFT_DIR') !== false) ?
 			getenv('DOCKER_NFT_DIR') : self::NFT_DIR;
-		$nft_file = (getenv('DOCKER_NTF_FILE') !== false) ?
-			getenv('DOCKER_NTF_FILE') : self::NFT_FILE;
+		$nft_file = (getenv('DOCKER_NFT_FILE') !== false) ?
+			getenv('DOCKER_NFT_FILE') : self::NFT_FILE;
 		$this->nft_statefile = $nft_dir.'/'.$nft_file;
 	}
 	/*--------------------------------------------------------------------------

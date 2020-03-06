@@ -13,14 +13,14 @@
 
 DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
 DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
-DOCKER_NTF_FILE=${DOCKER_NTF_FILE-autoban.nft}
+DOCKER_NFT_FILE=${DOCKER_NFT_FILE-autoban.nft}
 
 #
 # Save current NFT state to file. Omit any "expires time-string" by using
 # the option --stateless, since NFT refuse to load files with them.
 #
 
-nft_file=$DOCKER_NFT_DIR/$DOCKER_NTF_FILE
+nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
 if [ -n "$nft_file" ]; then
 	printf "entrypoint[$$]: INFO:$(basename $0): nftables saving config to $nft_file.\n"
 	nft --stateless list ruleset > ${nft_file}

@@ -2,7 +2,7 @@
 
 ![travis-ci test](https://img.shields.io/travis/mlan/docker-asterisk.svg?label=build&style=popout-square&logo=travis)
 ![docker build](https://img.shields.io/docker/cloud/build/mlan/asterisk.svg?label=build&style=popout-square&logo=docker)
-![image size](https://img.shields.io/microbadger/image-size/mlan/asterisk.svg?label=size&style=popout-square&logo=docker)
+![image size](https://img.shields.io/docker/image-size/mlan/asterisk.svg?label=size&style=popout-square&logo=docker)
 ![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=popout-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=popout-square&logo=docker)
 
@@ -101,6 +101,16 @@ FIX THIS SECTION!
 
 When you create the `mlan/asterisk` container, you can configure the services by passing one or more environment variables or arguments on the docker run command line. Once the services has been configured a lock file is created, to avoid repeating the configuration procedure when the container is restated. In the rare event that want to modify the configuration of an existing container you can override the default behavior by setting `FORCE_CONFIG` to a no-empty string.
 
+| Variable                                   | Default         | Description                                   |
+| ------------------------------------------ | --------------- | --------------------------------------------- |
+| ACME_FILE                                  | /acme/acme.json |                                               |
+| ASTERISK_SMSD_DEBUG                        |                 |                                               |
+| HOSTNAME                                   | $(hostname)     |                                               |
+| SYSLOG_LEVEL                               | 4               |                                               |
+| SYSLOG_OPTIONS                             | -SDt            |                                               |
+| [TLS_CERTDAYS](#tls_keybits-tls_certdays)  | 30              | Self-signed TLS certificate validity duration |
+| [TLS_KEYBITS](#tls_keybits-tls_certdays)   | 2048            | Self-signed TLS key length                    |
+
 ## Configuration files
 
 Asterisk and its modules are configured using several configuration files which are typically found in `/etc/asterisk`. The `/mlan/asterisk` image provides a collection of configuration files which can serve as starting point for your system. We will outline how we intend the default configuration files are structured.
@@ -109,20 +119,19 @@ Asterisk and its modules are configured using several configuration files which 
 
 Some of the collection of configuration files provided does not contain any user specific data and might initially be left unmodified. These files are:
 
-| File name        | Description                                                  |
-| ---------------- | ------------------------------------------------------------ |
-| acl.conf         |                                                              |
-| asterisk.conf    | asterisk logging, directory structure                        |
-| ccss.conf        |                                                              |
-| cli_aliases.conf | command line interface aliases convenience                   |
-| extensions.conf  | dialplan from PrivateDial |
-| features.conf    | activation of special features                               |
-| indications.conf | dial tone local                                              |
-| logger.conf      | logfiles                                                     |
-| modules.conf     | activation of modules                                        |
-| musiconhold.conf | music on hold directory                                      |
-| pjproject.conf   | pjsip installation version                                   |
-| rtp.conf         | Define RTP port range                                        |
+| File name        | Description                                |
+| ---------------- | ------------------------------------------ |
+| alsa.conf        |                                            |
+| asterisk.conf    | asterisk logging, directory structure      |
+| ccss.conf        |                                            |
+| cli_aliases.conf | command line interface aliases convenience |
+| features.conf    | activation of special features             |
+| indications.conf | dial tone local                            |
+| logger.conf      | logfiles                                   |
+| modules.conf     | activation of modules                      |
+| musiconhold.conf | music on hold directory                    |
+| pjproject.conf   | pjsip installation version                 |
+| rtp.conf         | Define RTP port range                      |
 
 ## Persistent storage
 
@@ -191,9 +200,27 @@ With these settings you should not need ICE, STUN or TURN.
 
 [Transport Layer Security](http://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS) provides encryption for call signaling. A excellent guide for setting up TLS between Asterisk and a SIP client, involving creating key files, modifying Asterisk's SIP configuration to enable TLS, creating a SIP endpoint/user that's capable of TLS, and modifying the SIP client to connect  to Asterisk over TLS, can be found here [Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial). 
 
-The PrivateDial configuration is already set up to provide both UDP and TCP. TLS and SDES SRTP are also prepared, but a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed for their activation. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key will automatically be generated. `TLS_KEYBITS=2048`, `TLS_CERTDAYS=30`.
+The PrivateDial configuration is already set up to provide both UDP and TCP. TLS and SDES SRTP are also prepared, but a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed for their activation. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key will automatically be generated.
+
+####  `TLS_KEYBITS`, `TLS_CERTDAYS`
+
+ `TLS_KEYBITS=2048`, `TLS_CERTDAYS=30`.
 
 There is also a mechanism to use ACME lets encrypt certificates.
+
+### Let’s Encrypt LTS certificates using Traefik
+
+Let’s Encrypt provide free, automated, authorized certificates when you can demonstrate control over your domain. Automatic Certificate Management Environment (ACME) is the protocol used for such demonstration. There are many agents and applications that supports ACME, e.g., [certbot](https://certbot.eff.org/). The reverse proxy [Traefik](https://docs.traefik.io/) also supports ACME.
+
+#### `ACME_FILE`
+
+The `mlan/amavis` image looks for a file `ACME_FILE=/acme/acme.json`. at container startup and every time this file changes certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` is will be used for TLS support.
+
+So reusing certificates from Traefik will work out of the box if the `/acme` directory in the Traefik container is also mounted in the `mlan/asterisk` container.
+
+```bash
+docker run -d -v proxy-acme:/acme:ro mlan/asterisk
+```
 
 ## Security - Intrusion prevention
 
@@ -204,9 +231,7 @@ Attempts by attackers to crack SIP passwords and hijack SIP accounts are very co
 When using non-standard ports the amount of attacks drop significantly, so it might be considered whenever practical. When changing port numbers they need to be updated both for docker and asterisk. To exemplify, assume we want to use 5560 for UDP and TCP and 5561 for TLS, in which case we update the configuration in two places:
 
 - docker/docker-compose, eg, `docker run -p "5560-5561:5560-5561" -p"5560:5560/udp" ...`
-- asterisk transport in `pjsip_wizard.conf`, eg `bind = 0.0.0.0:5560` and `bind = 0.0.0.0:5561`
-
-Please note that, relying on the the docker-proxy to map non-standard port to standard ones does not appear to work.
+- asterisk transport in `pjsip_transport.conf` (`pjsip.conf`), eg `bind = 0.0.0.0:5560` and `bind = 0.0.0.0:5561`
 
 ### SIP passwords strength
 
@@ -250,3 +275,34 @@ The `mlan/asterisk` repository contains add-ons that utilizes and extends the al
 ## WebSMS
 
 The [websms](src/websms/README.md) service is described [here](src/websms/doc/websms.md).
+
+# Missing
+
+TCP provides much more stable SIP functionality than UDP.
+
+## Implementation
+
+Build variables.
+
+| Variable             | Default                    | Description            |
+| -------------------- | -------------------------- | ---------------------- |
+| DOCKER_ACME_SSL_DIR  | ${DOCKER_SSL_DIR}/acme     |                        |
+| DOCKER_AST_SSL_DIR   | ${DOCKER_SSL_DIR}/asterisk |                        |
+| DOCKER_BIN_DIR       | /usr/local/bin             |                        |
+| DOCKER_CONF_DIR      | /etc/asterisk              |                        |
+| DOCKER_ENTRY_DIR     | /etc/entrypoint.d          |                        |
+| DOCKER_EXIT_DIR      | /etc/exitpoint.d           |                        |
+| DOCKER_LIB_DIR       | /var/lib/asterisk          |                        |
+| DOCKER_LOG_DIR       | /var/log/asterisk          |                        |
+| DOCKER_MOH_DIR       | ${DOCKER_LIB_DIR}/moh      |                        |
+| DOCKER_NFT_DIR       | /var/lib/nftables          |                        |
+| DOCKER_NFT_FILE      | autoban.nft                |                        |
+| DOCKER_PERSIST_DIR   | /srv                       |                        |
+| DOCKER_PHP_DIR       | /usr/share/php7            |                        |
+| DOCKER_RUN_DIR       | /var/run                   | Only in setup-runit.sh |
+| DOCKER_RUNSV_DIR     | /etc/service               |                        |
+| DOCKER_SEED_CONF_DIR | /usr/share/asterisk/config |                        |
+| DOCKER_SEED_NFT_DIR  | /etc/nftables              |                        |
+| DOCKER_SPOOL_DIR     | /var/spool/asterisk        |                        |
+| DOCKER_SSL_DIR       | /etc/ssl                   |                        |
+

@@ -17,6 +17,11 @@ DOCKER_EXIT_DIR=${DOCKER_EXIT_DIR-/etc/exitpoint.d}
 DOCKER_RUNSV_DIR=${DOCKER_RUNSV_DIR-/etc/service}
 
 #
+# source common functions
+#
+source docker-common.sh
+
+#
 # Functions
 #
 

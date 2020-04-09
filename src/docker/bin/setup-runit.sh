@@ -2,6 +2,7 @@
 #
 # setup-runit.sh
 #
+source docker-common.sh
 
 # use /etc/service if $DOCKER_RUNSV_DIR not already defined
 DOCKER_RUNSV_DIR=${DOCKER_RUNSV_DIR-/etc/service}
@@ -43,17 +44,6 @@ pid_name() {
 	echo "${DOCKER_RUN_DIR}/${dir_name}/${pid_name}.pid"
 }
 
-inform() {
-	name=$(basename $0)
-	case "$1" in
-		0) pre_string="\e[1m\e[92mINFO ($name)\e[0m";;
-		1) pre_string="\e[1m\e[93mWARN ($name)\e[0m";;
-		2) pre_string="\e[1m\e[91mERROR ($name)\e[0m";;
-	esac
-	shift
-	printf "$pre_string %s\n" "$*"
-}
-
 add_opt() {
 	if [ -z "$options" ]; then
 		options=$1
@@ -92,7 +82,7 @@ init_service() {
 	fi
 	shift
 	if [ ! -z "$cmd" ]; then
-		inform 0 "Setting up ($sv_name) options ($options) args ($@)"
+		dc_log 5 "Setting up ($sv_name) options ($options) args ($@)"
 		mkdir -p $runsv_dir
 		cat <<-!cat > $runsv_dir/run
 			#!/bin/sh -e

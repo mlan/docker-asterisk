@@ -3,6 +3,8 @@
 - [websms](src/websms) Complete documentation.
 - [privatedial](src/privatedial) Advancing documentation.
 - [docker](README.md) Advancing documentation.
+- [docker](src/notused) Cleanup `src/notused`.
+- [docker](src/docker) Consolidate common functions in src/docker/bin/docker-common.sh.
 
 # 0.6.0
 

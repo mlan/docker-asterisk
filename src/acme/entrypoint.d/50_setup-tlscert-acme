@@ -15,14 +15,6 @@ DOCKER_ACME_SSL_DIR=${DOCKER_ACME_SSL_DIR-/etc/ssl/acme}
 DOCKER_AST_SSL_DIR=${DOCKER_AST_SSL_DIR-/etc/ssl/asterisk}
 
 #
-# Helpers
-#
-
-inform() { printf "entrypoint[$$]: INFO:$(basename $0): $*.\n" ;}
-
-_is_installed() { apk -e info $1 &>/dev/null ;} # true if pkg is installed
-
-#
 # Make sure that we have the required directory structure in place under
 # DOCKER_PERSIST_DIR. It will be missing if we mount an empty volume there.
 #
@@ -33,8 +25,8 @@ fix_persist_dirs() {
 }
 
 setup_runit_acme_dump() {
-	if (_is_installed jq && [ -s $ACME_FILE ]); then
-		inform "Setup ACME TLS certificate monitoring"
+	if (dc_is_installed jq && [ -s $ACME_FILE ]); then
+		dc_log 5 "Setup ACME TLS certificate monitoring"
 		setup-runit.sh "-n acme $(which inotifyd) $(which dumpcerts.sh) $ACME_FILE:c"
 		# run dumpcerts.sh on cnt creation (and every time the json file changes)
 		# dumpcerts.sh reports to logger but it is yet to be started so this run will be quiet
@@ -46,7 +38,7 @@ setup_acme_tls_cert() {
 	local cert=$DOCKER_AST_SSL_DIR/asterisk.cert.pem
 	local key=$DOCKER_AST_SSL_DIR/asterisk.priv_key.pem
 	if ([ -s $ACME_FILE ] && ([ ! -s $cert ] || [ ! -s $key ])); then
-		inform "Setup ACME TLS certificate for host $HOSTNAME"
+		dc_log 5 "Setup ACME TLS certificate for host $HOSTNAME"
 		ln -sf $DOCKER_ACME_SSL_DIR/certs/${HOSTNAME}.crt $cert
 		ln -sf $DOCKER_ACME_SSL_DIR/private/${HOSTNAME}.key $key
 	fi

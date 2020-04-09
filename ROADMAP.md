@@ -37,8 +37,3 @@
 ## Dependencies
 
 - Reorganize. Use git submodules?
-
-## Docker
-
-- Harmonize script stdout messages. Separate script /usr/local/bin/inform ?
-- Clean up src/notused/.

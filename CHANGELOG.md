@@ -1,5 +1,7 @@
-# 0.6.1
+# 0.7.0
 
+- [acme](src/acme/bin/dumpcerts.sh) Support both v1 and v2 formats of the acme.json file.
+- [acme](src/acme/entrypoint.d/50_setup-tlscert-acme) Support both host and domain wildcard TLS certificates.
 - [websms](src/websms) Complete documentation.
 - [privatedial](src/privatedial) Advancing documentation.
 - [docker](README.md) Advancing documentation.

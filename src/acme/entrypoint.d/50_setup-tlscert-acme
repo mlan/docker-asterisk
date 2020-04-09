@@ -12,9 +12,15 @@ source docker-common.sh
 
 ACME_FILE=${ACME_FILE-/acme/acme.json}
 HOSTNAME=${HOSTNAME-$(hostname)}
+DOMAIN=${HOSTNAME#*.}
 DOCKER_ACME_SSL_DIR=${DOCKER_ACME_SSL_DIR-/etc/ssl/acme}
 DOCKER_AST_SSL_DIR=${DOCKER_AST_SSL_DIR-/etc/ssl/asterisk}
-
+DOCKER_AST_SSL_CERT=$DOCKER_AST_SSL_DIR/asterisk.cert.pem
+DOCKER_AST_SSL_KEY=$DOCKER_AST_SSL_DIR/asterisk.priv_key.pem
+DOCKER_ACME_SSL_H_CERT=$DOCKER_ACME_SSL_DIR/certs/${HOSTNAME}.crt
+DOCKER_ACME_SSL_H_KEY=$DOCKER_ACME_SSL_DIR/private/${HOSTNAME}.key
+DOCKER_ACME_SSL_D_CERT=$DOCKER_ACME_SSL_DIR/certs/${DOMAIN}.crt
+DOCKER_ACME_SSL_D_KEY=$DOCKER_ACME_SSL_DIR/private/${DOMAIN}.key
 #
 # Make sure that we have the required directory structure in place under
 # DOCKER_PERSIST_DIR. It will be missing if we mount an empty volume there.
@@ -36,12 +42,16 @@ setup_runit_acme_dump() {
 }
 
 setup_acme_tls_cert() {
-	local cert=$DOCKER_AST_SSL_DIR/asterisk.cert.pem
-	local key=$DOCKER_AST_SSL_DIR/asterisk.priv_key.pem
-	if ([ -s $ACME_FILE ] && ([ ! -s $cert ] || [ ! -s $key ])); then
-		dc_log 5 "Setup ACME TLS certificate for host $HOSTNAME"
-		ln -sf $DOCKER_ACME_SSL_DIR/certs/${HOSTNAME}.crt $cert
-		ln -sf $DOCKER_ACME_SSL_DIR/private/${HOSTNAME}.key $key
+	if ([ -r $DOCKER_ACME_SSL_H_CERT ] && [ -r $DOCKER_ACME_SSL_H_KEY ]); then
+		dc_log 5 "Seting up ACME TLS certificate for host $HOSTNAME"
+		ln -sf $DOCKER_ACME_SSL_H_CERT $DOCKER_AST_SSL_CERT
+		ln -sf $DOCKER_ACME_SSL_H_KEY $DOCKER_AST_SSL_KEY
+	else
+		if ([ -r $DOCKER_ACME_SSL_D_CERT ] && [ -r $DOCKER_ACME_SSL_D_KEY ]); then
+			dc_log 5 "Seting up ACME TLS certificate for domain $DOMAIN"
+			ln -sf $DOCKER_ACME_SSL_D_CERT $DOCKER_AST_SSL_CERT
+			ln -sf $DOCKER_ACME_SSL_D_KEY $DOCKER_AST_SSL_KEY
+		fi
 	fi
 }
 

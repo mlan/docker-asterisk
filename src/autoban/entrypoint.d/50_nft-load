@@ -10,6 +10,7 @@
 # Note that the templates are in /etc/nftables and the actual state file is kept
 # in /var/lib/nftables, which might be perceived to be counter intuitive.
 #
+source docker-common.sh
 
 DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
 DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
@@ -31,7 +32,7 @@ mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR}
 #
 
 if [ -z "$(ls -A $DOCKER_NFT_DIR 2>/dev/null)" ]; then
-	printf "entrypoint[$$]: INFO:$(basename $0): nftables seeding configuration.\n"
+	dc_log 5 "Seeding configuration."
 	cp -p -u $DOCKER_SEED_NFT_DIR/$DOCKER_NFT_FILE $DOCKER_NFT_DIR
 fi
 
@@ -41,7 +42,7 @@ fi
 
 nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
 if [ -f "$nft_file" ]; then
-	printf "entrypoint[$$]: INFO:$(basename $0): nftables importing $nft_file.\n"
+	dc_log 5 "Importing $nft_file."
 	nft flush ruleset
 	nft -f ${nft_file}
 fi

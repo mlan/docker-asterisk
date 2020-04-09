@@ -8,6 +8,7 @@
 #
 # Config
 #
+source docker-common.sh
 
 HOSTNAME=${HOSTNAME-$(hostname)}
 DOCKER_AST_SSL_DIR=${DOCKER_AST_SSL_DIR-/etc/ssl/asterisk}

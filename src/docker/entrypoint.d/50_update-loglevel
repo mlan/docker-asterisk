@@ -4,7 +4,9 @@
 #
 # If SYSLOG_LEVEL is not empty update syslog level
 #
+source docker-common.sh
+
 if [ -n "$SYSLOG_LEVEL" ]; then
-	printf "entrypoint[$$]: INFO:$(basename $0): setting syslogd level=$SYSLOG_LEVEL.\n"
+	dc_log 5 "Setting syslogd level=$SYSLOG_LEVEL.\n"
 	setup-runit.sh "syslogd -nO- -l$SYSLOG_LEVEL $SYSLOG_OPTIONS"
 fi

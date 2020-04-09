@@ -7,11 +7,6 @@
 export DOCKER_LOGLEVEL=${DOCKER_LOGLEVEL-5}
 export DOCKER_LOGENTRY=${DOCKER_LOGENTRY-entrypoint.sh}
 export DOCKER_LOGUSAGE=${DOCKER_LOGUSAGE-usage}
-export -f dc_log
-export -f dc_log_tag
-export -f dc_log_level
-export -f dc_log_stamp
-export -f dc_is_installed
 
 #
 # Write messages to console if interactive or syslog if not.

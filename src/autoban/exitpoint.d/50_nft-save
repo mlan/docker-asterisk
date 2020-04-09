@@ -10,6 +10,7 @@
 # Note that the templates are in /etc/nftables and the actual state file is kept
 # in /var/lib/nftables, which might be perceived to be counter intuitive.
 #
+source docker-common.sh
 
 DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
 DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
@@ -22,7 +23,7 @@ DOCKER_NFT_FILE=${DOCKER_NFT_FILE-autoban.nft}
 
 nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
 if [ -n "$nft_file" ]; then
-	printf "entrypoint[$$]: INFO:$(basename $0): nftables saving config to $nft_file.\n"
+	dc_log 5 "Saving config to $nft_file."
 	nft --stateless list ruleset > ${nft_file}
 #	nft list ruleset | sed 's/expires [[:alnum:]]*//g' > ${nft_file}
 fi

@@ -4,6 +4,8 @@
 #
 #
 #
+source docker-common.sh
+
 DOCKER_CONF_DIR=${DOCKER_CONF_DIR-/etc/asterisk}
 DOCKER_SEED_CONF_DIR=${DOCKER_SEED_CONF_DIR-/usr/local/share/astrisk/config}
 
@@ -25,6 +27,6 @@ mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 # so this is just an extra precaution.
 #
 if [ -z "$(ls -A $DOCKER_CONF_DIR 2>/dev/null)" ]; then
-	printf "entrypoint[$$]: INFO:$(basename $0): seeding asterisk configuration.\n"
+	dc_log 5 "Seeding asterisk configuration."
 	cp -p -u $DOCKER_SEED_CONF_DIR/* $DOCKER_CONF_DIR
 fi

@@ -8,6 +8,7 @@
 #
 # Config
 #
+source docker-common.sh
 
 ACME_FILE=${ACME_FILE-/acme/acme.json}
 HOSTNAME=${HOSTNAME-$(hostname)}

@@ -1,10 +1,10 @@
 # The `mlan/asterisk` repository
 
-![travis-ci test](https://img.shields.io/travis/mlan/docker-asterisk.svg?label=build&style=popout-square&logo=travis)
-![docker build](https://img.shields.io/docker/cloud/build/mlan/asterisk.svg?label=build&style=popout-square&logo=docker)
-![image size](https://img.shields.io/docker/image-size/mlan/asterisk.svg?label=size&style=popout-square&logo=docker)
-![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=popout-square&logo=docker)
-![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=popout-square&logo=docker)
+![travis-ci test](https://img.shields.io/travis/mlan/docker-asterisk.svg?label=build&style=flat-square&logo=travis)
+![docker build](https://img.shields.io/docker/cloud/build/mlan/asterisk.svg?label=build&style=flat-square&logo=docker)
+![image size](https://img.shields.io/docker/image-size/mlan/asterisk.svg?label=size&style=flat-square&logo=docker)
+![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=flat-square&logo=docker)
+![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=flat-square&logo=docker)
 
 THIS DOCUMENT IS UNDER DEVELOPMENT.
 

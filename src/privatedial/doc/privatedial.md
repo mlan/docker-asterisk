@@ -49,13 +49,6 @@ outbound_auth/username = username
 outbound_auth/password = password
 ```
 
-`extensions_local.conf`
-
-```ini
-[globals]
-TRUNK_ENDPOINT = trunk_itsp
-```
-
 Most likely you also need to configure WebSMS for SMS to work, see separate documentation.
 
 ### SIP Users
@@ -72,6 +65,7 @@ hint_exten = +12025550160
 endpoint/callerid = John Doe <+12025550160>
 endpoint/mailboxes = john.doe@example.com
 endpoint/from_user = +12025550160
+endpoint/set_var=TRUNK_ENDPOINT=trunk_itsp
 inbound_auth/username = john.doe
 inbound_auth/password = password
 ```

@@ -1,3 +1,7 @@
+# 0.7.1
+
+- [privatedial](src/privatedial) Use set_var=TRUNK_ENDPOINT to set outgoing target for each endpoint individually.
+
 # 0.7.0
 
 - [acme](src/acme/bin/dumpcerts.sh) Support both v1 and v2 formats of the acme.json file.

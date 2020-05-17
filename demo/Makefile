@@ -10,8 +10,9 @@ CNT_CLI  ?= asterisk -rvvvddd
 
 SIPS_URL ?= $(call _ip,$(CNT_NAME)):5061
 
-SMS_PORT ?= 8080
-SMS_URL  ?= 127.0.0.1:$(SMS_PORT)/
+SMS_HOST ?= 127.0.0.1:8080
+SMS_URL1 ?= /hook/1
+SMS_URL2 ?= /hook/2
 SMS_FROM ?= +15017122661
 SMS_TO   ?= +12025550160
 SMS_BODY ?= This is a test message, sent $$(date), with special chars: ☺ [$$\"\\];; and 4 additional lines:%0A1%0A2%0A3%0A4.
@@ -50,16 +51,22 @@ pw:
 	dd if=/dev/random count=1 bs=8 2>/dev/null | base64 | sed -e 's/=*$$//'
 	#od -vAn -N4 -tu4 < /dev/urandom
 
+sms0:
+	curl -i $(SMS_HOST)$(SMS_URL1) -G \
+	--data-urlencode "zd_echo=$(shell date)"
+	@echo
+
 sms1:
-	curl -i $(SMS_URL) -X POST \
+	curl -i $(SMS_HOST)$(SMS_URL1) -X POST \
 	--data-urlencode "To=$(SMS_TO)" \
 	--data-urlencode "From=$(SMS_FROM)" \
 	--data "Body=$(SMS_BODY)"
 
-sms0:
-	curl -i $(SMS_URL) -G \
-	--data-urlencode "zd_echo=$(shell date)"
-	@echo
+sms2:
+	curl -i $(SMS_HOST)$(SMS_URL2) -X POST \
+	--data-urlencode "To=$(SMS_TO)" \
+	--data-urlencode "From=$(SMS_FROM)" \
+	--data "Body=$(SMS_BODY)"
 
 logs:
 	docker container logs $(CNT_NAME)

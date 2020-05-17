@@ -27,8 +27,38 @@
 
 ## WebSMS
 
+- Allow multi-configs.
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
 - Handle "Invalid request" errors.
+
+### WebSMS Multi-Configs
+
+Parameters can be arrays.
+websms.conf
+```ini
+[websms]
+host[trunk1]    = https://api.trunk1.com
+host[trunk2]    = https://api.trunk2.com
+path[trunk1]    = /sms/send
+path[trunk2]    = 
+```
+```bash
+same = n,AGI(websms.php,${EXTEN},${MESSAGE(from)},${QUOTE(${MESSAGE(body)})},${ENDPOINT_TRUNK})
+```
+
+### WebSMSd Multi-Configs
+
+- match incoming ip and or path to split off requests into using different configutation
+
+array key can be omitted, if so indexes will automatically be assiged, so order is important.
+websms.conf
+```ini
+[websmsd]
+remote_addr[]   = 1.2.3.4/24
+request_uri[]   = /trunk1
+remote_addr[]   = 5.6.7.8
+request_uri[]   = /trunk2
+```
 
 ## Asterisk modules
 

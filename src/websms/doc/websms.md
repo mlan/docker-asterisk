@@ -75,13 +75,13 @@ The signature also uses the `path` part of the full request URL. To accommodate 
 
 ### Incoming access control
 
-Since most ITSP does not implement incoming authentication, but operate using a limited range of IP addresses, we can filter incoming source addresses to achieve some access control. Use `permit_addr` to limit incoming access using comma separated address ranges in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) format. By default any source addresses is permitted.
+Since most ITSP does not implement incoming authentication, but operate using a limited range of IP addresses, we can filter incoming source addresses to achieve some access control. Use `remote_addr` to limit incoming access using comma separated address ranges in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) format. By default any source addresses is permitted.
 
 When `websms` operates behind a reverse proxy we need to trust that the proxy reports the original source addresses. Use `proxy_addr` to indicate the addresses of your trusted proxies using comma separated address ranges in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) format. Often proxies sends the original source address in the header `HTTP_X_FORWARDED_FOR`.
 
 ```ini
 [websmsd]
-permit_addr     = 185.45.152.42,3.104.90.0/24,3.1.77.0/24
+remote_addr     = 185.45.152.42,3.104.90.0/24,3.1.77.0/24
 proxy_addr      = 172.16.0.0/12
 proxy_header    = HTTP_X_FORWARDED_FOR
 ```
@@ -144,7 +144,7 @@ One difference is that the strings, "yes", "no", "true", "false" and "null" have
 | [websmsd]  | key_echo        |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
 | [websmsd]  | key_account     |                              | string  | NOT USED                                                     |
 | [websmsd]  | report_success  |                              | string  | Report success like this, eg, "<Response></Response>".       |
-| [websmsd]  | permit_addr     |                              | CIDR    | If defined, only listed addresses are permitted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |
+| [websmsd]  | remote_addr     |                              | CIDR    | If defined, only listed addresses are permitted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |
 | [websmsd]  | proxy_addr      | 172.16.0.0/12                | CIDR    | Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16. |
 | [websmsd]  | proxy_header    | HTTP_X_FORWARDED_FOR         | string  | Behind a proxy this header hold the original client address. |
 | [astqueue] | outgoingdir     | /var/spool/asterisk/outgoing | string  | Directory where asterisk picks up call files.                |

@@ -41,7 +41,8 @@ class Websms {
 		'key_echo'        => null,
 		'key_account'     => null,
 		'report_success'  => "",
-		'permit_addr'     => null,
+		'remote_addr'     => null,
+		'request_uri'     => null,
 		'proxy_addr'      => "172.16.0.0/12",
 		'proxy_header'    => "HTTP_X_FORWARDED_FOR",
 	];
@@ -49,6 +50,7 @@ class Websms {
 	private $message;
 	private $curl;
 	public $debug = false;
+	public $index;
 	public function __construct($config = null, array $optconfig = []) {
 		if (is_string($config) !== true) {
 			$config = self::DEFAULT_CONF_FILE;
@@ -76,7 +78,7 @@ class Websms {
 	public function listen() {
 		$this->message = false;
 		$post = $_POST;
-		if ($this->permitted()) {
+		if ($this->check_addr_uri_index()) {
 			$this->echo();
 			$this->post_mess($post);
 			return $this->message;
@@ -90,7 +92,7 @@ class Websms {
 	public function answer($status = true) {
 		if ($status) {
 			trigger_error('Inbound SMS accepted, for ('.$this->message['to'].')', E_USER_NOTICE);
-			echo $this->config['websmsd']['report_success'];
+			echo $this->config('websmsd','report_success');
 		}
 	}
 	/*--------------------------------------------------------------------------
@@ -119,15 +121,70 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
+	If remote_addr is set, match remote host and request uri, set index.
+	If remote_addr isn't set but uri is, match request uri, set index.
+	@return Boolean true if matched, otherwise false
+	*/
+	private function check_addr_uri_index() {
+		$allow = true;
+		$match_addr = $this->config('websmsd','remote_addr');
+		$remote_addr = $_SERVER['REMOTE_ADDR'];
+		$request_uri = $_SERVER['REQUEST_URI'];
+		if(isset($match_addr)) {
+			$allow = false;
+			if (is_array($match_addr)) {
+				foreach ($match_addr as $index => $value) {
+					if($this->match_addr($value)) {
+						$allow = true;
+						$this->index = $index;
+					}
+				}
+			} else {
+				if($this->match_addr($match_addr)) $allow = true;
+			}
+			if($allow) trigger_error(
+					sprintf("REMOTE_ADDR (%s) is allowed, using index (%s)",
+					$remote_addr, $this->index), E_USER_NOTICE);
+			else trigger_error(
+					sprintf("REMOTE_ADDR (%s) is NOT allowed",
+					$remote_addr), E_USER_WARNING);
+		}
+		/*
+		Wait until now to call $this->config('websmsd','uri') since
+		$this->index might have been set above.
+		*/
+		$match_uri = $this->config('websmsd','request_uri');
+		if($allow && isset($match_uri)) {
+			$allow = false;
+			if (is_array($match_uri)) {
+				foreach ($match_uri as $index => $value) {
+					if($this->match_uri($value)) {
+						$allow = true;
+						$this->index = $index;
+					}
+				}
+			} else {
+				if($this->match_uri($match_uri)) $allow = true;
+			}
+			if($allow) trigger_error(
+					sprintf("REQUEST_URI (%s) is allowed, using index (%s)",
+					$request_uri, $this->index), E_USER_NOTICE);
+			else trigger_error(
+					sprintf("REQUEST_URI (%s) is NOT allowed",
+					$request_uri), E_USER_WARNING);
+		}
+		return $allow;
+	}
+	/*--------------------------------------------------------------------------
 	Respond to echo requests.
 	The API of some ITSP, eg Zadarma, test the web server by sending an echo
 	request. Let's respond and exit if we detect a echo request.
 	*/
 	private function echo() {
-		if (!empty($this->config['websmsd']['key_echo'])
-			&& isset($_GET[$this->config['websmsd']['key_echo']])) {
-			trigger_error('Received echo request ('.$_GET[$this->config['websmsd']['key_echo']].')', E_USER_NOTICE);
-			exit($_GET[$this->config['websmsd']['key_echo']]);
+		if (!empty($this->config('websmsd','key_echo'))
+			&& isset($_GET[$this->config('websmsd','key_echo')])) {
+			trigger_error('Received echo request ('.$_GET[$this->config('websmsd','key_echo')].')', E_USER_NOTICE);
+			exit($_GET[$this->config('websmsd','key_echo')]);
 		}
 	}
 	/*--------------------------------------------------------------------------
@@ -140,15 +197,19 @@ class Websms {
 		if (empty($post)) {
 			trigger_error("No POST header data", E_USER_WARNING);
 			return false;
+		} else {
+			if($this->debug) {
+				trigger_error(sprintf("POST data (%s)",json_encode($post)));
+			}
 		}
 		array_walk_recursive($post, function(&$val) {
 			$json = json_decode($val,true);
 			if (!empty($json)) $val = $json;
 		});
 		array_walk_recursive($post, function($val,$key) {
-			if ($key === $this->config['websmsd']['key_to'])   $this->message['to']   = $val;
-			if ($key === $this->config['websmsd']['key_from']) $this->message['from'] = $val;
-			if ($key === $this->config['websmsd']['key_body']) $this->message['body'] = $val;
+			if ($key === $this->config('websmsd','key_to'))   $this->message['to']   = $val;
+			if ($key === $this->config('websmsd','key_from')) $this->message['from'] = $val;
+			if ($key === $this->config('websmsd','key_body')) $this->message['body'] = $val;
 		});
 		if (empty($this->message['to']) || empty($this->message['from']) || empty($this->message['body'])) {
 			trigger_error(sprintf("Did not get all required POST data (%s)",
@@ -159,22 +220,29 @@ class Websms {
 	Initially assume 'REMOTE_ADDR' is the original IP of the HTTP client. But if
 	it is a 'proxy_addr' then trust that 'proxy_header' hold the real IP of the
 	client instead. Now that we have the real IP of the client check if it is
-	permitted.
+	allowed.
+	@param string $csv_addr  comma separated list of IP / CIDR to match
+	@return Boolean true if $remote_addr is permitted otherwise false
+	*/
+	private function match_addr($csv_addr) {
+		$remote_addr = $_SERVER['REMOTE_ADDR'];
+		if ($this->match_cidr($remote_addr,$this->config('websmsd','proxy_addr'))) {
+			$remote_addr = $_SERVER[$this->config('websmsd','proxy_header')];
+		}
+		return $this->cmp_cidr($remote_addr,$csv_addr);
+	}
+	/*--------------------------------------------------------------------------
+	Compare each uri (comma separated) with the REQUEST_URI
+	@param string $csv_uris        uris to test eg, /index.htm,/index.html
 	@return Boolean true if $saddr is permitted otherwise false
 	*/
-	private function permitted() {
-		if (isset($this->config['websmsd']['permit_addr'])) {
-			$saddr = $_SERVER['REMOTE_ADDR'];
-			if ($this->cmp_cidr($saddr,$this->config['websmsd']['proxy_addr'])) {
-				$saddr = $_SERVER[$this->config['websmsd']['proxy_header']];
-			}
-			$permit = $this->cmp_cidr($saddr,$this->config['websmsd']['permit_addr']);
-			$permitstr = $permit ? 'permitted' : 'denied';
-			trigger_error('HTTP request ('.$saddr.') '.$permitstr, E_USER_NOTICE);
-			return $permit;
-		} else {
-			return true;
+	private function match_uri($csv_uris) {
+		$request_uri = $_SERVER['REQUEST_URI'];
+		$match_uris = explode(',',$csv_uris);
+		foreach ($match_uris as $match_uri) {
+			if(strcmp($match_uri,$request_uri) === 0) return true;
 		}
+		return false;
 	}
 	/*--------------------------------------------------------------------------
 	@param string $ip        addr to test eg, 216.245.217.2
@@ -182,7 +250,7 @@ class Websms {
 	                          eg, 185.45.152.42,3.104.90.0/24,3.1.77.0/24
 	@return Boolean true if $ip matches any range in $csvcidrs
 	*/
-	public function cmp_cidr($ip,$csvcidrs) {
+	public function match_cidr($ip,$csvcidrs) {
 		$cidrs = explode(',',$csvcidrs);
 		foreach ($cidrs as $cidr) {
 			$blknmask = explode('/',$cidr);
@@ -205,8 +273,8 @@ class Websms {
 	@return Boolean true if HTTP request was verified
 	*/
 	private function verify($post) {
-		$method = $this->config['websmsd']['auth_method'];
-		$passwd = $this->config['websmsd']['auth_passwd'];
+		$method = $this->config('websmsd','auth_method');
+		$passwd = $this->config('websmsd','auth_passwd');
 		switch ($method) {
 		case '':
 			return true;
@@ -226,13 +294,17 @@ class Websms {
 	/*--------------------------------------------------------------------------
 	Parse arguments.
 	We require 3 arguments; to, from, body.
+	OR 4 arguments; to, from, body, index.
 	Build http POST query, from arguments, sort and URL-encode.
 	*/
 	private function args_mess($args) {
-		if (count($args) === 3) {
-			$keys = [ $this->config['websms']['key_to'],
-				$this->config['websms']['key_from'],
-				$this->config['websms']['key_body'] ];
+		switch (count($args)) {
+		case 4:
+			$this->index = $args[4];
+		case 3:
+			$keys = [ $this->config('websms','key_to'),
+				$this->config('websms','key_from'),
+				$this->config('websms','key_body') ];
 			$vals = [ $this->filter_number($args[1]),
 				$this->filter_number($args[2]),
 				$this->filter_message($args[3]) ];
@@ -242,9 +314,9 @@ class Websms {
 			$post = http_build_query($this->message);
 			$this->debug($post);
 			return $post;
-		} else {
+		default:
 			$strings = implode(',',$args);
-			trigger_error("We did not get exactly 3 arguments; to, from, body ($strings)", E_USER_WARNING);
+			trigger_error("We did not get exactly 3 or 4 arguments; to, from, body [index] ($strings)", E_USER_WARNING);
 			return false;
 		}
 	}
@@ -254,7 +326,7 @@ class Websms {
 	@return string $number
 	*/
 	private function filter_number($number) {
-		switch (strtolower($this->config['websms']['number_format'])) {
+		switch (strtolower($this->config('websms','number_format'))) {
 		case 'no+':
 		case 'omit+':
 			return preg_replace('/[+]/', '', $number);
@@ -269,7 +341,7 @@ class Websms {
 	@return string $message
 	*/
 	private function filter_message($message) {
-		switch (strtolower($this->config['websms']['charset'])) {
+		switch (strtolower($this->config('websms','charset'))) {
 		case 'ucs-2':
 			return preg_replace('/[\x{10000}-\x{10FFFF}]/u',"\u{FFFD}",$message);
 		case 'utf-8':
@@ -282,7 +354,7 @@ class Websms {
 	@return void
 	*/
 	private function curl_init() {
-		$url = $this->config['websms']['host'].$this->config['websms']['path'];
+		$url = $this->config('websms','host').$this->config('websms','path');
 		$this->curl = curl_init($url);
 	}
 	/*--------------------------------------------------------------------------
@@ -310,10 +382,10 @@ class Websms {
 		with headers like: Authorization: <user_key>:<signature>
 	*/
 	private function curl_auth($poststr) {
-		$method = $this->config['websms']['auth_method'];
-		$user = $this->config['websms']['auth_user'];
-		$passwd = $this->config['websms']['auth_passwd'];
-		$path = $this->config['websms']['path'];
+		$method = $this->config('websms','auth_method');
+		$user = $this->config('websms','auth_user');
+		$passwd = $this->config('websms','auth_passwd');
+		$path = $this->config('websms','path');
 		switch ($method) {
 		case 'basic':
 			curl_setopt($this->curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
@@ -362,9 +434,9 @@ class Websms {
 	}
 	*/
 	private function check($response) {
-		$check = $this->config['websms']['response_check'];
-		$host = $this->config['websms']['host'];
-		$user = $this->config['websms']['auth_user'];
+		$check = $this->config('websms','response_check');
+		$host = $this->config('websms','host');
+		$user = $this->config('websms','auth_user');
 		if (empty($response)) return false;
 		if (!empty($check)) {
 			if (strpos($check, '=') !== false) { // "key=value"
@@ -388,6 +460,19 @@ class Websms {
 			trigger_error("Outbound SMS sent (host=$host,user=$user)", E_USER_NOTICE);
 		}
 		return true;
+	}
+	/*--------------------------------------------------------------------------
+	Get configuration value, if $this->index is set pick that element in arrays
+	@param  mixed   $section
+	@param  mixed   $key
+	@return mixed   $value or $array_of_values
+	*/
+	public function config($section, $key) {
+		if (is_array($this->config[$section][$key]) && isset($this->index)) {
+			return $this->config[$section][$key][$this->index];
+		} else {
+			return $this->config[$section][$key];
+		}
 	}
 	/*--------------------------------------------------------------------------
 	Print variable if $debug or $this->debug is true

@@ -1,5 +1,6 @@
-# 0.7.1
+# 0.8.0
 
+- [websms](src/websms) Allow multiple API interfaces to be configurated.
 - [privatedial](src/privatedial) Use set_var=TRUNK_ENDPOINT to set outgoing target for each endpoint individually.
 
 # 0.7.0

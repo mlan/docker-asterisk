@@ -43,7 +43,7 @@ Add an endpoint entry in `pjsip_wizard.conf` based on the setup instructions pro
 `pjsip_wizard.conf`
 
 ```ini
-[trunk_itsp](tpl_trunk)
+[trunk:itsp](tpl_trunk)
 remote_hosts = sip.itsp.com
 outbound_auth/username = username
 outbound_auth/password = password
@@ -65,7 +65,7 @@ hint_exten = +12025550160
 endpoint/callerid = John Doe <+12025550160>
 endpoint/mailboxes = john.doe@example.com
 endpoint/from_user = +12025550160
-endpoint/set_var=TRUNK_ENDPOINT=trunk_itsp
+endpoint/set_var = TRUNK_ENDPOINT=trunk:itsp
 inbound_auth/username = john.doe
 inbound_auth/password = password
 ```

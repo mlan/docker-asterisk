@@ -104,7 +104,7 @@ Many API accepts UTF-16 character encoding, but some do not. In case the API onl
 
 #### Incoming echo
 
-Some API test that it can access your WebSMS web server, by sending a special HTTP request and expecting a the response to echo a key value. Configure such echo response by defining the HTTP request key used by the API. For example `key_echo = "zd_echo"`.
+Some API test that it can access your WebSMS web server, by sending a special HTTP request and expecting  the response to echo a key value. Configure such echo response by defining the HTTP request key used by the API. For example `key_echo = "zd_echo"`.
 
 #### Incoming response
 
@@ -123,40 +123,41 @@ context         = dp_entry_trunk_texting
 ### Configuring WebSMS, websms.conf
 
 The WebSMS configuration is kept in `websms.conf`. This file is parsed by [PHP](https://secure.php.net/manual/en/function.parse-ini-file.php), which luckily, accepts a syntax similar to Asterisk's configuration files.
-One difference is that the strings, "yes", "no", "true", "false" and "null" have to be within quotation marks otherwise they will be interpreted as Boolean by the PHP parser.
+One difference is that the strings, "yes", "no", "true", "false" and "null" have to be within quotation marks otherwise they will be interpreted as Boolean by the PHP parser. In the table below some key names end with []. The square brackets are not part pf the actual key name, instead they indicate that the key can hold multiple values allowing more than one SMS API interface to be configured.
 
-| Section    | Key             | Default                      | Format  | Description                                                  |
-| ---------- | --------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
-| [websms]   | host            |                              | URI     | First half of the URI (Protocol and hostname) of the ITSP API to send SMS to. |
-| [websms]   | path            |                              | URI     | Second half of the URI (path).                               |
-| [websms]   | key_to          | To                           | string  | HTTP POST key name holding SMS destination phone number      |
-| [websms]   | key_from        | From                         | string  | HTTP POST key name holding SMS originating phone number.     |
-| [websms]   | key_body        | Body                         | string  | HTTP POST key name holding the SMS message.                  |
-| [websms]   | auth_user       |                              | string  | Authentication user/id.                                      |
-| [websms]   | auth_passwd     |                              | string  | Authentication password/secret.                              |
-| [websms]   | auth_method     | basic                        | string  | Authentication method to use.                                |
-| [websms]   | response_check  |                              | string  | HTTP POST key=value to check, eg "status=success".           |
-| [websms]   | number_format   |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
-| [websms]   | charset         |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
-| [websmsd]  | key_to          | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
-| [websmsd]  | key_from        | From                         | string  | HTTP POST key name holding SMS origination phone number.     |
-| [websmsd]  | key_body        | Body                         | string  | HTTP POST key name holding the SMS message.                  |
-| [websmsd]  | key_echo        |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
-| [websmsd]  | key_account     |                              | string  | NOT USED                                                     |
-| [websmsd]  | report_success  |                              | string  | Report success like this, eg, "<Response></Response>".       |
-| [websmsd]  | remote_addr     |                              | CIDR    | If defined, only listed addresses are permitted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |
-| [websmsd]  | proxy_addr      | 172.16.0.0/12                | CIDR    | Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16. |
-| [websmsd]  | proxy_header    | HTTP_X_FORWARDED_FOR         | string  | Behind a proxy this header hold the original client address. |
-| [astqueue] | outgoingdir     | /var/spool/asterisk/outgoing | string  | Directory where asterisk picks up call files.                |
-| [astqueue] | stagingdir      | /var/spool/asterisk/staging  | string  | Create call file here and then move to outgoing.             |
-| [astqueue] | waittime        | 45                           | integer | How many seconds to wait for an answer before the call fails. |
-| [astqueue] | maxretries      | 0                            | integer | Number of retries before failing. 0 = don't retry if fails.  |
-| [astqueue] | retrytime       | 300                          | integer | How many seconds to wait before retry.                       |
-| [astqueue] | archive         | no                           | string  | Use "yes" to save call file to /var/spool/asterisk/outgoing_done |
-| [astqueue] | channel_context | default                      | string  | Dialplan context to answer the call, ie set up the channel.  |
-| [astqueue] | context         | default                      | string  | Dialplan context to handle the SMS.                          |
-| [astqueue] | priority        | 1                            | integer | Dialplan priority to handle the SMS.                         |
-| [astqueue] | message_encode  | rfc3986                      | string  | Only single line allowed in call file so url-encoding message. |
+| Section    | Key              | Default                      | Format  | Description                                                  |
+| ---------- | ---------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
+| [websms]   | host[]           |                              | URI     | First half of the URI (Protocol and hostname) of the ITSP API to send SMS to. |
+| [websms]   | path[]           |                              | URI     | Second half of the URI (path).                               |
+| [websms]   | key_to[]         | To                           | string  | HTTP POST key name holding SMS destination phone number      |
+| [websms]   | key_from[]       | From                         | string  | HTTP POST key name holding SMS originating phone number.     |
+| [websms]   | key_body[]       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
+| [websms]   | auth_user[]      |                              | string  | Authentication user/id.                                      |
+| [websms]   | auth_passwd[]    |                              | string  | Authentication password/secret.                              |
+| [websms]   | auth_method[]    | basic                        | string  | Authentication method to use.                                |
+| [websms]   | response_check[] |                              | string  | HTTP POST key=value to check, eg "status=success".           |
+| [websms]   | number_format[]  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
+| [websms]   | charset[]        |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
+| [websmsd]  | key_to[]         | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
+| [websmsd]  | key_from[]       | From                         | string  | HTTP POST key name holding SMS origination phone number.     |
+| [websmsd]  | key_body[]       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
+| [websmsd]  | key_echo[]       |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
+| [websmsd]  | key_account[]    |                              | string  | NOT USED                                                     |
+| [websmsd]  | report_success[] |                              | string  | Report success like this, eg, "<Response></Response>".       |
+| [websmsd]  | request_uri[]    |                              | string  | If defined, only listed URIs are allowed, eg /,/mywebhook/1. URIs must start with a "/". |
+| [websmsd]  | remote_addr[]    |                              | CIDR    | If defined, only listed addresses are allowed, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |
+| [websmsd]  | proxy_addr       | 172.16.0.0/12                | CIDR    | Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16. |
+| [websmsd]  | proxy_header     | HTTP_X_FORWARDED_FOR         | string  | Behind a proxy this header hold the original client address. |
+| [astqueue] | outgoingdir      | /var/spool/asterisk/outgoing | string  | Directory where asterisk picks up call files.                |
+| [astqueue] | stagingdir       | /var/spool/asterisk/staging  | string  | Create call file here and then move to outgoing.             |
+| [astqueue] | waittime         | 45                           | integer | How many seconds to wait for an answer before the call fails. |
+| [astqueue] | maxretries       | 0                            | integer | Number of retries before failing. 0 = don't retry if fails.  |
+| [astqueue] | retrytime        | 300                          | integer | How many seconds to wait before retry.                       |
+| [astqueue] | archive          | no                           | string  | Use "yes" to save call file to /var/spool/asterisk/outgoing_done |
+| [astqueue] | channel_context  | default                      | string  | Dialplan context to answer the call, ie set up the channel.  |
+| [astqueue] | context          | default                      | string  | Dialplan context to handle the SMS.                          |
+| [astqueue] | priority         | 1                            | integer | Dialplan priority to handle the SMS.                         |
+| [astqueue] | message_encode   | rfc3986                      | string  | Only single line allowed in call file so url-encoding message. |
 
 ### Default configuration
 
@@ -177,6 +178,70 @@ channel_context = dp_entry_channel_open
 context         = dp_entry_trunk_texting
 ```
 
+### Multiple interface configuration
+
+It is possible to define more than one SMS interface. This is useful when you subscribe to the service of more than one ITSP. For outgoing SMS, using `websms`, the interface is selected using a channel variable, `WEBSMS_INDEX`, you set on each PJSIP endpoint individually. For incoming SMS, using `websmsd`, the interface is selected based on the HTTP request parameters, `remote_addr` and/or `request_uri`.
+
+The section [Default configuration](#default-configuration) contains an example of a configuration for a single interface, which we can use as a reference. Now lets look at a configuration,  `websms.conf`, with two interfaces defined.
+
+ ```ini
+[websms]
+host[api-1]          = api.example1.com
+path                 = /sms/send/
+auth_user[api-1]     = user1
+auth_passwd[api-1]   = passwd1
+
+host[api-2]          = api.example2.com
+auth_user[api-2]     = user2
+auth_passwd[api-2]   = passwd2
+
+[websmsd]
+remote_addr[api-1]   = 1.2.3.4/24
+request_uri[api-1]   = /incomming1
+key_body[api-1]      = Body
+
+remote_addr[api-2]   = 5.6.7.8
+request_uri[api-2]   = /incomming2
+key_body[api-2]      = text
+ ```
+
+As can be seen, parameters that are common between configurations does not need to be specified more than once, see for example the parameter `path` above.
+
+#### Multiple outgoing interface configurations
+
+The channel variable, `WEBSMS_INDEX`, needs to match one of the indexes used in the `[websms]` section. Lets look at an example snippet of `pjsip_wizard.conf`
+
+```ini
+[john.doe](tpl_softphone)
+hint_exten = +12025550160
+endpoint/set_var = WEBSMS_INDEX=api-1
+
+[jane.doe](tpl_softphone)
+hint_exten = +12025550183
+endpoint/set_var = WEBSMS_INDEX=api-2
+```
+
+Here the endpoint `john.doe`  will use the `api-1` configuration for outgoing SMS, whereas `jane.doe` will use `api-2`.
+
+#### Multiple incoming interface configurations
+
+For incoming SMS either the `remote_addr` and/or the `request_uri` parameter needs to be defined, using square brackets, for each individual interface, if more than one is used. WebSMS matches these parameters for incoming requests to figure out which configuration to use.
+
+Note that, the parameters `proxy_addr` and `proxy_header` can *only* have a single definition, i.e. *no* square brackets, since they are used before the incoming request has been analyzed and the interface is therefore not yet know.
+
+It is not necessary to explicitly name the index in the `[websmsd]` section. If the index is omitted, the order of definitions will be important. To exemplify, this `[websmsd]` configuration is equivalent to the one above.
+
+```ini
+[websmsd]
+remote_addr[]   = 1.2.3.4/24
+request_uri[]   = /incomming1
+key_body[]      = Body
+
+remote_addr[]   = 5.6.7.8
+request_uri[]   = /incomming2
+key_body[]      = text
+```
+
 ## Implementation
 
 implementing a PHP client script, which sends HTTP SMS requests, and a server that listens for HTTP POST request form your ITSP.
@@ -190,7 +255,7 @@ The function of `websms.php` in the SMS data flow is to transfer the message out
 To describe the data flow we walk trough an example where a soft-phone (endpoint) user sends a SMS to a destination outside of the PBX. The endpoint sends a SIP MESSAGE request [RFC3428](https://tools.ietf.org/html/rfc3428) to Asterisk and a [channel](https://wiki.asterisk.org/wiki/display/AST/Channels) is set up and placed in the dial-plan. The channel variables include the, `EXTEN`, `MESSAGE(to)`, `MESSAGE(from)`, and `MESSAGE(body)`. The external destination is identified in the dial-plan and `websms.php` is call via [Asterisk Gateway Interface (AGI)](https://wiki.asterisk.org/wiki/pages/viewpage.action?pageId=32375589) in the dial-plan (extensions.conf):
 
 ```bash
-same = n,AGI(websms.php,${EXTEN},${MESSAGE(from)},${QUOTE(${MESSAGE(body)})})
+same = n,AGI(websms.php,${EXTEN},${MESSAGE(from)},${QUOTE(${MESSAGE(body)})},${WEBSMS_INDEX})
 ```
 
 The `MESSAGE(body)` needs to be quoted since it can include special characters. With the provided arguments `websms.php` sends an authenticated HTTP request to the API of ITSP who will continue forward the SMS to its final destination.
@@ -251,4 +316,4 @@ setvar: MESSAGE_ENCODE=rfc3986
 
 To make sure Asterisk does not tries to read the call file before it is fully written,`websmsd.php`first writes to the file in a staging directory before it is moved to the directory where Asterisk pick it up.
 
-Once Asterisk pick up the call file it creates a channel and start to execute it according what is specified in the dial plan. In the dial plan, defined by `extensions.conf` the function [`MESSAGE()`](https://wiki.asterisk.org/wiki/display/AST/Asterisk+17+Function_MESSAGE) is used to access the SMS data.
+Once Asterisk pick up the call file it creates a channel and start to execute it according what is specified in the dial plan. In the dial plan, defined by `extensions.conf` the function [`MESSAGE()`](https://wiki.asterisk.org/wiki/display/AST/Asterisk+17+Function_MESSAGE) is used to access the SMS data.

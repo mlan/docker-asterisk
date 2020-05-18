@@ -300,7 +300,8 @@ class Websms {
 	private function args_mess($args) {
 		switch (count($args)) {
 		case 4:
-			$this->index = $args[4];
+			$index = $args[4];
+			if(strlen($index) > 0) $this->index = $index;
 		case 3:
 			$keys = [ $this->config('websms','key_to'),
 				$this->config('websms','key_from'),

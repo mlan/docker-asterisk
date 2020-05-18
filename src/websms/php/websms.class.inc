@@ -229,7 +229,7 @@ class Websms {
 		if ($this->match_cidr($remote_addr,$this->config('websmsd','proxy_addr'))) {
 			$remote_addr = $_SERVER[$this->config('websmsd','proxy_header')];
 		}
-		return $this->cmp_cidr($remote_addr,$csv_addr);
+		return $this->match_cidr($remote_addr,$csv_addr);
 	}
 	/*--------------------------------------------------------------------------
 	Compare each uri (comma separated) with the REQUEST_URI

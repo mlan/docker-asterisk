@@ -64,7 +64,6 @@ Add an endpoint entry in `pjsip_wizard.conf` for each user. Each user can simult
 hint_exten = +12025550160
 endpoint/callerid = John Doe <+12025550160>
 endpoint/mailboxes = john.doe@example.com
-endpoint/from_user = +12025550160
 endpoint/set_var = TRUNK_ENDPOINT=trunk:itsp
 inbound_auth/username = john.doe
 inbound_auth/password = password
@@ -121,7 +120,7 @@ bind = 0.0.0.0:5561
 
 #### TLS Certificate and key
 
-To enable encryption of both the session and data packages (TLS and SDES SRTP)  a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key are automatically generated. The default file names for these are defined below. Should the certificate and key be available be other means they can be copied to the container using this names. If other file names are referred also update their names in `pjsip_transport.conf`.
+To enable encryption of both the session and data packages (TLS and SDES SRTP) a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key are automatically generated. The default file names for these are defined below. Should the certificate and key be available be other means they can be copied to the container using this names. If other file names are referred also update their names in `pjsip_transport.conf`.
 
 `pjsip_transport.conf`
 
@@ -135,7 +134,7 @@ There is also a mechanism to use ACME lets encrypt certificates, which also use 
 
 ## Implementation
 
-The PrivateDial has its contexts is organized in 3 levels. The entry, action and subroutine contexts. A SIP event  will trigger the execution of the PrivateDial dial plan staring on one of the entry contexts. The entry contexts include some of the action contexts, and the action contexts call the subroutines.
+The PrivateDial has its contexts is organized in 3 levels. The entry, action and subroutine contexts. A SIP event will trigger the execution of the PrivateDial dial plan staring on one of the entry contexts. The entry contexts include some of the action contexts, and the action contexts call the subroutines.
 
 ### Entry context
 

@@ -1,4 +1,4 @@
-#  WebSMS
+# WebSMS
 
 The [Short Message Service (SMS)](https://en.wikipedia.org/wiki/SMS) [text messaging](https://en.wikipedia.org/wiki/Text_messaging) service, introduced in 1993, enabled mobile devices to exchange short text messages, using the [Short Message Peer-to-Peer (SMPP)](https://en.wikipedia.org/wiki/Short_Message_Peer-to-Peer) protocol. The [Session Initiation Protocol (SIP)](wikipedia.org/wiki/Session_Initiation_Protocol) include provision for [Instant Messaging (IM)](https://en.wikipedia.org/wiki/Instant_messaging) using the [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) protocol extension, serving a similar purpose.
 
@@ -8,7 +8,7 @@ The WebSMS service bridges this limitation, with the help of two components. One
 
 ## Operation
 
-Asterisk natively handles SMS in between soft-phones using  the [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) protocol. When SMS is sent out to your ITSP Asterisk it uses an utility, `websms`, to send a HTTP [POST](https://en.wikipedia.org/wiki/POST_(HTTP)) request, containing the extension number, caller id and the message text, to the ITSP web [API](https://en.wikipedia.org/wiki/Application_programming_interface). Normally this request need to be authenticated using credentials provided by the ITSP.
+Asterisk natively handles SMS in between soft-phones using the [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) protocol. When SMS is sent out to your ITSP Asterisk it uses an utility, `websms`, to send a HTTP [POST](https://en.wikipedia.org/wiki/POST_(HTTP)) request, containing the extension number, caller id and the message text, to the ITSP web [API](https://en.wikipedia.org/wiki/Application_programming_interface). Normally this request need to be authenticated using credentials provided by the ITSP.
 
 The `websmsd` client listens for HTTP POST request which your ITSP will issue when there is an incoming SMS. The request includes the extension number, caller id and the message text. Once received, this message is placed in the Asterisk call queue, using a [call file](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Call+FIles). Asterisk will pick up the queued message and forward it to the relevant soft-phone using the SIMPLE protocol. For this to work you need to provide your ITSP with the URL to the `websmsd` client.
 
@@ -63,9 +63,9 @@ Currently there is support for: `basic` and `zadarma`.
 #### `basic`
 
 [Basic access authentication](wikipedia.org/wiki/Basic_access_authentication),
-is a method for an [HTTP user agent](https://en.wikipedia.org/wiki/User_agent) (here `websms`) to provide a [user name](https://en.wikipedia.org/wiki/User_name) and [password](https://en.wikipedia.org/wiki/Password) when making a request. In basic HTTP authentication, a request contains a header field in the form of `Authorization: Basic <credentials>`, where credentials is the [base64](https://en.wikipedia.org/wiki/Base64) encoding of id and password joined by a  single colon `:`.
+is a method for an [HTTP user agent](https://en.wikipedia.org/wiki/User_agent) (here `websms`) to provide a [user name](https://en.wikipedia.org/wiki/User_name) and [password](https://en.wikipedia.org/wiki/Password) when making a request. In basic HTTP authentication, a request contains a header field in the form of `Authorization: Basic <credentials>`, where credentials is the [base64](https://en.wikipedia.org/wiki/Base64) encoding of id and password joined by a single colon `:`.
 
-When using the `basic` authentication method, it is not important how the full URL is separated into  `host` and `path`.
+When using the `basic` authentication method, it is not important how the full URL is separated into `host` and `path`.
 
 #### `zadarma`
 
@@ -96,7 +96,7 @@ Some API respond with a status message to the HTTP request that we send, which c
 
 #### Outgoing number format
 
-While most API accept any number format, some don't. We can  omit the leading "+" in international numbers, by defining `number_format = "omit+"`.
+While most API accept any number format, some don't. We can omit the leading "+" in international numbers, by defining `number_format = "omit+"`.
 
 #### Outgoing character encoding
 
@@ -104,7 +104,7 @@ Many API accepts UTF-16 character encoding, but some do not. In case the API onl
 
 #### Incoming echo
 
-Some API test that it can access your WebSMS web server, by sending a special HTTP request and expecting  the response to echo a key value. Configure such echo response by defining the HTTP request key used by the API. For example `key_echo = "zd_echo"`.
+Some API test that it can access your WebSMS web server, by sending a special HTTP request and expecting the response to echo a key value. Configure such echo response by defining the HTTP request key used by the API. For example `key_echo = "zd_echo"`.
 
 #### Incoming response
 
@@ -182,7 +182,7 @@ context         = dp_entry_trunk_texting
 
 It is possible to define more than one SMS interface. This is useful when you subscribe to the service of more than one ITSP. For outgoing SMS, using `websms`, the interface is selected using a channel variable, `WEBSMS_INDEX`, you set on each PJSIP endpoint individually. For incoming SMS, using `websmsd`, the interface is selected based on the HTTP request parameters, `remote_addr` and/or `request_uri`.
 
-The section [Default configuration](#default-configuration) contains an example of a configuration for a single interface, which we can use as a reference. Now lets look at a configuration,  `websms.conf`, with two interfaces defined.
+The section [Default configuration](#default-configuration) contains an example of a configuration for a single interface, which we can use as a reference. Now lets look at a configuration, `websms.conf`, with two interfaces defined.
 
  ```ini
 [websms]
@@ -221,7 +221,7 @@ hint_exten = +12025550183
 endpoint/set_var = WEBSMS_INDEX=api-2
 ```
 
-Here the endpoint `john.doe`  will use the `api-1` configuration for outgoing SMS, whereas `jane.doe` will use `api-2`.
+Here the endpoint `john.doe` will use the `api-1` configuration for outgoing SMS, whereas `jane.doe` will use `api-2`.
 
 #### Multiple incoming interface configurations
 
@@ -250,7 +250,7 @@ Currently there can only be one WebSMS configuration, so it is not possible to s
 
 ### websms.php sending SMS to ITSP
 
-The function of `websms.php` in the SMS data flow is to transfer the message out of Asterisk onto the system of the ITSP. The underlying mechanism for this is a HTTP(S) request executed using [cURL](https://curl.haxx.se/). Admittedly, since Asterisk comes with integrated support for cURL using [libcurl](https://curl.haxx.se/libcurl/) it would be possible to implement the  `websms` functionality without of going the route of calling a PHP script. The main motivation of `websms` is therefore "ease of use" since it can better leverage the companion function `websmsd`.
+The function of `websms.php` in the SMS data flow is to transfer the message out of Asterisk onto the system of the ITSP. The underlying mechanism for this is a HTTP(S) request executed using [cURL](https://curl.haxx.se/). Admittedly, since Asterisk comes with integrated support for cURL using [libcurl](https://curl.haxx.se/libcurl/) it would be possible to implement the `websms` functionality without of going the route of calling a PHP script. The main motivation of `websms` is therefore "ease of use" since it can better leverage the companion function `websmsd`.
 
 To describe the data flow we walk trough an example where a soft-phone (endpoint) user sends a SMS to a destination outside of the PBX. The endpoint sends a SIP MESSAGE request [RFC3428](https://tools.ietf.org/html/rfc3428) to Asterisk and a [channel](https://wiki.asterisk.org/wiki/display/AST/Channels) is set up and placed in the dial-plan. The channel variables include the, `EXTEN`, `MESSAGE(to)`, `MESSAGE(from)`, and `MESSAGE(body)`. The external destination is identified in the dial-plan and `websms.php` is call via [Asterisk Gateway Interface (AGI)](https://wiki.asterisk.org/wiki/pages/viewpage.action?pageId=32375589) in the dial-plan (extensions.conf):
 

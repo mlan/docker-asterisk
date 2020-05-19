@@ -22,29 +22,31 @@
 class Websms {
 	const DEFAULT_CONF_FILE = '/etc/asterisk/websms.conf';
 	const DEFAULT_CONF_VALS = [
-		'host'            => "",
-		'path'            => "",
-		'key_to'          => "To",
-		'key_from'        => "From",
-		'key_body'        => "Body",
-		'auth_user'       => "",
-		'auth_passwd'     => "",
-		'auth_method'     => "basic",
-		'response_check'  => null,
-		'number_format'   => "",
-		'charset'         => null,
-	];
-	const DEFAULT_CONFD_VALS = [
-		'key_to'          => "To",
-		'key_from'        => "From",
-		'key_body'        => "Body",
-		'key_echo'        => null,
-		'key_account'     => null,
-		'report_success'  => "",
-		'remote_addr'     => null,
-		'request_uri'     => null,
-		'proxy_addr'      => "172.16.0.0/12",
-		'proxy_header'    => "HTTP_X_FORWARDED_FOR",
+		'websms' => [
+			'host'            => "",
+			'path'            => "",
+			'key_to'          => "To",
+			'key_from'        => "From",
+			'key_body'        => "Body",
+			'auth_user'       => "",
+			'auth_passwd'     => "",
+			'auth_method'     => "basic",
+			'response_check'  => null,
+			'number_format'   => "",
+			'charset'         => null,
+		],
+		'websmsd' => [
+			'key_to'          => "To",
+			'key_from'        => "From",
+			'key_body'        => "Body",
+			'key_echo'        => null,
+			'key_account'     => null,
+			'report_success'  => "",
+			'remote_addr'     => null,
+			'request_uri'     => null,
+			'proxy_addr'      => "172.16.0.0/12",
+			'proxy_header'    => "HTTP_X_FORWARDED_FOR",
+		]
 	];
 	private $config;
 	private $message;
@@ -55,8 +57,7 @@ class Websms {
 		if (is_string($config) !== true) {
 			$config = self::DEFAULT_CONF_FILE;
 		}
-		$this->config['websmsd'] = self::DEFAULT_CONFD_VALS;
-		$this->config['websms'] = self::DEFAULT_CONF_VALS;
+		$this->config = self::DEFAULT_CONF_VALS;
 		if (file_exists($config) === true) {
 			$config_ini = parse_ini_file($config,true);
 			if (!empty($config_ini['websmsd']))
@@ -446,26 +447,32 @@ class Websms {
 		"cost":0.24,
 		"currency":"USD"
 	}
+	@param array $response
+	@return Boolean true if response_check matches, otherwize false
 	*/
 	private function check($response) {
-		$check = $this->config('websms','response_check');
+		$response_check = $this->config('websms','response_check');
 		$host = $this->config('websms','host');
 		$user = $this->config('websms','auth_user');
 		if (empty($response)) return false;
-		if (!empty($check)) {
-			if (strpos($check, '=') !== false) { // "key=value"
-				list($test_key, $test_value) = explode('=',$check);
-				if (@$response[$test_key] !== $test_value) {
-					trigger_error("Called ($host) but return key ($test_key = $response[$test_key] != $test_value)", E_USER_WARNING);
-					trigger_error(sprintf("Response was: %s",
-						json_encode($response)));
+		if (!empty($response_check)) {
+			if (strpos($response_check, '=') !== false) { // "key=value"
+				list($test_key, $test_value) = explode('=',$response_check);
+				// test hierarchically
+				array_walk_recursive($response, function($val,$key) use (&$response_value) {
+					if ($key === $test_key) $response_value = $val;
+				}, $response_value);
+				if ($response_value !== $test_value) {
+					trigger_error(sprintf("Called (%s) but return did not match (%s = %s != %s)",
+						$host,$test_key,$response_value,$test_value), E_USER_WARNING);
+					trigger_error(sprintf("Response was: %s",json_encode($response)));
 					return false;
 				}
 			} else { // "/pattern/"
-				if (!preg_match($check,$response)) {
-					trigger_error("Called ($host) but return not matched ($response != $check)", E_USER_WARNING);
-					trigger_error(sprintf("Response was: %s",
-						json_encode($response)));
+				if (!preg_match($response_check,$response)) {
+					trigger_error(sprintf("Called (%s) but return did not match (%s != %s)",
+						$host,$response,$response_check), E_USER_WARNING);
+					trigger_error(sprintf("Response was: %s",json_encode($response)));
 					return false;
 				}
 			}
@@ -476,7 +483,7 @@ class Websms {
 		return true;
 	}
 	/*--------------------------------------------------------------------------
-	Get configuration value, if $this->index is set pick that element in arrays
+	Get configuration value, if $this->index is set pick that element in array
 	@param  mixed   $section
 	@param  mixed   $key
 	@param  Boolean $allow_array
@@ -490,9 +497,9 @@ class Websms {
 					$value = $value[$this->index];
 				} else {
 					trigger_error(
-						sprintf("No config (%s:%s) using index (%s) found",
-						$section,$key,$this->index), E_USER_ERROR);
-					$value = null;
+						sprintf("No config (%s:%s:%s) using default",
+						$section,$key,$this->index), E_USER_NOTICE);
+					$value = self::DEFAULT_CONF_VALS[$section][$key];
 				}
 			} else {
 				if ($allow_array !== true) {

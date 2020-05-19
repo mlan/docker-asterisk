@@ -142,7 +142,6 @@ One difference is that the strings, "yes", "no", "true", "false" and "null" have
 | [websmsd]  | key_from[]       | From                         | string  | HTTP POST key name holding SMS origination phone number.     |
 | [websmsd]  | key_body[]       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
 | [websmsd]  | key_echo[]       |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
-| [websmsd]  | key_account[]    |                              | string  | NOT USED                                                     |
 | [websmsd]  | report_success[] |                              | string  | Report success like this, eg, "<Response></Response>".       |
 | [websmsd]  | request_uri[]    |                              | string  | If defined, only listed URIs are allowed, eg /,/mywebhook/1. URIs must start with a "/". |
 | [websmsd]  | remote_addr[]    |                              | CIDR    | If defined, only listed addresses are allowed, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |

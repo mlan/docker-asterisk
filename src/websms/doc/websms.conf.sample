@@ -25,7 +25,6 @@
 ;key_from        = "From"  ;http POST key name holding sms origination phone number
 ;key_body        = "Body"  ;http POST key name holding the sms message
 ;key_echo        = ""      ;some ITSP test that the client respond by echoing it value, eg "zd_echo"
-;key_account     = ""      ;
 ;report_success  = ""      ;report success, eg, "<Response></Response>"
 ;request_uri     = ""      ;if defined, only listed URIs are accepted, eg /,/trunk1. URIs must start with "/".
 ;remote_addr     = ""      ;if defined, only listed addrs are accepted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24

@@ -40,7 +40,6 @@ class Websms {
 			'key_from'        => "From",
 			'key_body'        => "Body",
 			'key_echo'        => null,
-			'key_account'     => null,
 			'report_success'  => "",
 			'remote_addr'     => null,
 			'request_uri'     => null,
@@ -459,9 +458,9 @@ class Websms {
 			if (strpos($response_check, '=') !== false) { // "key=value"
 				list($test_key, $test_value) = explode('=',$response_check);
 				// test hierarchically
-				array_walk_recursive($response, function($val,$key) use (&$response_value) {
+				array_walk_recursive($response, function($val,$key) use (&$response_value,$test_key) {
 					if ($key === $test_key) $response_value = $val;
-				}, $response_value);
+				});
 				if ($response_value !== $test_value) {
 					trigger_error(sprintf("Called (%s) but return did not match (%s = %s != %s)",
 						$host,$test_key,$response_value,$test_value), E_USER_WARNING);

@@ -127,7 +127,7 @@ class Websms {
 	*/
 	private function check_addr_uri_index() {
 		$allow = true;
-		$match_addr = $this->config('websmsd','remote_addr');
+		$match_addr = $this->config('websmsd','remote_addr',true);
 		$remote_addr = $this->remote_addr();
 		$request_uri = $_SERVER['REQUEST_URI'];
 		if(isset($match_addr)) {
@@ -153,7 +153,7 @@ class Websms {
 		Wait until now to call $this->config('websmsd','uri') since
 		$this->index might have been set above.
 		*/
-		$match_uri = $this->config('websmsd','request_uri');
+		$match_uri = $this->config('websmsd','request_uri',true);
 		if($allow && isset($match_uri)) {
 			$allow = false;
 			if (is_array($match_uri)) {
@@ -228,7 +228,14 @@ class Websms {
 		$proxy_header = $this->config('websmsd','proxy_header');
 		if (!empty($proxy_addr) && !empty($proxy_header) &&
 			$this->match_cidr($remote_addr,$proxy_addr)) {
-			$remote_addr = $_SERVER[$proxy_header];
+			$header_addr = @$_SERVER[$proxy_header];
+			if (isset($header_addr)) {
+				$remote_addr = $header_addr;
+			} else {
+				trigger_error(
+					sprintf("REMOTE_ADDR (%s) matches proxy (%s) but there is no header (%s)",
+					$remote_addr, $proxy_addr, $proxy_header), E_USER_WARNING);
+			}
 		}
 		return $remote_addr;
 	}
@@ -472,19 +479,29 @@ class Websms {
 	Get configuration value, if $this->index is set pick that element in arrays
 	@param  mixed   $section
 	@param  mixed   $key
-	@return mixed   $value or $array_of_values
+	@param  Boolean $allow_array
+	@return mixed   $value or $array_of_values if $allow_array = true
 	*/
-	public function config($section, $key) {
-		if (is_array($this->config[$section][$key]) && isset($this->index)) {
-			$value = @$this->config[$section][$key][$this->index];
-			if (!isset($value)) trigger_error(
-				sprintf("No configuration (%s:%s) using index (%s) found",
-				$section,$key,$this->index), E_USER_ERROR);
-		} else {
-			$value = @$this->config[$section][$key];
-			if (!isset($value)) trigger_error(
-				sprintf("No configuration (%s:%s) found",
-				$section,$key), E_USER_ERROR);
+	public function config($section, $key, $allow_array = false) {
+		$value = $this->config[$section][$key];
+		if (is_array($value)) {
+			if (isset($this->index)) {
+				if (array_key_exists($this->index,$value)) {
+					$value = $value[$this->index];
+				} else {
+					trigger_error(
+						sprintf("No config (%s:%s) using index (%s) found",
+						$section,$key,$this->index), E_USER_ERROR);
+					$value = null;
+				}
+			} else {
+				if ($allow_array !== true) {
+					trigger_error(
+						sprintf("Config (%s:%s) is array but index is not provided",
+						$section,$key), E_USER_ERROR);
+					$value = null;
+				}
+			}
 		}
 		return $value;
 	}

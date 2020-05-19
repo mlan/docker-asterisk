@@ -128,19 +128,19 @@ class Websms {
 	private function check_addr_uri_index() {
 		$allow = true;
 		$match_addr = $this->config('websmsd','remote_addr');
-		$remote_addr = $_SERVER['REMOTE_ADDR'];
+		$remote_addr = $this->remote_addr();
 		$request_uri = $_SERVER['REQUEST_URI'];
 		if(isset($match_addr)) {
 			$allow = false;
 			if (is_array($match_addr)) {
 				foreach ($match_addr as $index => $value) {
-					if($this->match_addr($value)) {
+					if($this->match_cidr($remote_addr,$value)) {
 						$allow = true;
 						$this->index = $index;
 					}
 				}
 			} else {
-				if($this->match_addr($match_addr)) $allow = true;
+				if($this->match_cidr($remote_addr,$match_addr)) $allow = true;
 			}
 			if($allow) trigger_error(
 					sprintf("REMOTE_ADDR (%s) is allowed, using index (%s)",
@@ -219,17 +219,18 @@ class Websms {
 	/*--------------------------------------------------------------------------
 	Initially assume 'REMOTE_ADDR' is the original IP of the HTTP client. But if
 	it is a 'proxy_addr' then trust that 'proxy_header' hold the real IP of the
-	client instead. Now that we have the real IP of the client check if it is
-	allowed.
-	@param string $csv_addr  comma separated list of IP / CIDR to match
-	@return Boolean true if $remote_addr is permitted otherwise false
+	client instead.
+	@return string $remote_addr
 	*/
-	private function match_addr($csv_addr) {
+	private function remote_addr() {
 		$remote_addr = $_SERVER['REMOTE_ADDR'];
-		if ($this->match_cidr($remote_addr,$this->config('websmsd','proxy_addr'))) {
-			$remote_addr = $_SERVER[$this->config('websmsd','proxy_header')];
+		$proxy_addr = $this->config('websmsd','proxy_addr');
+		$proxy_header = $this->config('websmsd','proxy_header');
+		if (!empty($proxy_addr) && !empty($proxy_header) &&
+			$this->match_cidr($remote_addr,$proxy_addr)) {
+			$remote_addr = $_SERVER[$proxy_header];
 		}
-		return $this->match_cidr($remote_addr,$csv_addr);
+		return $remote_addr;
 	}
 	/*--------------------------------------------------------------------------
 	Compare each uri (comma separated) with the REQUEST_URI
@@ -392,6 +393,11 @@ class Websms {
 			curl_setopt($this->curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 			curl_setopt($this->curl, CURLOPT_USERPWD, "$user:$passwd");
 			break;
+		case 'nexmo':
+			$api_auth = [ 'api_key' => $user, 'api_secret' => $passwd ];
+			curl_setopt($this->curl, CURLOPT_POSTFIELDS,
+				http_build_query(array_merge($this->message, $api_auth)));
+			break;
 		case 'zadarma':
 			$signature = base64_encode(hash_hmac('sha1', $path .
 				$poststr . md5($poststr), $passwd));
@@ -470,10 +476,17 @@ class Websms {
 	*/
 	public function config($section, $key) {
 		if (is_array($this->config[$section][$key]) && isset($this->index)) {
-			return $this->config[$section][$key][$this->index];
+			$value = @$this->config[$section][$key][$this->index];
+			if (!isset($value)) trigger_error(
+				sprintf("No configuration (%s:%s) using index (%s) found",
+				$section,$key,$this->index), E_USER_ERROR);
 		} else {
-			return $this->config[$section][$key];
+			$value = @$this->config[$section][$key];
+			if (!isset($value)) trigger_error(
+				sprintf("No configuration (%s:%s) found",
+				$section,$key), E_USER_ERROR);
 		}
+		return $value;
 	}
 	/*--------------------------------------------------------------------------
 	Print variable if $debug or $this->debug is true

@@ -205,7 +205,7 @@ request_uri[api-2]   = /incomming2
 key_body[api-2]      = text
  ```
 
-As can be seen, parameters that are common between configurations does not need to be specified more than once, see for example the parameter `path` above.
+As can be seen, parameters that are common between configurations does not need to be specified more than once, see for example the parameter `path` above. Note that there is no default value available for the other interfaces when a parameters, using square brackets,  are set for one of them. That is, if a parameter is defined, using square brackets, for one interface; that parameter needs to be defied for all other interfaces too.
 
 #### Multiple outgoing interface configurations
 

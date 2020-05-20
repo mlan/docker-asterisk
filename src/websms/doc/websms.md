@@ -125,38 +125,38 @@ context         = dp_entry_trunk_texting
 The WebSMS configuration is kept in `websms.conf`. This file is parsed by [PHP](https://secure.php.net/manual/en/function.parse-ini-file.php), which luckily, accepts a syntax similar to Asterisk's configuration files.
 One difference is that the strings, "yes", "no", "true", "false" and "null" have to be within quotation marks otherwise they will be interpreted as Boolean by the PHP parser. In the table below some key names end with []. The square brackets are not part pf the actual key name, instead they indicate that the key can hold multiple values allowing more than one SMS API interface to be configured.
 
-| Section    | Key              | Default                      | Format  | Description                                                  |
-| ---------- | ---------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
-| [websms]   | host[]           |                              | URI     | First half of the URI (Protocol and hostname) of the ITSP API to send SMS to. |
-| [websms]   | path[]           |                              | URI     | Second half of the URI (path).                               |
-| [websms]   | key_to[]         | To                           | string  | HTTP POST key name holding SMS destination phone number      |
-| [websms]   | key_from[]       | From                         | string  | HTTP POST key name holding SMS originating phone number.     |
-| [websms]   | key_body[]       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
-| [websms]   | auth_user[]      |                              | string  | Authentication user/id.                                      |
-| [websms]   | auth_passwd[]    |                              | string  | Authentication password/secret.                              |
-| [websms]   | auth_method[]    | basic                        | string  | Authentication method to use.                                |
-| [websms]   | response_check[] |                              | string  | HTTP POST key=value to check, eg "status=success".           |
-| [websms]   | number_format[]  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
-| [websms]   | charset[]        |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
-| [websmsd]  | key_to[]         | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
-| [websmsd]  | key_from[]       | From                         | string  | HTTP POST key name holding SMS origination phone number.     |
-| [websmsd]  | key_body[]       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
-| [websmsd]  | key_echo[]       |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
-| [websmsd]  | report_success[] |                              | string  | Report success like this, eg, "<Response></Response>".       |
-| [websmsd]  | request_uri[]    |                              | string  | If defined, only listed URIs are allowed, eg /,/mywebhook/1. URIs must start with a "/". |
-| [websmsd]  | remote_addr[]    |                              | CIDR    | If defined, only listed addresses are allowed, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |
-| [websmsd]  | proxy_addr       | 172.16.0.0/12                | CIDR    | Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16. |
-| [websmsd]  | proxy_header     | HTTP_X_FORWARDED_FOR         | string  | Behind a proxy this header hold the original client address. |
-| [astqueue] | outgoingdir      | /var/spool/asterisk/outgoing | string  | Directory where asterisk picks up call files.                |
-| [astqueue] | stagingdir       | /var/spool/asterisk/staging  | string  | Create call file here and then move to outgoing.             |
-| [astqueue] | waittime         | 45                           | integer | How many seconds to wait for an answer before the call fails. |
-| [astqueue] | maxretries       | 0                            | integer | Number of retries before failing. 0 = don't retry if fails.  |
-| [astqueue] | retrytime        | 300                          | integer | How many seconds to wait before retry.                       |
-| [astqueue] | archive          | no                           | string  | Use "yes" to save call file to /var/spool/asterisk/outgoing_done |
-| [astqueue] | channel_context  | default                      | string  | Dialplan context to answer the call, ie set up the channel.  |
-| [astqueue] | context          | default                      | string  | Dialplan context to handle the SMS.                          |
-| [astqueue] | priority         | 1                            | integer | Dialplan priority to handle the SMS.                         |
-| [astqueue] | message_encode   | rfc3986                      | string  | Only single line allowed in call file so url-encoding message. |
+| Section    | Key               | Default                      | Format  | Description                                                  |
+| ---------- | ----------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
+| [websms]   | host []           |                              | URI     | First half of the URI (Protocol and hostname) of the ITSP API to send SMS to. |
+| [websms]   | path []           |                              | URI     | Second half of the URI (path).                               |
+| [websms]   | key_to []         | To                           | string  | HTTP POST key name holding SMS destination phone number      |
+| [websms]   | key_from []       | From                         | string  | HTTP POST key name holding SMS originating phone number.     |
+| [websms]   | key_body []       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
+| [websms]   | auth_user []      |                              | string  | Authentication user/id.                                      |
+| [websms]   | auth_passwd []    |                              | string  | Authentication password/secret.                              |
+| [websms]   | auth_method []    | basic                        | string  | Authentication method to use.                                |
+| [websms]   | response_check [] |                              | string  | HTTP POST key=value to check, eg "status=success".           |
+| [websms]   | number_format []  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
+| [websms]   | charset []        |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
+| [websmsd]  | key_to []         | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
+| [websmsd]  | key_from []       | From                         | string  | HTTP POST key name holding SMS origination phone number.     |
+| [websmsd]  | key_body []       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
+| [websmsd]  | key_echo []       |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
+| [websmsd]  | report_success [] |                              | string  | Report success like this, eg, "<Response></Response>".       |
+| [websmsd]  | request_uri []    |                              | string  | If defined, only listed URIs are allowed, eg /,/mywebhook/1. URIs must start with a "/". |
+| [websmsd]  | remote_addr []    |                              | CIDR    | If defined, only listed addresses are allowed, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |
+| [websmsd]  | proxy_addr        | 172.16.0.0/12                | CIDR    | Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16. |
+| [websmsd]  | proxy_header      | HTTP_X_FORWARDED_FOR         | string  | Behind a proxy this header hold the original client address. |
+| [astqueue] | outgoingdir       | /var/spool/asterisk/outgoing | string  | Directory where asterisk picks up call files.                |
+| [astqueue] | stagingdir        | /var/spool/asterisk/staging  | string  | Create call file here and then move to outgoing.             |
+| [astqueue] | waittime          | 45                           | integer | How many seconds to wait for an answer before the call fails. |
+| [astqueue] | maxretries        | 0                            | integer | Number of retries before failing. 0 = don't retry if fails.  |
+| [astqueue] | retrytime         | 300                          | integer | How many seconds to wait before retry.                       |
+| [astqueue] | archive           | no                           | string  | Use "yes" to save call file to /var/spool/asterisk/outgoing_done |
+| [astqueue] | channel_context   | default                      | string  | Dialplan context to answer the call, ie set up the channel.  |
+| [astqueue] | context           | default                      | string  | Dialplan context to handle the SMS.                          |
+| [astqueue] | priority          | 1                            | integer | Dialplan priority to handle the SMS.                         |
+| [astqueue] | message_encode    | rfc3986                      | string  | Only single line allowed in call file so url-encoding message. |
 
 ### Default configuration
 
@@ -185,26 +185,25 @@ The section [Default configuration](#default-configuration) contains an example 
 
  ```ini
 [websms]
-host[api-1]          = api.example1.com
+host         [api-1] = api.example1.com
 path                 = /sms/send/
-auth_user[api-1]     = user1
-auth_passwd[api-1]   = passwd1
+auth_user    [api-1] = user1
+auth_passwd  [api-1] = passwd1
 
-host[api-2]          = api.example2.com
-auth_user[api-2]     = user2
-auth_passwd[api-2]   = passwd2
+host         [api-2] = api.example2.com
+auth_user    [api-2] = user2
+auth_passwd  [api-2] = passwd2
 
 [websmsd]
-remote_addr[api-1]   = 1.2.3.4/24
-request_uri[api-1]   = /incomming1
-key_body[api-1]      = Body
+remote_addr  [api-1] = 1.2.3.4/24
+request_uri  [api-1] = /incomming1
 
-remote_addr[api-2]   = 5.6.7.8
-request_uri[api-2]   = /incomming2
-key_body[api-2]      = text
+remote_addr  [api-2] = 5.6.7.8,5.6.7.9
+request_uri  [api-2] = /incomming2
+key_body     [api-2] = text
  ```
 
-As can be seen, parameters that are common between configurations does not need to be specified more than once, see for example the parameter `path` above. Note that there is no default value available for the other interfaces when a parameters, using square brackets,  are set for one of them. That is, if a parameter is defined, using square brackets, for one interface; that parameter needs to be defied for all other interfaces too.
+As can be seen, parameters that are common between configurations does not need to be specified more than once, see for example the parameter `path` above. If a parameter is defined, using square brackets, but not for all interfaces, the default value will be used for the interfaces not defined.
 
 #### Multiple outgoing interface configurations
 
@@ -232,13 +231,12 @@ It is not necessary to explicitly name the index in the `[websmsd]` section. If 
 
 ```ini
 [websmsd]
-remote_addr[]   = 1.2.3.4/24
-request_uri[]   = /incomming1
-key_body[]      = Body
+remote_addr  [] = 1.2.3.4/24
+request_uri  [] = /incomming1
 
-remote_addr[]   = 5.6.7.8
-request_uri[]   = /incomming2
-key_body[]      = text
+remote_addr  [] = 5.6.7.8,5.6.7.9
+request_uri  [] = /incomming2
+key_body     [] = text
 ```
 
 ## Implementation

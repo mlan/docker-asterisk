@@ -490,26 +490,39 @@ class Websms {
 	*/
 	public function config($section, $key, $allow_array = false) {
 		$value = $this->config[$section][$key];
+		$indices = $this->config_indices($section);
 		if (is_array($value)) {
 			if (isset($this->index)) {
 				if (array_key_exists($this->index,$value)) {
 					$value = $value[$this->index];
 				} else {
-					trigger_error(
-						sprintf("No config (%s:%s:%s) using default",
-						$section,$key,$this->index), E_USER_NOTICE);
 					$value = self::DEFAULT_CONF_VALS[$section][$key];
+					if (!in_array($this->index,$indices)) trigger_error(
+						sprintf("Config ([%s] %s [%s]) missing; using default",
+						$section,$key,$this->index), E_USER_NOTICE);
 				}
 			} else {
 				if ($allow_array !== true) {
 					trigger_error(
-						sprintf("Config (%s:%s) is array but index is not provided",
+						sprintf("Config ([%s] %s) is array but index is not provided",
 						$section,$key), E_USER_ERROR);
 					$value = null;
 				}
 			}
 		}
 		return $value;
+	}
+	/*--------------------------------------------------------------------------
+	*/
+	public function config_indices($section) {
+		$indices = [];
+		array_walk($this->config[$section], function($val,$key) use (&$indices) {
+			if(is_array($val))
+				foreach($val as $key => $value)
+					if(!in_array($key, $indices))
+						$indices[] = $key;
+		});
+		return $indices;
 	}
 	/*--------------------------------------------------------------------------
 	Print variable if $debug or $this->debug is true

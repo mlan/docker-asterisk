@@ -30,7 +30,6 @@ I some scenarios it can be beneficial to use a [reverse proxy](https://en.wikipe
 
 Some functions of WebSMS are configurable by using a configuration file; `websms.conf`. Typically this file need to include the details of your account with the ITSP. The configuration file has three sections, they are: `[websms]` configuring outgoing SMS to the ITSP, `[websmsd]` configuring incoming SMS from the ITSP, and `[astqueue]` configuring the call queue, using call files, where incoming SMS are placed so that Asterisk can pick them up.
 
-
 | File name   | Description                                            |
 | ----------- | ------------------------------------------------------ |
 | websms.conf | Configurations which are unique to the WebSMS services |
@@ -60,9 +59,13 @@ auth_method     = basic
 Not all ITSP use the same authentication method.
 Currently there is support for: `none`, `plain`, `basic` and `zadarma`.
 
+#### `none`
+
+The POST request is sent without any authentication data.
+
 #### `plain`
 
-The `plain` method uses the parametrs `key_user` and `key_secret` in addition to `auth_user` and `auth_secret`.
+The `plain` method uses the parameters `key_user` and `key_secret` in addition to `auth_user` and `auth_secret`.
 These are used to add the key-value pairs `<key_user>:<auth_user>` and `<key_secret>:<auth_secret>` to the POST request.
 
 #### `basic`
@@ -137,9 +140,11 @@ One difference is that the strings, "yes", "no", "true", "false" and "null" have
 | [websms]   | auth_user []    |                              | string  | Authentication user/id.                                      |
 | [websms]   | key_body []     | Body                         | string  | HTTP POST key name holding the SMS message.                  |
 | [websms]   | key_from []     | From                         | string  | HTTP POST key name holding SMS originating phone number.     |
+| [websms]   | key_secret []   |                              | string  | HTTP POST key name holding password/secret with auth_method=plain. |
 | [websms]   | key_to []       | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
+| [websms]   | key_user []     |                              | string  | HTTP POST key name holding user/id with auth_method=plain.   |
 | [websms]   | resp_check []   |                              | string  | HTTP POST key=value to check, eg "status=success".           |
-| [websms]   | url_host []     | http://localhost             | URL     | Scheme and host of the ITSP SMS API, eg https://api.expmple.com |
+| [websms]   | url_host []     | http://localhost             | URL     | Scheme and host of the ITSP SMS API, eg https://api.example.com |
 | [websms]   | url_path []     | /                            | URL     | Path of the ITSP SMS API, eg /sms/send/                      |
 | [websms]   | val_charset []  |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
 | [websms]   | val_numform []  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
@@ -166,7 +171,6 @@ One difference is that the strings, "yes", "no", "true", "false" and "null" have
 ### Default configuration
 
 If the Asterisk configuration directory is empty, default configuration files will be copied there at container startup. The one relevant here is `websms.conf`.
-
 
 ```ini
 [websms]

@@ -13,9 +13,9 @@
 ;auth_user       = ""      ;authentication username/key
 ;key_body        = Body    ;http POST key name holding the sms message
 ;key_from        = From    ;http POST key name holding sms originating phone number
-;key_secret      = ""      ;
+;key_secret      = ""      ;http POST key name holding the password/secret when using auth_method=plain
 ;key_to          = To      ;http POST key name holding sms destination phone number
-;key_user        = ""      ;
+;key_user        = ""      ;http POST key name holding the username/key when using auth_method=plain
 ;resp_check      = ""      ;http POST key=value to check, eg "status=success"
 ;url_host        = http://localhost  ;scheme and host, eg https://api.expmple.com
 ;url_path        = /       ;complete url will be <url_host><url_path>

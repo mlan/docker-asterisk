@@ -50,40 +50,45 @@ Most ITSP requires `websms` to authenticate when sending outgoing SMS via their 
 
 ```ini
 [websms]
-host            = https://api.example.com
-path            = /sms/send/
+url_host        = https://api.example.com
+url_path        = /sms/send/
 auth_user       = id
-auth_passwd     = secret
+auth_secret     = secret
 auth_method     = basic
 ```
 
 Not all ITSP use the same authentication method.
-Currently there is support for: `basic` and `zadarma`.
+Currently there is support for: `none`, `plain`, `basic` and `zadarma`.
+
+#### `plain`
+
+The `plain` method uses the parametrs `key_user` and `key_secret` in addition to `auth_user` and `auth_secret`.
+These are used to add the key-value pairs `<key_user>:<auth_user>` and `<key_secret>:<auth_secret>` to the POST request.
 
 #### `basic`
 
 [Basic access authentication](wikipedia.org/wiki/Basic_access_authentication),
 is a method for an [HTTP user agent](https://en.wikipedia.org/wiki/User_agent) (here `websms`) to provide a [user name](https://en.wikipedia.org/wiki/User_name) and [password](https://en.wikipedia.org/wiki/Password) when making a request. In basic HTTP authentication, a request contains a header field in the form of `Authorization: Basic <credentials>`, where credentials is the [base64](https://en.wikipedia.org/wiki/Base64) encoding of id and password joined by a single colon `:`.
 
-When using the `basic` authentication method, it is not important how the full URL is separated into `host` and `path`.
+When using the `basic` authentication method, it is not important how the full URL is separated into `url_host` and `url_path`.
 
 #### `zadarma`
 
 The ITSP [Zadarma](zadarma.com/en/support/api) uses an authentication method using a signature, `<signature>`, computed using the actual message and a secret key, to provide additional security. The request will use a header like: `Authorization: <user_key>:<signature>`.
 
-The signature also uses the `path` part of the full request URL. To accommodate this scheme the full URL is separated into `host` and `path`. The actual request will use a URL which is the concatenation of `host` and `path`.
+The signature also uses the `url_path` part of the full request URL. To accommodate this scheme the full URL is separated into `url_host` and `url_path`. The actual request will use a URL which is the concatenation of `url_host` and `url_path`.
 
 ### Incoming access control
 
-Since most ITSP does not implement incoming authentication, but operate using a limited range of IP addresses, we can filter incoming source addresses to achieve some access control. Use `remote_addr` to limit incoming access using comma separated address ranges in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) format. By default any source addresses is permitted.
+Since most ITSP does not implement incoming authentication, but operate using a limited range of IP addresses, we can filter incoming source addresses to achieve some access control. Use `remt_addr` to limit incoming access using comma separated address ranges in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) format. By default any source addresses is permitted.
 
-When `websms` operates behind a reverse proxy we need to trust that the proxy reports the original source addresses. Use `proxy_addr` to indicate the addresses of your trusted proxies using comma separated address ranges in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) format. Often proxies sends the original source address in the header `HTTP_X_FORWARDED_FOR`.
+When `websms` operates behind a reverse proxy we need to trust that the proxy reports the original source addresses. Use `prox_addr` to indicate the addresses of your trusted proxies using comma separated address ranges in [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) format. Often proxies sends the original source address in the header `HTTP_X_FORWARDED_FOR`.
 
 ```ini
 [websmsd]
-remote_addr     = 185.45.152.42,3.104.90.0/24,3.1.77.0/24
-proxy_addr      = 172.16.0.0/12
-proxy_header    = HTTP_X_FORWARDED_FOR
+remt_addr      = 185.45.152.42,3.104.90.0/24,3.1.77.0/24
+prox_addr      = 172.16.0.0/12
+prox_header    = HTTP_X_FORWARDED_FOR
 ```
 
 ### Quirks
@@ -92,15 +97,15 @@ Despite the API of different ITSP all serve a similar purpose, they all differ s
 
 #### Outgoing response check
 
-Some API respond with a status message to the HTTP request that we send, which can be used to check if the message was sent successfully. We can configure WebSMS to check if the response include the expected "key=value" pair. For example; `response_check = "status=success"`
+Some API respond with a status message to the HTTP request that we send, which can be used to check if the message was sent successfully. We can configure WebSMS to check if the response include the expected "key=value" pair. For example; `resp_check = "status=success"`
 
 #### Outgoing number format
 
-While most API accept any number format, some don't. We can omit the leading "+" in international numbers, by defining `number_format = "omit+"`.
+While most API accept any number format, some don't. We can omit the leading "+" in international numbers, by defining `val_numform = "omit+"`.
 
 #### Outgoing character encoding
 
-Many API accepts UTF-16 character encoding, but some do not. In case the API only support UCS-2, it might be required to force WebSMS to use it and thereby limit Unicode character range to `U+FFFF`. This is achieved by defining `charset = UCS-2`.
+Many API accepts UTF-16 character encoding, but some do not. In case the API only support UCS-2, it might be required to force WebSMS to use it and thereby limit Unicode character range to `U+FFFF`. This is achieved by defining `val_charset = UCS-2`.
 
 #### Incoming echo
 
@@ -108,7 +113,7 @@ Some API test that it can access your WebSMS web server, by sending a special HT
 
 #### Incoming response
 
-Some API expects a specific response when sending a HTTP request to know that the transfer was successful. The response to incoming SMS is configured by using `report_success`. For example ` report_success = "<Response></Response>"`.
+Some API expects a specific response when sending a HTTP request to know that the transfer was successful. The response to incoming SMS is configured by using `resp_ack`. For example ` resp_ack = "<Response></Response>"`.
 
 ### Call queue contexts
 
@@ -125,38 +130,38 @@ context         = dp_entry_trunk_texting
 The WebSMS configuration is kept in `websms.conf`. This file is parsed by [PHP](https://secure.php.net/manual/en/function.parse-ini-file.php), which luckily, accepts a syntax similar to Asterisk's configuration files.
 One difference is that the strings, "yes", "no", "true", "false" and "null" have to be within quotation marks otherwise they will be interpreted as Boolean by the PHP parser. In the table below some key names end with []. The square brackets are not part pf the actual key name, instead they indicate that the key can hold multiple values allowing more than one SMS API interface to be configured.
 
-| Section    | Key               | Default                      | Format  | Description                                                  |
-| ---------- | ----------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
-| [websms]   | host []           |                              | URI     | First half of the URI (Protocol and hostname) of the ITSP API to send SMS to. |
-| [websms]   | path []           |                              | URI     | Second half of the URI (path).                               |
-| [websms]   | key_to []         | To                           | string  | HTTP POST key name holding SMS destination phone number      |
-| [websms]   | key_from []       | From                         | string  | HTTP POST key name holding SMS originating phone number.     |
-| [websms]   | key_body []       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
-| [websms]   | auth_user []      |                              | string  | Authentication user/id.                                      |
-| [websms]   | auth_passwd []    |                              | string  | Authentication password/secret.                              |
-| [websms]   | auth_method []    | basic                        | string  | Authentication method to use.                                |
-| [websms]   | response_check [] |                              | string  | HTTP POST key=value to check, eg "status=success".           |
-| [websms]   | number_format []  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
-| [websms]   | charset []        |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
-| [websmsd]  | key_to []         | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
-| [websmsd]  | key_from []       | From                         | string  | HTTP POST key name holding SMS origination phone number.     |
-| [websmsd]  | key_body []       | Body                         | string  | HTTP POST key name holding the SMS message.                  |
-| [websmsd]  | key_echo []       |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
-| [websmsd]  | report_success [] |                              | string  | Report success like this, eg, "<Response></Response>".       |
-| [websmsd]  | request_uri []    |                              | string  | If defined, only listed URIs are allowed, eg /,/mywebhook/1. URIs must start with a "/". |
-| [websmsd]  | remote_addr []    |                              | CIDR    | If defined, only listed addresses are allowed, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24. |
-| [websmsd]  | proxy_addr        | 172.16.0.0/12                | CIDR    | Trust "proxy_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16. |
-| [websmsd]  | proxy_header      | HTTP_X_FORWARDED_FOR         | string  | Behind a proxy this header hold the original client address. |
-| [astqueue] | outgoingdir       | /var/spool/asterisk/outgoing | string  | Directory where asterisk picks up call files.                |
-| [astqueue] | stagingdir        | /var/spool/asterisk/staging  | string  | Create call file here and then move to outgoing.             |
-| [astqueue] | waittime          | 45                           | integer | How many seconds to wait for an answer before the call fails. |
-| [astqueue] | maxretries        | 0                            | integer | Number of retries before failing. 0 = don't retry if fails.  |
-| [astqueue] | retrytime         | 300                          | integer | How many seconds to wait before retry.                       |
-| [astqueue] | archive           | no                           | string  | Use "yes" to save call file to /var/spool/asterisk/outgoing_done |
-| [astqueue] | channel_context   | default                      | string  | Dialplan context to answer the call, ie set up the channel.  |
-| [astqueue] | context           | default                      | string  | Dialplan context to handle the SMS.                          |
-| [astqueue] | priority          | 1                            | integer | Dialplan priority to handle the SMS.                         |
-| [astqueue] | message_encode    | rfc3986                      | string  | Only single line allowed in call file so url-encoding message. |
+| Section    | Key             | Default                      | Format  | Description                                                  |
+| ---------- | --------------- | ---------------------------- | ------- | ------------------------------------------------------------ |
+| [websms]   | auth_method []  | basic                        | string  | Authentication method to use.                                |
+| [websms]   | auth_secret []  |                              | string  | Authentication password/secret.                              |
+| [websms]   | auth_user []    |                              | string  | Authentication user/id.                                      |
+| [websms]   | key_body []     | Body                         | string  | HTTP POST key name holding the SMS message.                  |
+| [websms]   | key_from []     | From                         | string  | HTTP POST key name holding SMS originating phone number.     |
+| [websms]   | key_to []       | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
+| [websms]   | resp_check []   |                              | string  | HTTP POST key=value to check, eg "status=success".           |
+| [websms]   | url_host []     | http://localhost             | URL     | Scheme and host of the ITSP SMS API, eg https://api.expmple.com |
+| [websms]   | url_path []     | /                            | URL     | Path of the ITSP SMS API, eg /sms/send/                      |
+| [websms]   | val_charset []  |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
+| [websms]   | val_numform []  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
+| [websmsd]  | key_body []     | Body                         | string  | HTTP POST key name holding the SMS message.                  |
+| [websmsd]  | key_echo []     |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
+| [websmsd]  | key_from []     | From                         | string  | HTTP POST key name holding SMS origination phone number.     |
+| [websmsd]  | key_to []       | To                           | string  | HTTP POST key name holding SMS destination phone number.     |
+| [websmsd]  | prox_addr       | 172.16.0.0/12                | CIDR    | Trust "prox_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16 |
+| [websmsd]  | prox_header     | HTTP_X_FORWARDED_FOR         | string  | Behind a proxy this header hold the original client address. |
+| [websmsd]  | remt_addr []    |                              | CIDR    | If defined, only listed addresses are allowed, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24 |
+| [websmsd]  | resp_ack []     |                              | string  | Report success like this, eg, "<Response></Response>".       |
+| [websmsd]  | url_path []     |                              | string  | If defined, only listed URL paths are allowed, eg /,/mywebhook/1. URIs must start with a "/". |
+| [astqueue] | archive         | no                           | string  | Use "yes" to save call file to /var/spool/asterisk/outgoing_done |
+| [astqueue] | channel_context | default                      | string  | Dialplan context to answer the call, ie set up the channel.  |
+| [astqueue] | context         | default                      | string  | Dialplan context to handle the SMS.                          |
+| [astqueue] | maxretries      | 0                            | integer | Number of retries before failing. 0 = don't retry if fails.  |
+| [astqueue] | message_encode  | rfc3986                      | string  | Only single line allowed in call file so url-encoding message. |
+| [astqueue] | outgoingdir     | /var/spool/asterisk/outgoing | string  | Directory where asterisk picks up call files.                |
+| [astqueue] | priority        | 1                            | integer | Dialplan priority to handle the SMS.                         |
+| [astqueue] | retrytime       | 300                          | integer | How many seconds to wait before retry.                       |
+| [astqueue] | stagingdir      | /var/spool/asterisk/staging  | string  | Create call file here and then move to outgoing.             |
+| [astqueue] | waittime        | 45                           | integer | How many seconds to wait for an answer before the call fails. |
 
 ### Default configuration
 
@@ -165,10 +170,10 @@ If the Asterisk configuration directory is empty, default configuration files wi
 
 ```ini
 [websms]
-host            = api.example.com
-path            = /sms/send/
+url_host        = api.example.com
+url_path        = /sms/send/
 auth_user       = user
-auth_passwd     = passwd
+auth_secret     = secret
 
 [websmsd]
 
@@ -179,31 +184,31 @@ context         = dp_entry_trunk_texting
 
 ### Multiple interface configuration
 
-It is possible to define more than one SMS interface. This is useful when you subscribe to the service of more than one ITSP. For outgoing SMS, using `websms`, the interface is selected using a channel variable, `WEBSMS_INDEX`, you set on each PJSIP endpoint individually. For incoming SMS, using `websmsd`, the interface is selected based on the HTTP request parameters, `remote_addr` and/or `request_uri`.
+It is possible to define more than one SMS interface. This is useful when you subscribe to the service of more than one ITSP. For outgoing SMS, using `websms`, the interface is selected using a channel variable, `WEBSMS_INDEX`, you set on each PJSIP endpoint individually. For incoming SMS, using `websmsd`, the interface is selected based on the HTTP request parameters, `remt_addr` and/or `url_path`.
 
 The section [Default configuration](#default-configuration) contains an example of a configuration for a single interface, which we can use as a reference. Now lets look at a configuration, `websms.conf`, with two interfaces defined.
 
  ```ini
 [websms]
-host         [api-1] = api.example1.com
-path                 = /sms/send/
+url_host     [api-1] = api.example1.com
+url_path             = /sms/send/
 auth_user    [api-1] = user1
-auth_passwd  [api-1] = passwd1
+auth_secret  [api-1] = secret1
 
-host         [api-2] = api.example2.com
+url_host     [api-2] = api.example2.com
 auth_user    [api-2] = user2
-auth_passwd  [api-2] = passwd2
+auth_secret  [api-2] = secret2
 
 [websmsd]
-remote_addr  [api-1] = 1.2.3.4/24
-request_uri  [api-1] = /incomming1
+remt_addr    [api-1] = 1.2.3.4/24
+url_path     [api-1] = /incomming1
 
-remote_addr  [api-2] = 5.6.7.8,5.6.7.9
-request_uri  [api-2] = /incomming2
+remt_addr    [api-2] = 5.6.7.8,5.6.7.9
+url_path     [api-2] = /incomming2
 key_body     [api-2] = text
  ```
 
-As can be seen, parameters that are common between configurations does not need to be specified more than once, see for example the parameter `path` above. If a parameter is defined, using square brackets, but not for all interfaces, the default value will be used for the interfaces not defined.
+As can be seen, parameters that are common between configurations does not need to be specified more than once, see for example the parameter `url_path` above. If a parameter is defined, using square brackets, but not for all interfaces, the default value will be used for the interfaces not defined.
 
 #### Multiple outgoing interface configurations
 
@@ -223,19 +228,18 @@ Here the endpoint `john.doe` will use the `api-1` configuration for outgoing SMS
 
 #### Multiple incoming interface configurations
 
-For incoming SMS either the `remote_addr` and/or the `request_uri` parameter needs to be defined, using square brackets, for each individual interface, if more than one is used. WebSMS matches these parameters for incoming requests to figure out which configuration to use.
+For incoming SMS either the `remt_addr` and/or the `url_path` parameter needs to be defined, using square brackets, for each individual interface, if more than one is used. WebSMS matches these parameters for incoming requests to figure out which configuration to use.
 
-Note that, the parameters `proxy_addr` and `proxy_header` can *only* have a single definition, i.e. *no* square brackets, since they are used before the incoming request has been analyzed and the interface is therefore not yet know.
+Note that, the parameters `prox_addr` and `prox_header` can *only* have a single definition, i.e. *no* square brackets, since they are used before the incoming request has been analyzed and the interface is therefore not yet know.
 
 It is not necessary to explicitly name the index in the `[websmsd]` section. If the index is omitted, the order of definitions will be important. To exemplify, this `[websmsd]` configuration is equivalent to the one above.
 
 ```ini
 [websmsd]
-remote_addr  [] = 1.2.3.4/24
-request_uri  [] = /incomming1
-
-remote_addr  [] = 5.6.7.8,5.6.7.9
-request_uri  [] = /incomming2
+remt_addr    [] = 1.2.3.4/24
+url_path     [] = /incomming1
+remt_addr    [] = 5.6.7.8,5.6.7.9
+url_path     [] = /incomming2
 key_body     [] = text
 ```
 

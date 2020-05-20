@@ -1,5 +1,7 @@
 # 0.8.0
 
+- [websms](src/websms) Harmonized configuration parameter names.
+- [websms](src/websms) Added authorization methods, `plain` and `none`.
 - [websms](src/websms) Allow multiple API interfaces to be configured.
 - [privatedial](src/privatedial) Use set_var=TRUNK_ENDPOINT to set outgoing target for each endpoint individually.
 - [privatedial](src/privatedial) Don't use `endpoint/from_user`, it overwrites CallerID.
@@ -28,7 +30,7 @@
 # 0.5.2
 
 - [websms](src/websms) Fixing bugs related to special characters in SMS messages
-- [websms](src/websms) Added `charset` parameter. Set to `ucs-2` to make sure all characters are within the Unicode BMP (up to U+FFFF).
+- [websms](src/websms) Added `var_charset` parameter. Set to `ucs-2` to make sure all characters are within the Unicode BMP (up to U+FFFF).
 - [websms](src/websms) Updating documentation.
 - [websms](src/websms) Refactoring of `astqueue.class.ini` to better cope with message encoding.
 - [privatedial](src/privatedial) added `sub_decode_body` to cope with encoded messages.
@@ -102,5 +104,5 @@
 
 # 0.1.0
 
-- Using alpine:3.9 since for alpine:3.10 there are dependency errors reported when asterisk starts
-- minivm-send bash script simplify minivm configuration
+- [docker](Dockerfile) Using alpine:3.9 since for alpine:3.10 there are dependency errors reported when asterisk starts.
+- [privatedial](src/privatedial) minivm-send bash script simplify minivm configuration.

@@ -23,28 +23,30 @@ class Websms {
 	const DEFAULT_CONF_FILE = '/etc/asterisk/websms.conf';
 	const DEFAULT_CONF_VALS = [
 		'websms' => [
-			'host'            => "",
-			'path'            => "",
-			'key_to'          => "To",
-			'key_from'        => "From",
-			'key_body'        => "Body",
-			'auth_user'       => "",
-			'auth_passwd'     => "",
-			'auth_method'     => "basic",
-			'response_check'  => null,
-			'number_format'   => "",
-			'charset'         => null,
+			'auth_method' => "basic",
+			'auth_secret' => null,
+			'auth_user'   => null,
+			'key_body'    => "Body",
+			'key_from'    => "From",
+			'key_secret'  => null,
+			'key_to'      => "To",
+			'key_user'    => null,
+			'resp_check'  => null,
+			'url_host'    => "http://localhost",
+			'url_path'    => "/",
+			'val_charset' => null,
+			'val_numform' => null,
 		],
 		'websmsd' => [
-			'key_to'          => "To",
-			'key_from'        => "From",
-			'key_body'        => "Body",
-			'key_echo'        => null,
-			'report_success'  => "",
-			'remote_addr'     => null,
-			'request_uri'     => null,
-			'proxy_addr'      => "172.16.0.0/12",
-			'proxy_header'    => "HTTP_X_FORWARDED_FOR",
+			'key_body'    => "Body",
+			'key_echo'    => null,
+			'key_from'    => "From",
+			'key_to'      => "To",
+			'prox_addr'   => "172.16.0.0/12",
+			'prox_header' => "HTTP_X_FORWARDED_FOR",
+			'remt_addr'   => null,
+			'resp_ack'    => "",
+			'url_path'    => null,
 		]
 	];
 	private $config;
@@ -92,7 +94,7 @@ class Websms {
 	public function answer($status = true) {
 		if ($status) {
 			trigger_error('Inbound SMS accepted, for ('.$this->message['to'].')', E_USER_NOTICE);
-			echo $this->config('websmsd','report_success');
+			echo $this->config('websmsd','resp_ack');
 		}
 	}
 	/*--------------------------------------------------------------------------
@@ -121,39 +123,39 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	If remote_addr is set, match remote host and request uri, set index.
-	If remote_addr isn't set but uri is, match request uri, set index.
+	If remt_addr is set, match remote host and request uri, set index.
+	If remt_addr isn't set but uri is, match request uri, set index.
 	@return Boolean true if matched, otherwise false
 	*/
 	private function check_addr_uri_index() {
 		$allow = true;
-		$match_addr = $this->config('websmsd','remote_addr',true);
-		$remote_addr = $this->remote_addr();
+		$match_addr = $this->config('websmsd','remt_addr',true);
+		$remt_addr = $this->remt_addr();
 		$request_uri = $_SERVER['REQUEST_URI'];
 		if(isset($match_addr)) {
 			$allow = false;
 			if (is_array($match_addr)) {
 				foreach ($match_addr as $index => $value) {
-					if($this->match_cidr($remote_addr,$value)) {
+					if($this->match_cidr($remt_addr,$value)) {
 						$allow = true;
 						$this->index = $index;
 					}
 				}
 			} else {
-				if($this->match_cidr($remote_addr,$match_addr)) $allow = true;
+				if($this->match_cidr($remt_addr,$match_addr)) $allow = true;
 			}
 			if($allow) trigger_error(
 					sprintf("REMOTE_ADDR (%s) is allowed, using index (%s)",
-					$remote_addr, $this->index), E_USER_NOTICE);
+					$remt_addr, $this->index), E_USER_NOTICE);
 			else trigger_error(
 					sprintf("REMOTE_ADDR (%s) is NOT allowed",
-					$remote_addr), E_USER_WARNING);
+					$remt_addr), E_USER_WARNING);
 		}
 		/*
 		Wait until now to call $this->config('websmsd','uri') since
 		$this->index might have been set above.
 		*/
-		$match_uri = $this->config('websmsd','request_uri',true);
+		$match_uri = $this->config('websmsd','url_path',true);
 		if($allow && isset($match_uri)) {
 			$allow = false;
 			if (is_array($match_uri)) {
@@ -218,26 +220,26 @@ class Websms {
 	}
 	/*--------------------------------------------------------------------------
 	Initially assume 'REMOTE_ADDR' is the original IP of the HTTP client. But if
-	it is a 'proxy_addr' then trust that 'proxy_header' hold the real IP of the
+	it is a 'prox_addr' then trust that 'prox_header' hold the real IP of the
 	client instead.
-	@return string $remote_addr
+	@return string $remt_addr
 	*/
-	private function remote_addr() {
-		$remote_addr = $_SERVER['REMOTE_ADDR'];
-		$proxy_addr = $this->config('websmsd','proxy_addr');
-		$proxy_header = $this->config('websmsd','proxy_header');
-		if (!empty($proxy_addr) && !empty($proxy_header) &&
-			$this->match_cidr($remote_addr,$proxy_addr)) {
-			$header_addr = @$_SERVER[$proxy_header];
+	private function remt_addr() {
+		$remt_addr = $_SERVER['REMOTE_ADDR'];
+		$prox_addr = $this->config('websmsd','prox_addr');
+		$prox_header = $this->config('websmsd','prox_header');
+		if (!empty($prox_addr) && !empty($prox_header) &&
+			$this->match_cidr($remt_addr,$prox_addr)) {
+			$header_addr = @$_SERVER[$prox_header];
 			if (isset($header_addr)) {
-				$remote_addr = $header_addr;
+				$remt_addr = $header_addr;
 			} else {
 				trigger_error(
 					sprintf("REMOTE_ADDR (%s) matches proxy (%s) but there is no header (%s)",
-					$remote_addr, $proxy_addr, $proxy_header), E_USER_WARNING);
+					$remt_addr, $prox_addr, $prox_header), E_USER_WARNING);
 			}
 		}
-		return $remote_addr;
+		return $remt_addr;
 	}
 	/*--------------------------------------------------------------------------
 	Compare each uri (comma separated) with the REQUEST_URI
@@ -281,20 +283,20 @@ class Websms {
 	@return Boolean true if HTTP request was verified
 	*/
 	private function verify($post) {
-		$method = $this->config('websmsd','auth_method');
-		$passwd = $this->config('websmsd','auth_passwd');
-		switch ($method) {
+		$auth_method = $this->config('websmsd','auth_method');
+		$auth_secret = $this->config('websmsd','auth_secret');
+		switch ($auth_method) {
 		case '':
 			return true;
 			break;
 		case 'zadarma':
 			$result = $post['result'];
 			$sign = $post['Signature'];
-			$sign_expected = base64_encode(hash_hmac('sha1', $result, $passwd));
+			$sign_expected = base64_encode(hash_hmac('sha1', $result, $auth_secret));
 			return ($sign === $sign_expected);
 			break;
 		default:
-			trigger_error("Unknown method (auth_method=$method)", E_USER_WARNING);
+			trigger_error("Unknown method (auth_method=$auth_method)", E_USER_WARNING);
 			return true;
 			break;
 		}
@@ -335,7 +337,7 @@ class Websms {
 	@return string $number
 	*/
 	private function filter_number($number) {
-		switch (strtolower($this->config('websms','number_format'))) {
+		switch (strtolower($this->config('websms','val_numform'))) {
 		case 'no+':
 		case 'omit+':
 			return preg_replace('/[+]/', '', $number);
@@ -350,7 +352,7 @@ class Websms {
 	@return string $message
 	*/
 	private function filter_message($message) {
-		switch (strtolower($this->config('websms','charset'))) {
+		switch (strtolower($this->config('websms','val_charset'))) {
 		case 'ucs-2':
 			return preg_replace('/[\x{10000}-\x{10FFFF}]/u',"\u{FFFD}",$message);
 		case 'utf-8':
@@ -363,7 +365,7 @@ class Websms {
 	@return void
 	*/
 	private function curl_init() {
-		$url = $this->config('websms','host').$this->config('websms','path');
+		$url = $this->config('websms','url_host').$this->config('websms','url_path');
 		$this->curl = curl_init($url);
 	}
 	/*--------------------------------------------------------------------------
@@ -391,29 +393,41 @@ class Websms {
 		with headers like: Authorization: <user_key>:<signature>
 	*/
 	private function curl_auth($poststr) {
-		$method = $this->config('websms','auth_method');
-		$user = $this->config('websms','auth_user');
-		$passwd = $this->config('websms','auth_passwd');
-		$path = $this->config('websms','path');
-		switch ($method) {
-		case 'basic':
-			curl_setopt($this->curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-			curl_setopt($this->curl, CURLOPT_USERPWD, "$user:$passwd");
+		$auth_method = $this->config('websms','auth_method');
+		$auth_user = $this->config('websms','auth_user');
+		$auth_secret = $this->config('websms','auth_secret');
+		$key_user = $this->config('websms','key_user');
+		$key_secret = $this->config('websms','key_secret');
+		$url_path = $this->config('websms','url_path');
+		switch ($auth_method) {
+		case 'none':
 			break;
-		case 'nexmo':
-			$api_auth = [ 'api_key' => $user, 'api_secret' => $passwd ];
-			curl_setopt($this->curl, CURLOPT_POSTFIELDS,
-				http_build_query(array_merge($this->message, $api_auth)));
+		case 'plain':
+			if (!empty($key_user) && !empty($auth_user) && !empty($key_secret) && !empty($auth_secret)) {
+				$api_auth = [ $key_user => $auth_user, $key_secret => $auth_secret ];
+				curl_setopt($this->curl, CURLOPT_POSTFIELDS,
+					http_build_query(array_merge($this->message, $api_auth)));
+			} else trigger_error(
+				sprintf("Authorization method (%s) but not all needed parameters are defined",$auth_method), E_USER_WARNING);
+			break;
+		case 'basic':
+			if (!empty($auth_user) && !empty($auth_secret)) {
+				curl_setopt($this->curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+				curl_setopt($this->curl, CURLOPT_USERPWD, "$auth_user:$auth_secret");
+			} else trigger_error(
+				sprintf("Authorization method (%s) but not all needed parameters are defined",$auth_method), E_USER_WARNING);
 			break;
 		case 'zadarma':
-			$signature = base64_encode(hash_hmac('sha1', $path .
-				$poststr . md5($poststr), $passwd));
-			curl_setopt($this->curl, CURLOPT_HTTPHEADER,
-				array('Authorization: ' . $user . ':' . $signature));
+			if (!empty($auth_user) && !empty($auth_secret)) {
+				$signature = base64_encode(hash_hmac('sha1', $url_path .
+					$poststr . md5($poststr), $auth_secret));
+				curl_setopt($this->curl, CURLOPT_HTTPHEADER,
+					array('Authorization: ' . $auth_user . ':' . $signature));
+			} else trigger_error(
+				sprintf("Authorization method (%s) but not all needed parameters are defined",$auth_method), E_USER_WARNING);
 			break;
-		default:
-			trigger_error("Unknown method (auth_method=$method)", E_USER_WARNING);
-			break;
+		default: trigger_error(
+			sprintf("Unknown authorization method (auth_method=%s)",$auth_method), E_USER_WARNING);
 		}
 	}
 	/*--------------------------------------------------------------------------
@@ -436,7 +450,7 @@ class Websms {
 	}
 	/*--------------------------------------------------------------------------
 	Check response and set exit code accordingly.
-	the response check is controlled by the variable response_check. It can be:
+	the response check is controlled by the variable resp_check. It can be:
 	= null\""; No check, we will always exit with status true
 	= "key=value" If value of key in response is equal to value exit true otherwise false
 	= "/pattern/"; If pattern matches response exit with status true otherwise false
@@ -447,37 +461,37 @@ class Websms {
 		"currency":"USD"
 	}
 	@param array $response
-	@return Boolean true if response_check matches, otherwize false
+	@return Boolean true if resp_check matches, otherwize false
 	*/
 	private function check($response) {
-		$response_check = $this->config('websms','response_check');
-		$host = $this->config('websms','host');
-		$user = $this->config('websms','auth_user');
+		$resp_check = $this->config('websms','resp_check');
+		$url_host = $this->config('websms','url_host');
+		$auth_user = $this->config('websms','auth_user');
 		if (empty($response)) return false;
-		if (!empty($response_check)) {
-			if (strpos($response_check, '=') !== false) { // "key=value"
-				list($test_key, $test_value) = explode('=',$response_check);
+		if (!empty($resp_check)) {
+			if (strpos($resp_check, '=') !== false) { // "key=value"
+				list($test_key, $test_value) = explode('=',$resp_check);
 				// test hierarchically
 				array_walk_recursive($response, function($val,$key) use (&$response_value,$test_key) {
 					if ($key === $test_key) $response_value = $val;
 				});
 				if ($response_value !== $test_value) {
 					trigger_error(sprintf("Called (%s) but return did not match (%s = %s != %s)",
-						$host,$test_key,$response_value,$test_value), E_USER_WARNING);
+						$url_host,$test_key,$response_value,$test_value), E_USER_WARNING);
 					trigger_error(sprintf("Response was: %s",json_encode($response)));
 					return false;
 				}
 			} else { // "/pattern/"
-				if (!preg_match($response_check,$response)) {
+				if (!preg_match($resp_check,$response)) {
 					trigger_error(sprintf("Called (%s) but return did not match (%s != %s)",
-						$host,$response,$response_check), E_USER_WARNING);
+						$url_host,$response,$resp_check), E_USER_WARNING);
 					trigger_error(sprintf("Response was: %s",json_encode($response)));
 					return false;
 				}
 			}
-			trigger_error("Outbound SMS sent (host=$host,user=$user) successfully", E_USER_NOTICE);
+			trigger_error("Outbound SMS sent (host=$url_host,user=$auth_user) successfully", E_USER_NOTICE);
 		} else {
-			trigger_error("Outbound SMS sent (host=$host,user=$user)", E_USER_NOTICE);
+			trigger_error("Outbound SMS sent (host=$url_host,user=$auth_user)", E_USER_NOTICE);
 		}
 		return true;
 	}

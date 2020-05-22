@@ -217,7 +217,8 @@ class Websms {
 			if ($key === $this->config('websmsd','key_from')) $message['from'] = $val;
 			if ($key === $this->config('websmsd','key_body')) $message['body'] = $val;
 		});
-		if (empty($message['to']) || empty($message['from']) || empty($message['body'])) {
+		if (empty($message['body'])) $message['body'] = '';
+		if (empty($message['to']) || empty($message['from'])) {
 			trigger_error(sprintf("Did not get all required POST data (%s) message (%s)",
 				json_encode($post_data),json_encode($message)), E_USER_WARNING);
 		}
@@ -462,7 +463,7 @@ class Websms {
 			break;
 		case 'zadarma':
 			if (!empty($auth_user) && !empty($auth_secret)) {
-				$query_string = curl_data($query_data);
+				$query_string = $this->curl_data($query_data);
 				$signature = base64_encode(hash_hmac('sha1', $url_path .
 					$query_string . md5($query_string), $auth_secret));
 				curl_setopt($this->curl, CURLOPT_HTTPHEADER,

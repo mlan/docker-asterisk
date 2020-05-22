@@ -104,7 +104,7 @@ Some API respond with a status message to the HTTP request that we send, which c
 
 #### Outgoing number format
 
-While most API accept any number format, some don't. We can omit the leading "+" in international numbers, by defining `val_numform = "omit+"`.
+While most API accept any number format, some don't. We can omit the leading "+" in international numbers, by defining `val_numform = "E164"`.
 
 #### Outgoing character encoding
 
@@ -113,6 +113,11 @@ SIP is a text-based protocol and uses the UTF-8 charset ([RFC 2279](https://tool
 Many API supports the full range of Unicode character encoding, but some do not. In case the API only support UCS-2, it might be required to force WebSMS to use it and thereby limit the Unicode character range to BNP (U+0000, U+FFFF). This is achieved by defining `val_unicode = UCS-2`.
 
 There are APIs that supports the full range but needs an additional key-value pair in the HTTP request data to handle non-BMP characters. When defining `val_unicode = "key=value"` the key-value pair `key:value` is added to the request data when the message body include non-BMP characters.
+
+#### Outgoing static key-value pairs
+
+Sometimes your ITSP need some static key-value pairs in the HTTP request data that WebSMS does not provide.
+In such case you can inject them using `val_static`. The syntax is; `val_static = "key1=value1,key2=value2`.
 
 #### Incoming echo
 
@@ -150,7 +155,8 @@ One difference is that the strings, "yes", "no", "true", "false" and "null" have
 | [websms]   | resp_check []   |                              | string  | HTTP POST key=value to check, eg "status=success".           |
 | [websms]   | url_host []     | http://localhost             | URL     | Scheme and host of the ITSP SMS API, eg https://api.example.com |
 | [websms]   | url_path []     | /                            | URL     | Path of the ITSP SMS API, eg /sms/send/                      |
-| [websms]   | val_numform []  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
+| [websms]   | val_numform []  |                              | string  | Number format to use, eg "E164" will omit the leading "+" in international numbers. |
+| [websms]   | val_static []   |                              | string  | Add key-value pairs, eg "key1=value1,key2=value2             |
 | [websms]   | val_unicode []  |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF. Use "key=value" to add key-value pair when non-BMP chareters present. |
 | [websmsd]  | key_body []     | Body                         | string  | HTTP POST key name holding the SMS message.                  |
 | [websmsd]  | key_echo []     |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |

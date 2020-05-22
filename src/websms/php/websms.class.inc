@@ -35,6 +35,7 @@ class Websms {
 			'url_host'    => "http://localhost",
 			'url_path'    => "/",
 			'val_numform' => null,
+			'val_static'  => null,
 			'val_unicode' => null,
 		],
 		'websmsd' => [
@@ -50,10 +51,9 @@ class Websms {
 		]
 	];
 	private $config;
-	private $message; // TODO remove!
+	public $index;
 	private $curl;
 	public $debug = false;
-	public $index;
 	public function __construct($config = null, array $optconfig = []) {
 		if (is_string($config) !== true) {
 			$config = self::DEFAULT_CONF_FILE;
@@ -74,26 +74,25 @@ class Websms {
 	}
 	/*--------------------------------------------------------------------------
 	Read the post header data.
-	Use $_POST since file_get_contents("php://input") cannot handle multipart/form-data
 	@return mixed array message or boolean false
 	*/
-	public function listen() {
-		$this->message = false;
-		$post = $_POST;
-		if ($this->check_addr_uri_index()) {
-			$this->echo();
-			$this->post_mess($post);
-			return $this->message;
-		} else {
-			return false;
-		}
+	public function rx_query() {
+		if ($this->identify_remote()) {
+			$this->if_echo_exit();
+			return $this->message_data();
+		} else return false;
 	}
 	/*--------------------------------------------------------------------------
 	Respond with a status message.
+	@param  Boolean $status
+	@param  array $message to, from, and body.
+	@return void
 	*/
-	public function answer($status = true) {
+	public function ack_query($status = true, $message) {
 		if ($status) {
-			trigger_error('Inbound SMS accepted, for ('.$this->message['to'].')', E_USER_NOTICE);
+			trigger_error(sprintf(
+				"Inbound SMS accepted, to (%s) from (%s)", $message['to'],
+				$message['from']), E_USER_NOTICE);
 			echo $this->config('websmsd','resp_ack');
 		}
 	}
@@ -109,12 +108,13 @@ class Websms {
 		Send POST query.
 		Check response.
 	*/
-	public function query($args) {
+	public function tx_query($args) {
 		unset($args[0]);
 		$query_data = $this->query_data($args);
 		if (!empty($query_data)) {
 			$this->val_unicode($query_data);
 			$this->val_numform($query_data);
+			$this->val_static($query_data);
 			$this->curl_init();
 			$this->curl_auth($query_data);
 			$this->curl_data($query_data);
@@ -129,7 +129,7 @@ class Websms {
 	If remt_addr isn't set but uri is, match request uri, set index.
 	@return Boolean true if matched, otherwise false
 	*/
-	private function check_addr_uri_index() {
+	private function identify_remote() {
 		$allow = true;
 		$match_addr = $this->config('websmsd','remt_addr',true);
 		$remt_addr = $this->remt_addr();
@@ -184,7 +184,7 @@ class Websms {
 	The API of some ITSP, eg Zadarma, test the web server by sending an echo
 	request. Let's respond and exit if we detect a echo request.
 	*/
-	private function echo() {
+	private function if_echo_exit() {
 		if (!empty($this->config('websmsd','key_echo'))
 			&& isset($_GET[$this->config('websmsd','key_echo')])) {
 			trigger_error('Received echo request ('.$_GET[$this->config('websmsd','key_echo')].')', E_USER_NOTICE);
@@ -192,33 +192,36 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	Evaluates POST request data and updates $this->message. Parameters are
+	Evaluates POST request data and returns $message. Parameters are
 	json decoded and searched recursively.
-	@param array POST request parameters
-	@return void
+	Use $_POST since file_get_contents("php://input") cannot handle multipart/form-data
+	@return array $message to, from, and body.
 	*/
-	private function post_mess($post) {
-		if (empty($post)) {
+	private function message_data() {
+		$post_data = $_POST;
+		$message = [];
+		if (empty($post_data)) {
 			trigger_error("No POST header data", E_USER_WARNING);
 			return false;
 		} else {
 			if($this->debug) {
-				trigger_error(sprintf("POST data (%s)",json_encode($post)));
+				trigger_error(sprintf("POST data (%s)",json_encode($post_data)));
 			}
 		}
-		array_walk_recursive($post, function(&$val) {
-			$json = json_decode($val,true);
-			if (!empty($json)) $val = $json;
+		array_walk_recursive($post_data, function(&$val) {
+			$val_json = json_decode($val,true);
+			if (!empty($val_json)) $val = $val_json;
 		});
-		array_walk_recursive($post, function($val,$key) {
-			if ($key === $this->config('websmsd','key_to'))   $this->message['to']   = $val;
-			if ($key === $this->config('websmsd','key_from')) $this->message['from'] = $val;
-			if ($key === $this->config('websmsd','key_body')) $this->message['body'] = $val;
+		array_walk_recursive($post_data, function($val,$key) use (&$message) {
+			if ($key === $this->config('websmsd','key_to'))   $message['to']   = $val;
+			if ($key === $this->config('websmsd','key_from')) $message['from'] = $val;
+			if ($key === $this->config('websmsd','key_body')) $message['body'] = $val;
 		});
-		if (empty($this->message['to']) || empty($this->message['from']) || empty($this->message['body'])) {
-			trigger_error(sprintf("Did not get all required POST data (%s)",
-				json_encode($post)), E_USER_WARNING);
+		if (empty($message['to']) || empty($message['from']) || empty($message['body'])) {
+			trigger_error(sprintf("Did not get all required POST data (%s) message (%s)",
+				json_encode($post_data),json_encode($message)), E_USER_WARNING);
 		}
+		return $message;
 	}
 	/*--------------------------------------------------------------------------
 	Initially assume 'REMOTE_ADDR' is the original IP of the HTTP client. But if
@@ -338,13 +341,30 @@ class Websms {
 		$key_from = $this->config('websms','key_from');
 		switch (strtolower($this->config('websms','val_numform'))) {
 		case 'no+':
-		case 'omit+':
+		case 'e164':
 		case 'e.164':
-			$query_data[$key_to] = preg_replace('/[+]/', '',$query_data[$key_to]);
-			$query_data[$key_from] = preg_replace('/[+]/', '',$query_data[$key_from]);
+			$query_data[$key_to] = preg_replace(['/^[+]/','/^00/'], '',$query_data[$key_to]);
+			$query_data[$key_from] = preg_replace(['/^[+]/','/^00/'], '',$query_data[$key_from]);
 			break;
 		case 'e.123':
 		default:
+		}
+	}
+	/*--------------------------------------------------------------------------
+	Add key-value pairs in $query_data
+	@param array $query_data
+	@void
+	*/
+	private function val_static(&$query_data) {
+		$val_static = $this->config('websms','val_static');
+		if (!empty($val_static)) {
+			$static_keyvals = explode(',',$val_static);
+			foreach ($static_keyvals as $static_keyval) {
+				if (strpos($static_keyval, '=') !== false) {
+					list($key, $val) = explode('=',$static_keyval);
+					$query_data[$key] = $val;
+				}
+			}
 		}
 	}
 	/*--------------------------------------------------------------------------

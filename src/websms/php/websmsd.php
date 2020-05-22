@@ -28,7 +28,7 @@ require_once 'astqueue.class.inc';
 $sms = new Websms('/etc/asterisk/websms.conf');
 $queue = new Astqueue('/etc/asterisk/websms.conf');
 
-$message = $sms->listen();
+$message = $sms->rx_query();
 $status = $queue->text($message);
-$sms->answer($status);
+$sms->ack_query($status, $message);
 ?>

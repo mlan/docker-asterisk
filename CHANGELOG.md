@@ -1,6 +1,9 @@
 # 0.8.0
 
 - [websms](src/websms) Harmonized configuration parameter names.
+- [websms](src/websms) Harmonized function names.
+- [websms](src/websms) Facilitate static key-value pairs, `val_static = "key1=value1,key2=value2"`.
+- [websms](src/websms) Parameter `val_numform`, now takes `E.164` (omit +) and `E.123`.
 - [websms](src/websms) Improved Unicode configuration, allowing `val_unicode = "key=value"`.
 - [websms](src/websms) Added authorization methods, `plain` and `none`.
 - [websms](src/websms) Allow multiple API interfaces to be configured.
@@ -32,7 +35,7 @@
 # 0.5.2
 
 - [websms](src/websms) Fixing bugs related to special characters in SMS messages
-- [websms](src/websms) Added `var_charset` parameter. Set to `ucs-2` to make sure all characters are within the Unicode BMP (up to U+FFFF).
+- [websms](src/websms) Added `val_unicode` parameter. Set to `ucs-2` to make sure all characters are within the Unicode BMP (up to U+FFFF).
 - [websms](src/websms) Updating documentation.
 - [websms](src/websms) Refactoring of `astqueue.class.ini` to better cope with message encoding.
 - [privatedial](src/privatedial) added `sub_decode_body` to cope with encoded messages.

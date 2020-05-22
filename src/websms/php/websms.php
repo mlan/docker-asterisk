@@ -17,7 +17,7 @@ require_once 'websms.class.inc';
 $sms = new Websms('/etc/asterisk/websms.conf');
 
 // Send POST querry and check response and set exit code accordingly.
-if ($sms->query(@$argv)) {
+if ($sms->tx_query(@$argv)) {
 	$exit_code = 0;
 } else {
 	$exit_code = 1;

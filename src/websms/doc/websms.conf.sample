@@ -19,8 +19,8 @@
 ;resp_check      = ""      ;http POST key=value to check, eg "status=success"
 ;url_host        = http://localhost  ;scheme and host, eg https://api.expmple.com
 ;url_path        = /       ;complete url will be <url_host><url_path>
-;val_charset     = ""      ;set to "UCS-2" to limit Unicode characters to U+FFFF
 ;val_numform     = ""      ;eg "omit+" omit leading "+" in phone numbers
+;val_unicode     = ""      ;set to "UCS-2" to limit Unicode characters to U+FFFF
 
 ;[websmsd]
 ;key_body        = Body    ;http POST key name holding the sms message

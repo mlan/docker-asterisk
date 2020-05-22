@@ -1,8 +1,10 @@
 # 0.8.0
 
 - [websms](src/websms) Harmonized configuration parameter names.
+- [websms](src/websms) Improved Unicode configuration, allowing `val_unicode = "key=value"`.
 - [websms](src/websms) Added authorization methods, `plain` and `none`.
 - [websms](src/websms) Allow multiple API interfaces to be configured.
+- [websms](src/websms) Code clean up.
 - [privatedial](src/privatedial) Use set_var=TRUNK_ENDPOINT to set outgoing target for each endpoint individually.
 - [privatedial](src/privatedial) Don't use `endpoint/from_user`, it overwrites CallerID.
 

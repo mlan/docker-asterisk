@@ -34,8 +34,8 @@ class Websms {
 			'resp_check'  => null,
 			'url_host'    => "http://localhost",
 			'url_path'    => "/",
-			'val_charset' => null,
 			'val_numform' => null,
+			'val_unicode' => null,
 		],
 		'websmsd' => [
 			'key_body'    => "Body",
@@ -50,7 +50,7 @@ class Websms {
 		]
 	];
 	private $config;
-	private $message;
+	private $message; // TODO remove!
 	private $curl;
 	public $debug = false;
 	public $index;
@@ -111,13 +111,15 @@ class Websms {
 	*/
 	public function query($args) {
 		unset($args[0]);
-		$poststr = $this->args_mess($args);
-		if (!empty($poststr)) {
+		$query_data = $this->query_data($args);
+		if (!empty($query_data)) {
+			$this->val_unicode($query_data);
+			$this->val_numform($query_data);
 			$this->curl_init();
-			$this->curl_data($poststr);
-			$this->curl_auth($poststr);
-			$response = $this->curl_send();
-			return $this->check($response);
+			$this->curl_auth($query_data);
+			$this->curl_data($query_data);
+			$resp_data = $this->curl_send();
+			return $this->resp_check($resp_data);
 		} else {
 			return false;
 		}
@@ -305,26 +307,21 @@ class Websms {
 	Parse arguments.
 	We require 3 arguments; to, from, body.
 	OR 4 arguments; to, from, body, index.
-	Build http POST query, from arguments, sort and URL-encode.
+	@param  array $args arguments
+	@return array $query_data or false
 	*/
-	private function args_mess($args) {
+	private function query_data($args) {
 		switch (count($args)) {
 		case 4:
 			$index = $args[4];
 			if(strlen($index) > 0) $this->index = $index;
 		case 3:
-			$keys = [ $this->config('websms','key_to'),
-				$this->config('websms','key_from'),
-				$this->config('websms','key_body') ];
-			$vals = [ $this->filter_number($args[1]),
-				$this->filter_number($args[2]),
-				$this->filter_message($args[3]) ];
-			$this->message = array_combine($keys,$vals);
-			ksort($this->message);
-			$this->debug($this->message);
-			$post = http_build_query($this->message);
-			$this->debug($post);
-			return $post;
+			$query_data = [
+			$this->config('websms','key_to')   => $args[1],
+			$this->config('websms','key_from') => $args[2],
+			$this->config('websms','key_body') => $args[3],
+			];
+			return $query_data;
 		default:
 			$strings = implode(',',$args);
 			trigger_error("We did not get exactly 3 or 4 arguments; to, from, body [index] ($strings)", E_USER_WARNING);
@@ -333,52 +330,77 @@ class Websms {
 	}
 	/*--------------------------------------------------------------------------
 	Sanitize telephone numbers.
-	@param string $number
-	@return string $number
+	@param array $query_data
+	@void
 	*/
-	private function filter_number($number) {
+	private function val_numform(&$query_data) {
+		$key_to = $this->config('websms','key_to');
+		$key_from = $this->config('websms','key_from');
 		switch (strtolower($this->config('websms','val_numform'))) {
 		case 'no+':
 		case 'omit+':
-			return preg_replace('/[+]/', '', $number);
+		case 'e.164':
+			$query_data[$key_to] = preg_replace('/[+]/', '',$query_data[$key_to]);
+			$query_data[$key_from] = preg_replace('/[+]/', '',$query_data[$key_from]);
+			break;
+		case 'e.123':
 		default:
-			return $number;
 		}
 	}
 	/*--------------------------------------------------------------------------
-	Filter message, since some API only accept Unicode up to xFFFF BMP (UCS-2)
-	replace characters in SMP with the replacement character U+FFFD, when needed.
-	@param string $message
-	@return string $message
+	Sanitize body, since some API only accept Unicode up to xFFFF BMP (UCS-2).
+	ucs-2:
+		Replace characters in SMP with the replacement character U+FFFD, when needed.
+	key=val:
+		If There is SMP characters add the provided key:val
+	otherwise:
+		Do nothing.
+	@param array $query_data
+	@void
 	*/
-	private function filter_message($message) {
-		switch (strtolower($this->config('websms','val_charset'))) {
+	private function val_unicode(&$query_data) {
+		$val_unicode = $this->config('websms','val_unicode');
+		$key_body = $this->config('websms','key_body');
+		if (strpos($val_unicode, '=') !== false) {
+			list($key_code, $val_code) = explode('=',$val_unicode);
+			$val_unicode = 'key=val';
+		}
+		switch (strtolower($val_unicode)) {
 		case 'ucs-2':
-			return preg_replace('/[\x{10000}-\x{10FFFF}]/u',"\u{FFFD}",$message);
+			$query_data[$key_body] = preg_replace('/[\x{10000}-\x{10FFFF}]/u',"\u{FFFD}",$query_data[$key_body]);
+			break;
+		case 'key=val':
+			if (!empty(preg_grep("/[\x{10000}-\x{10FFFF}]/u",[$query_data[$key_body]])))
+				$query_data[$key_code] = $val_code;
+			break;
 		case 'utf-8':
 		default:
-			return $message;
 		}
 	}
 	/*--------------------------------------------------------------------------
-	Init curl.
+	Init and setup curl for a POST query.
 	@return void
 	*/
 	private function curl_init() {
 		$url = $this->config('websms','url_host').$this->config('websms','url_path');
 		$this->curl = curl_init($url);
-	}
-	/*--------------------------------------------------------------------------
-	Setup curl for POST query.
-	*/
-	private function curl_data($poststr) {
 		curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
-//		curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, 'POST');
 		curl_setopt($this->curl, CURLOPT_POST, true);
-		curl_setopt($this->curl, CURLOPT_POSTFIELDS, $poststr);
 		curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($this->curl, CURLOPT_SSL_VERIFYHOST, false);
-//		curl_setopt($this->curl, CURLINFO_HEADER_OUT, true); // debug only
+	}
+	/*--------------------------------------------------------------------------
+	Generates a URL-encoded query string from the $query_data array provided,
+	and pass it on to curl.
+	@param  array  $query_data
+	@return string $query_string
+	*/
+	private function curl_data($query_data) {
+		ksort($query_data);
+		$this->debug($query_data);
+		$query_string = http_build_query($query_data);
+		curl_setopt($this->curl, CURLOPT_POSTFIELDS, $query_string);
+		return $query_string;
 	}
 	/*--------------------------------------------------------------------------
 	Setup curl's authentication method.
@@ -391,8 +413,10 @@ class Websms {
 	'zadarma'
 		Zadarma's unique authentication method, see, zadarma.com/en/support/api,
 		with headers like: Authorization: <user_key>:<signature>
+	@param  array  $query_data
+	@return void
 	*/
-	private function curl_auth($poststr) {
+	private function curl_auth(&$query_data) {
 		$auth_method = $this->config('websms','auth_method');
 		$auth_user = $this->config('websms','auth_user');
 		$auth_secret = $this->config('websms','auth_secret');
@@ -404,9 +428,8 @@ class Websms {
 			break;
 		case 'plain':
 			if (!empty($key_user) && !empty($auth_user) && !empty($key_secret) && !empty($auth_secret)) {
-				$api_auth = [ $key_user => $auth_user, $key_secret => $auth_secret ];
-				curl_setopt($this->curl, CURLOPT_POSTFIELDS,
-					http_build_query(array_merge($this->message, $api_auth)));
+				$query_data[$key_user] = $auth_user;
+				$query_data[$key_secret] = $auth_secret;
 			} else trigger_error(
 				sprintf("Authorization method (%s) but not all needed parameters are defined",$auth_method), E_USER_WARNING);
 			break;
@@ -419,8 +442,9 @@ class Websms {
 			break;
 		case 'zadarma':
 			if (!empty($auth_user) && !empty($auth_secret)) {
+				$query_string = curl_data($query_data);
 				$signature = base64_encode(hash_hmac('sha1', $url_path .
-					$poststr . md5($poststr), $auth_secret));
+					$query_string . md5($query_string), $auth_secret));
 				curl_setopt($this->curl, CURLOPT_HTTPHEADER,
 					array('Authorization: ' . $auth_user . ':' . $signature));
 			} else trigger_error(
@@ -431,22 +455,22 @@ class Websms {
 		}
 	}
 	/*--------------------------------------------------------------------------
-	Send POST query,
-	read response and close.
+	Send POST query, read response and close.
+	@return  array  $resp_data
 	*/
 	private function curl_send() {
-		$response_json = curl_exec($this->curl);
-		if (!empty($response_json)) {
-			$response = json_decode($response_json,true);
+		$resp_json = curl_exec($this->curl);
+		if (!empty($resp_json)) {
+			$resp_data = json_decode($resp_json,true);
 		} else {
-			$response = false;
+			$resp_data = false;
 			trigger_error("Curl error: ".curl_error($this->curl));
 		}
 		$curl_info = curl_getinfo($this->curl);
 		curl_close($this->curl);
 		//$this->debug($curl_info);
-		$this->debug($response_json);
-		return $response;
+		$this->debug($resp_json);
+		return $resp_data;
 	}
 	/*--------------------------------------------------------------------------
 	Check response and set exit code accordingly.
@@ -460,32 +484,32 @@ class Websms {
 		"cost":0.24,
 		"currency":"USD"
 	}
-	@param array $response
+	@param  array $resp_data
 	@return Boolean true if resp_check matches, otherwize false
 	*/
-	private function check($response) {
+	private function resp_check($resp_data) {
 		$resp_check = $this->config('websms','resp_check');
 		$url_host = $this->config('websms','url_host');
 		$auth_user = $this->config('websms','auth_user');
-		if (empty($response)) return false;
+		if (empty($resp_data)) return false;
 		if (!empty($resp_check)) {
 			if (strpos($resp_check, '=') !== false) { // "key=value"
 				list($test_key, $test_value) = explode('=',$resp_check);
 				// test hierarchically
-				array_walk_recursive($response, function($val,$key) use (&$response_value,$test_key) {
-					if ($key === $test_key) $response_value = $val;
+				array_walk_recursive($resp_data, function($val,$key) use (&$resp_value,$test_key) {
+					if ($key === $test_key) $resp_value = $val;
 				});
-				if ($response_value !== $test_value) {
+				if ($resp_value !== $test_value) {
 					trigger_error(sprintf("Called (%s) but return did not match (%s = %s != %s)",
-						$url_host,$test_key,$response_value,$test_value), E_USER_WARNING);
-					trigger_error(sprintf("Response was: %s",json_encode($response)));
+						$url_host,$test_key,$resp_value,$test_value), E_USER_WARNING);
+					trigger_error(sprintf("Response was: %s",json_encode($resp_data)));
 					return false;
 				}
 			} else { // "/pattern/"
-				if (!preg_match($resp_check,$response)) {
+				if (!preg_match($resp_check,$resp_data)) {
 					trigger_error(sprintf("Called (%s) but return did not match (%s != %s)",
-						$url_host,$response,$resp_check), E_USER_WARNING);
-					trigger_error(sprintf("Response was: %s",json_encode($response)));
+						$url_host,$resp_data,$resp_check), E_USER_WARNING);
+					trigger_error(sprintf("Response was: %s",json_encode($resp_data)));
 					return false;
 				}
 			}

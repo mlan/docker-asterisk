@@ -7,7 +7,6 @@
 
 ## PrivateDial
 
-- Check that callid is set correctly on incoming calls (from trunk).
 - Test MiniVM functionality.
 - Debug MiniVM access messages.
 - Make IVR custom-able
@@ -28,7 +27,6 @@
 ## WebSMS
 
 - Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
-- Handle "Invalid request" errors.
 
 ## Asterisk modules
 

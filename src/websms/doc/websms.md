@@ -18,9 +18,9 @@ Not all ITSP offer [virtual numbers (DID)](https://en.wikipedia.org/wiki/Virtual
 
 ### Emoticons and encoding
 
-Modern phones support [Unicode](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set) for non-GSM (GSM-7) characters; Historically this was the Unicode UCS-2, but modern systems use UTF-16, which in addition supports 4 byte characters, that is emoticons. Since the maximum SMS message byte length is fixed, Unicode provides a larger set of characters at a cost in [message length](https://en.wikipedia.org/wiki/SMS#Message_size).
+Modern phones support the [Unicode](https://en.wikipedia.org/wiki/Universal_Coded_Character_Set) [UTF-8](http://www.utf-8.com/) and the GSM (7-bit) character encodings. Unicode characters used in SMS are 2 bytes (16-bits) or 4 bytes (32-bits) long and since length of an SMS message is limited to 140 bytes (1120 bits) the number of charters that can be sent in one SMS will depend on what encoding is used. If Unicode is used 70 charters can be sent in one SMS. The original GSM encoding uses 7-bit encoding allowing 160 charters.
 
-Nowadays most smart phones uses UTF-16 encoding in stead of UCS-2. Consequently, to be able to send and receive SMS with all types of emoticons, the ITSP's API needs to support the UTF-16 encoding which is not always the case.
+Most emoticons are encoded using 4 bytes reducing message length further. Another consideration is that not all ITSP has implemented an API supporting the full Unicode character range, making sending or receiving messages including emoticons difficult.
 
 ### Reverse proxy
 
@@ -108,7 +108,11 @@ While most API accept any number format, some don't. We can omit the leading "+"
 
 #### Outgoing character encoding
 
-Many API accepts UTF-16 character encoding, but some do not. In case the API only support UCS-2, it might be required to force WebSMS to use it and thereby limit Unicode character range to `U+FFFF`. This is achieved by defining `val_charset = UCS-2`.
+SIP is a text-based protocol and uses the UTF-8 charset ([RFC 2279](https://tools.ietf.org/html/rfc2279)) and consequently also the message body of the MESSAGE method ([RFC 3261](https://tools.ietf.org/html/rfc3261)). UTF-8 is a multi-byte encoding able to encode the whole Unicode charset. An encoded character takes between 1 and 4 bytes. 2 bytes are sufficient to cover the code point range (U+0000, U+FFFF) called BMP (Basic Multilingual Plane). Most emoticons are non-BMP characters. To cover the complete BMP and the non-BMP  (U+10000, U+10FFFF) range 4 bytes are needed. UCS-2 is an Unicode encoding limited to BMP characters.
+
+Many API supports the full range of Unicode character encoding, but some do not. In case the API only support UCS-2, it might be required to force WebSMS to use it and thereby limit the Unicode character range to BNP (U+0000, U+FFFF). This is achieved by defining `val_unicode = UCS-2`.
+
+There are APIs that supports the full range but needs an additional key-value pair in the HTTP request data to handle non-BMP characters. When defining `val_unicode = "key=value"` the key-value pair `key:value` is added to the request data when the message body include non-BMP characters.
 
 #### Incoming echo
 
@@ -146,8 +150,8 @@ One difference is that the strings, "yes", "no", "true", "false" and "null" have
 | [websms]   | resp_check []   |                              | string  | HTTP POST key=value to check, eg "status=success".           |
 | [websms]   | url_host []     | http://localhost             | URL     | Scheme and host of the ITSP SMS API, eg https://api.example.com |
 | [websms]   | url_path []     | /                            | URL     | Path of the ITSP SMS API, eg /sms/send/                      |
-| [websms]   | val_charset []  |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF.        |
 | [websms]   | val_numform []  |                              | string  | Number format to use, eg "omit+" will omit the leading "+" in international numbers. |
+| [websms]   | val_unicode []  |                              | string  | Set to "UCS-2" to limit Unicode characters to U+FFFF. Use "key=value" to add key-value pair when non-BMP chareters present. |
 | [websmsd]  | key_body []     | Body                         | string  | HTTP POST key name holding the SMS message.                  |
 | [websmsd]  | key_echo []     |                              | string  | Some ITSP test that the client respond by expecting it echoing the value in this key, eg "zd_echo". |
 | [websmsd]  | key_from []     | From                         | string  | HTTP POST key name holding SMS origination phone number.     |

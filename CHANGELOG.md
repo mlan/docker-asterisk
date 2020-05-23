@@ -1,3 +1,7 @@
+# 0.8.1
+
+- [privatedial](src/privatedial) Break out endpoints from pjsip_wizard.conf to pjsip_endpoint.conf.
+
 # 0.8.0
 
 - [websms](src/websms) Harmonized configuration parameter names.

@@ -30,17 +30,18 @@ The suite of Asterisk configuration files making up PrivateDial is summarized be
 | minivm.conf           | Define mail sever URL and authentication credentials which voice mail email notifications will be sent |
 | pjsip.conf            | Use case specific global variables used by the PJSIP driver  |
 | pjsip_transport.conf  | Defines SIP transport, protocol, port, host URL              |
-| pjsip_wizard.conf     | Defines endpoints, soft-phones, users, sip trunk             |
+| pjsip_wizard.conf     | Defines templates for sip trunk and soft-phone endpoints     |
+| pjsip_endpoint.conf   | Defines  sip trunk and soft-phone endpoints                  |
 
 ## Usage
 
 ### SIP Trunk
 
-PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_wizard.conf` . For convenience the templates, `tpl_trunk`, `tpl_trunkout` and `tpl_trunkin` has been defined.
+PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf` . For convenience the templates, `tpl_trunk`, `tpl_trunkout` and `tpl_trunkin` has been defined in  `pjsip_wizard.conf`.
 
-Add an endpoint entry in `pjsip_wizard.conf` based on the setup instructions provided by your trunk provider. This entry also hold your authentication credentials.
+Add an endpoint entry in `pjsip_endpoint.conf` based on the setup instructions provided by your trunk provider. This entry also hold your authentication credentials.
 
-`pjsip_wizard.conf`
+`pjsip_endpoint.conf`
 
 ```ini
 [trunk:itsp](tpl_trunk)
@@ -53,18 +54,22 @@ Most likely you also need to configure WebSMS for SMS to work, see separate docu
 
 ### SIP Users
 
-PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_wizard.conf`. For convenience the template, `tpl_softphone` has been defined.
+PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf`. For convenience the template, `tpl_softphone` has been defined in  `pjsip_wizard.conf`.
 
-Add an endpoint entry in `pjsip_wizard.conf` for each user. Each user can simultaneously connect with several soft-phones, using the same account.
+Add an endpoint entry in `pjsip_endpoint.conf` for each user. Each user can simultaneously connect with several soft-phones, using the same account.
 
-`pjsip_wizard.conf`
+`pjsip_endpoint.conf`
 
 ```ini
-[john.doe](tpl_softphone)
+[tpl_phone](!,tpl_softphone)
+endpoint/from_domain = example.com
+endpoint/set_var = TRUNK_ENDPOINT=trunk:itsp
+endpoint/set_var = WEBSMS_INDEX=
+
+[john.doe](tpl_phone)
 hint_exten = +12025550160
 endpoint/callerid = John Doe <+12025550160>
 endpoint/mailboxes = john.doe@example.com
-endpoint/set_var = TRUNK_ENDPOINT=trunk:itsp
 inbound_auth/username = john.doe
 inbound_auth/password = password
 ```

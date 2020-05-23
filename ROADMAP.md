@@ -5,6 +5,10 @@
 - privatedial.md
 - README.md
 
+## Upgrade utility
+
+- shell utility that helps upgrading config files.
+
 ## PrivateDial
 
 - Test MiniVM functionality.
@@ -21,12 +25,10 @@
 
 ## AutoBan
 
-- Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
+- Add option to get revese DNS using gethostbyaddr($ip); in `show who`.
 - Perhaps replace entrypoint.d/ with /etc/conf.d/nftables?
 
 ## WebSMS
-
-- Sanitize conf settings. Issue warning and use defaults when invalid settings are detected.
 
 ## Asterisk modules
 

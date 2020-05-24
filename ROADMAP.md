@@ -2,18 +2,16 @@
 
 ## Documentation
 
-- privatedial.md
 - README.md
+
+## PrivateDial
+
+- Debug MiniVM access messages.
+- Make IVR custom-able
 
 ## Upgrade utility
 
 - shell utility that helps upgrading config files.
-
-## PrivateDial
-
-- Test MiniVM functionality.
-- Debug MiniVM access messages.
-- Make IVR custom-able
 
 ### Put in documentation
 

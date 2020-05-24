@@ -1,10 +1,10 @@
 # PrivateDial
 
-PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to private use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
+PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to residential use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
 
 It uses the [PJSIP](https://www.pjsip.org/) [channel driver](https://wiki.asterisk.org/wiki/display/AST/Configuring+res_pjsip) and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
 
-The underlying design idea is to separate the dial plan function from the user data. To achieve this all user specific data has been pushed out from the main `extensions.conf` file.
+The underlying design idea is to separate the dial plan functionality from the user data. To achieve this all user specific data has been pushed out from the main `extensions.conf` file.
 
 ## Features
 
@@ -23,6 +23,8 @@ The suite of Asterisk configuration files making up PrivateDial is summarized be
 
 ### Configuration files overview
 
+The configuration files making up PrivateDial are tabulated below.
+
 | File name             | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
 | extensions.conf       | The dial plan, defining the data flow of calls and messages  |
@@ -31,13 +33,15 @@ The suite of Asterisk configuration files making up PrivateDial is summarized be
 | pjsip.conf            | Use case specific global variables used by the PJSIP driver  |
 | pjsip_transport.conf  | Defines SIP transport, protocol, port, host URL              |
 | pjsip_wizard.conf     | Defines templates for sip trunk and soft-phone endpoints     |
-| pjsip_endpoint.conf   | Defines  sip trunk and soft-phone endpoints                  |
+| pjsip_endpoint.conf   | Defines sip trunk and soft-phone endpoints                   |
+
+When configuring the asterisk sever the following files often needs to be updated: `pjsip_transport.conf` and `minivm.conf`. The remaining task is, once the severer has been configured, to add and maintain sip trunk and soft-phone endpoints, which is kept in `pjsip_endpoint.conf`.
 
 ## Usage
 
 ### SIP Trunk
 
-PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf` . For convenience the templates, `tpl_trunk`, `tpl_trunkout` and `tpl_trunkin` has been defined in  `pjsip_wizard.conf`.
+PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf` . For convenience the templates, `tpl_trunk`, `tpl_trunkout` and `tpl_trunkin` has been defined in `pjsip_wizard.conf`.
 
 Add an endpoint entry in `pjsip_endpoint.conf` based on the setup instructions provided by your trunk provider. This entry also hold your authentication credentials.
 
@@ -50,11 +54,9 @@ outbound_auth/username = username
 outbound_auth/password = password
 ```
 
-Most likely you also need to configure WebSMS for SMS to work, see separate documentation.
-
 ### SIP Users
 
-PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf`. For convenience the template, `tpl_softphone` has been defined in  `pjsip_wizard.conf`.
+PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf`. For convenience the template, `tpl_softphone` has been defined in `pjsip_wizard.conf`.
 
 Add an endpoint entry in `pjsip_endpoint.conf` for each user. Each user can simultaneously connect with several soft-phones, using the same account.
 
@@ -74,6 +76,8 @@ inbound_auth/username = john.doe
 inbound_auth/password = password
 ```
 
+You also need to configure WebSMS for SMS to work, see separate documentation.
+
 ### Outgoing SMTP email server
 
 PrivateDial use [MiniVoiceMail](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmRecord) to deliver voice mail messages via email with attached sound files. For this to work a separate SMTP email server need to have been set up. This can for example be achieved by using the image [mlan/postfix-amavis CHECK URL](hubdocker.com/mlan/postfix-amavis). With a functional email server, configure MiniVM to connect to it by providing its URL and authentication credentials in `minivm.conf`
@@ -91,7 +95,7 @@ Here we describe 3 aspects of SIP networking that often needs to be addressed. C
 
 #### Network Address Translation (NAT)
 
-When communicating with devices on local networks a more elaborate mechanism using (NAT) needs to be configured allowing server and client locate each other. Assuming that the SIP server has the following external URL; `sip.example.com`, in that case update `pjsip_transport.conf` like so
+When communicating with devices on local networks a more elaborate mechanism using (NAT) needs to be configured allowing server and client locate each other. Assuming that the SIP server has the following external URL; `sip.example.com`, make sure to update `pjsip_transport.conf` so it includes the snippet below.
 
 `pjsip_transport.conf`
 
@@ -139,7 +143,7 @@ There is also a mechanism to use ACME lets encrypt certificates, which also use 
 
 ## Implementation
 
-The PrivateDial has its contexts is organized in 3 levels. The entry, action and subroutine contexts. A SIP event will trigger the execution of the PrivateDial dial plan staring on one of the entry contexts. The entry contexts include some of the action contexts, and the action contexts call the subroutines.
+The PrivateDial has its dialplan contexts organized in 3 levels. The entry, action and subroutine contexts. A SIP event will trigger the execution of the PrivateDial dial plan staring on one of the entry contexts. The entry contexts include some of the action contexts, and the action contexts call the subroutines.
 
 ### Entry context
 

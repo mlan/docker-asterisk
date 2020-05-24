@@ -6,9 +6,7 @@
 ![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=flat-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=flat-square&logo=docker)
 
-THIS DOCUMENT IS UNDER DEVELOPMENT.
-
-This (non official) repository provides dockerized PBX.
+This (non official) repository provides dockerized asterisk PBX.
 
 ## Features
 
@@ -19,6 +17,9 @@ Feature list follows below
 - [WebSMS](srs/websms/README.md), send and receive Instant Messages, SMS over HTTP
 - [AutoBan](src/autoban/README.md), a built in intrusion detection and prevention system
 - Alpine Linux
+- demo
+- persistent storage
+- console audio
 
 ## Tags
 
@@ -50,20 +51,26 @@ version: '3'
 services:
   tele:
     image: mlan/asterisk
+    network_mode: bridge # Only here to help testing
     cap_add:
+      - sys_ptrace       # Only here to help testing
       - net_admin
       - net_raw
     ports:
       - "${SMS_PORT-8080}:80"
-      - "9960:9960/udp"
-      - "9960:9960"
-      - "9961:9961"
+      - "5060:5060/udp"
+      - "5060:5060"
+      - "5061:5061"
       - "10000-10099:10000-10099/udp"
     environment:
       - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
       - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
+      - PULSE_SERVER=unix:/run/pulse/socket # Use host audio
+      - PULSE_COOKIE=/run/pulse/cookie      # Use host audio
     volumes:
       - tele-conf:/srv
+      - ./pulse:/run/pulse:rshared          # Use host audio
+      - /etc/localtime:/etc/localtime:ro    # Use host timezone
 
 volumes:
   tele-conf:
@@ -78,7 +85,7 @@ make up
 The you can connect to the asterisk command line interface (CLI) running inside the container by typing
 
 ```bash
-make cli
+make cmd
 ```
 
 From the Asterisk CLI you can type

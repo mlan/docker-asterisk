@@ -1,7 +1,8 @@
 # 0.8.1
 
 - [privatedial](src/privatedial) Break out endpoints from pjsip_wizard.conf to pjsip_endpoint.conf.
-- [privatedial](src/privatedial) Use Hangup() insted of Goto() when entering extension `h`.
+- [privatedial](src/privatedial) Use Hangup() instead of Goto() when entering extension `h`.
+- [privatedial](src/privatedial) Work around bug in [MinivmGreet()](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmGreet).
 
 # 0.8.0
 

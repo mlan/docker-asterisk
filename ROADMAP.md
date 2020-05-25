@@ -6,8 +6,12 @@
 
 ## PrivateDial
 
-- Debug MiniVM access messages.
 - Make IVR custom-able
+
+## MiniVM
+
+The application [MinivmGreet()](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmGreet) is broken. Now it only plays the "temp" message.
+Consider fixing the code in [app_minivm.c](https://github.com/asterisk/asterisk/blob/8f5534a68a01ad3fbe6b1920c8ab160fc3b4df89/apps/app_minivm.c) lines 2326-2345 and file a patch.
 
 ## Upgrade utility
 
@@ -23,7 +27,7 @@
 
 ## AutoBan
 
-- Add option to get revese DNS using gethostbyaddr($ip); in `show who`.
+- Add option to get reverse DNS using gethostbyaddr($ip); in `show who`.
 - Perhaps replace entrypoint.d/ with /etc/conf.d/nftables?
 
 ## WebSMS

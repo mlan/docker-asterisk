@@ -54,6 +54,8 @@ outbound_auth/username = username
 outbound_auth/password = password
 ```
 
+With some ITSP SIP servers you need to explicitly state which transport to use. In such case add the folowing to the section above; `transport = udp`, for UDP.
+
 ### SIP Users
 
 PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf`. For convenience the template, `tpl_softphone` has been defined in `pjsip_wizard.conf`.
@@ -65,6 +67,7 @@ Add an endpoint entry in `pjsip_endpoint.conf` for each user. Each user can simu
 ```ini
 [tpl_phone](!,tpl_softphone)
 endpoint/from_domain = example.com
+endpoint/language = en
 endpoint/set_var = TRUNK_ENDPOINT=trunk:itsp
 endpoint/set_var = WEBSMS_INDEX=
 

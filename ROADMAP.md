@@ -15,7 +15,7 @@ Consider fixing the code in [app_minivm.c](https://github.com/asterisk/asterisk/
 
 ## Upgrade utility
 
-- shell utility that helps upgrading config files.
+- Shell utility that helps upgrading config files.
 
 ### Put in documentation
 

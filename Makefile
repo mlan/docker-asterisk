@@ -30,7 +30,7 @@ TST_PORT ?= -p $(TST_SIPP):$(TST_SIPP)/udp \
 TST_XTRA ?= --cap-add SYS_PTRACE \
 	--cap-add=NET_ADMIN \
 	--cap-add=NET_RAW \
-	-e ASTERISK_SMSD_DEBUG=true -e SYSLOG_LEVEL=8
+	-e SYSLOG_LEVEL=8
 CNT_ENV  ?= --hostname $(CNT_HOST) $(TST_PORT) $(TST_XTRA)
 CNT_VOL  ?=
 CNT_CMD  ?= asterisk -pf -vvvddd

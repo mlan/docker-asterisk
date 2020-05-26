@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# 50_websmsd-setport
+#
+# 
+#
+source docker-common.sh
+
+if $(echo $WEBSMSD_PORT | grep -qE "^[0-9]+$"); then
+	dc_log 5 "websmsd will listen to port=$WEBSMSD_PORT."
+	setup-runit.sh "-n websmsd php -S 0.0.0.0:$WEBSMSD_PORT -t $DOCKER_PHP_DIR websmsd.php"
+else
+	dc_log 5 "websmsd will be disabled since there was no valid port=$WEBSMSD_PORT."
+	touch ${DOCKER_RUNSV_DIR}/websmsd/down
+fi

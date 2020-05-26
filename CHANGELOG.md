@@ -3,6 +3,8 @@
 - [privatedial](src/privatedial) Break out endpoints from pjsip_wizard.conf to pjsip_endpoint.conf.
 - [privatedial](src/privatedial) Use Hangup() instead of Goto() when entering extension `h`.
 - [privatedial](src/privatedial) Work around bug in [MinivmGreet()](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmGreet).
+- [docker](README.md) Advancing documentation.
+- [websms](src/websms) `WEBSMSD_PORT=80` sets PHP web server port, used by WebSMS.
 
 # 0.8.0
 

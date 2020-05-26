@@ -104,59 +104,57 @@ make destroy
 
 ## Environment variables
 
-FIX THIS SECTION!
+Despite the fact that Asterisk is configured using configuration files, there is a handful for environmental variables that controls the behavior of other functions within the `mlan/asterisk` container. These functions are logging and the management of TLS certificates.
 
-When you create the `mlan/asterisk` container, you can configure the services by passing one or more environment variables or arguments on the docker run command line. Once the services has been configured a lock file is created, to avoid repeating the configuration procedure when the container is restated. In the rare event that want to modify the configuration of an existing container you can override the default behavior by setting `FORCE_CONFIG` to a no-empty string.
-
-| Variable                                   | Default         | Description                                   |
-| ------------------------------------------ | --------------- | --------------------------------------------- |
-| ACME_FILE                                  | /acme/acme.json |                                               |
-| ASTERISK_SMSD_DEBUG                        |                 |                                               |
-| HOSTNAME                                   | $(hostname)     |                                               |
-| SYSLOG_LEVEL                               | 4               |                                               |
-| SYSLOG_OPTIONS                             | -SDt            |                                               |
-| [TLS_CERTDAYS](#tls_keybits-tls_certdays)  | 30              | Self-signed TLS certificate validity duration |
-| [TLS_KEYBITS](#tls_keybits-tls_certdays)   | 2048            | Self-signed TLS key length                    |
+| Variable                                  | Default         | Description                                                  |
+| ----------------------------------------- | --------------- | ------------------------------------------------------------ |
+| [SYSLOG_LEVEL](#logging-syslog_level)     | 4               | Logging level, from 0 to 8. 0 is minimal, where as, 8 is maximal log outputs. |
+| SYSLOG_OPTIONS                            | -SDt            | S: smaller output, D: drop duplicates, t: Strip client-generated timestamps. |
+| [ACME_FILE](#acme_file)                   | /acme/acme.json | File that contains TLS certificates, provided by [Let's encrypt](https://letsencrypt.org/) using [Traefik](https://docs.traefik.io/). |
+| HOSTNAME                                  | $(hostname)     | Used to identify the relevant TLS certificates in ACME_FILE  |
+| [TLS_CERTDAYS](#tls_keybits-tls_certdays) | 30              | Self-signed TLS certificate validity duration in days.       |
+| [TLS_KEYBITS](#tls_keybits-tls_certdays)  | 2048            | Self-signed TLS key length in bits.                          |
+| WEBSMSD_PORT(#websmsd_port)               | 80              | PHP web server port, used by WebSMS. Undefined or non-numeric, will disable the PHP web server. |
 
 ## Configuration files
 
-Asterisk and its modules are configured using several configuration files which are typically found in `/etc/asterisk`. The `/mlan/asterisk` image provides a collection of configuration files which can serve as starting point for your system. We will outline how we intend the default configuration files are structured.
-
-### Configuration files overview
+Asterisk and its modules are configured using several configuration files which are typically found in `/etc/asterisk`. The `/mlan/asterisk` image include collection of sample configuration files which can serve as starting point for your system.
 
 Some of the collection of configuration files provided does not contain any user specific data and might initially be left unmodified. These files are:
 
-| File name        | Description                                |
-| ---------------- | ------------------------------------------ |
-| alsa.conf        |                                            |
-| asterisk.conf    | asterisk logging, directory structure      |
-| ccss.conf        |                                            |
-| cli_aliases.conf | command line interface aliases convenience |
-| features.conf    | activation of special features             |
-| indications.conf | dial tone local                            |
-| logger.conf      | logfiles                                   |
-| modules.conf     | activation of modules                      |
-| musiconhold.conf | music on hold directory                    |
-| pjproject.conf   | pjsip installation version                 |
-| rtp.conf         | Define RTP port range                      |
+| File name        | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| alsa.conf        | Open Sound System (ALSA) console driver configuration        |
+| asterisk.conf    | Asterisk global configuration including; debug, run-as-user and directory structure |
+| ccss.conf        | Call Completion Supplementary Services configuration         |
+| cli_aliases.conf | Asterisk Command Line Interface aliases                      |
+| features.conf    | Call Features (transfer, monitor/mixmonitor, etc) configuration |
+| indications.conf | Location specific tone indications                           |
+| logger.conf      | Logging configuration                                        |
+| modules.conf     | Module Loader configuration                                  |
+| musiconhold.conf | Music on Hold configuration                                  |
+| pjproject.conf   | Common pjproject options                                     |
+| rtp.conf         | RTP configuration including port range                       |
+
+The configuration files mentioned above are perhaps not the ones that require the most attention. The configuration files defining key aspects of the Asterisk server like; the call flow and SIP trunk and phone details is the concern of the add-on [PrivateDial](#privatedial). Please refer to its separate [documentation](src/privatedial/README.md) for details.
 
 ## Persistent storage
 
-By default, docker will store the configuration and run data within the container. This has the drawback that the configurations and queued and quarantined mail are lost together with the container should it be deleted. It can therefore be a good idea to use docker volumes and mount the run directories and/or the configuration directories there so that the data will survive a container deletion.
+By default, docker will store the configuration and run data within the container. This has the drawback that the configuration and state of the applications are lost together with the container should it be deleted. It can therefore be a good idea to use docker volumes and mount the configuration and spool directories directories there so that the data will survive a container deletion.
 
-To facilitate such approach, to achieve persistent storage, the configuration and run directories of the services has been consolidated to `/srv/etc` and `/srv/var` respectively. So if you to have chosen to use both persistent configuration and run data you can run the container like this:
+To facilitate such approach, to achieve persistent storage, the configuration and spool directories of the services has been consolidated under `/srv`. The applications running inside the container still finds files in their usual locations since symbolic links are there pointing back to `/srv`. With this approach simply mounting a docker volume at `/srv` let you keep application configuration and state persistent.
+
+The volume `tele-conf` in the [demo](#docker-compose-example) described above achieves this. An other way would be to run the container like this:
 
 ```
-docker run -d --name pbx-mta -v pbx-mta:/srv -p 127.0.0.1:25:25 mlan/asterisk
+docker run -d -v tele-conf:/srv ... mlan/asterisk
 ```
 
 ## Initialization procedure
 
-The `mlan/asterisk` image is compiled without any configuration files. When a container is created using the `mlan/asterisk` image default configuration files are copied to the configuration directory `etc/asterisk` if it is found to be empty. This behavior is intended to support the following initialization procedures.
+The `mlan/asterisk` image is built with sample configuration files placed in a seeding directory. The directories where the applications look for configuration files are empty. When the container is started the configuration directory, `etc/asterisk` , is scanned. If it is found to be empty, sample configuration files from the seeding directory are copied to the configuration directory.
 
-In scenarios where you already have a collection of configuration files on a docker volume, start/create a `mlan/asterisk` container with this volume mounted. At startup these configuration files are recognized and left untouched and asterisk is stated. The same will happen when the container is restarted. 
-
-In a scenario where we don't have any configuration files yet we start/create a want to start `mlan/asterisk` container with an empty target volume. At startup the default configuration files will be copied to the mounted volume. Now you can edit these configuration files to your liking either from within the container or directly from the volume mounting point on the docker host. At consecutive startup these configuration files are recognized and left untouched and asterisk is stated.
+The initialization procedure will leave any existing configuration untouched. If configuration files are found, nothing is copied or modified during start up. Only when `etc/asterisk` is found to be empty, will seeding files be copied. This behavior should keep your conflagration safe also when upgrading to a new version of the `mlan/asterisk` image. Should a new version of the `mlan/asterisk` image come with interesting update to any sample configuration file, it need to manually be copied or merged with the present configuration files.
 
 ## Logging `SYSLOG_LEVEL`
 
@@ -173,7 +171,13 @@ The [Session Initiation Protocol (SIP)](https://en.wikipedia.org/wiki/Session_In
 
 SIP is designed to be independent of the underlying [transport layer](https://en.wikipedia.org/wiki/Transport_layer) protocol, and can be used with the [User Datagram Protocol](https://en.wikipedia.org/wiki/User_Datagram_Protocol) (UDP), the [Transmission Control Protocol](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) (TCP), and the [Stream Control Transmission Protocol](https://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol) (SCTP). For secure transmissions of SIP messages over insecure network links, the protocol may be encrypted with [Transport Layer Security](https://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS). For the transmission of media streams (voice, video) the [Session Description Protocol](https://en.wikipedia.org/wiki/Session_Description_Protocol) (SDP) payload carried in SIP messages typically employs the [Real-time Transport Protocol](https://en.wikipedia.org/wiki/Real-time_Transport_Protocol) (RTP) or the [Secure Real-time Transport Protocol](https://en.wikipedia.org/wiki/Secure_Real-time_Transport_Protocol) (SRTP).
 
-TLS protects against attackers who try to listen on the signaling link but it does not provide end-to-end security to prevent espionage and law enforcement interception, as the encryption is only hop-by-hop and every single intermediate proxy has to be trusted. The media streams which are separate connections from the signaling stream, may be encrypted with the [Secure Real-time Transport Protocol](https://en.wikipedia.org/wiki/Secure_Real-time_Transport_Protocol) (SRTP). The key exchange for SRTP is performed with [SDES](https://en.wikipedia.org/wiki/SDES), or with [ZRTP](https://en.wikipedia.org/wiki/ZRTP).
+When sending an audio stream it is far better to lose a packet than to have a packet retransmitted, causing excessive jitter in the packet timing. Audio is real-time and requires a protocol like UDP to work correctly. Packet loss does not break audio, it only reduces the quality. Therefore it is no surprise that RTP is built on top of UDP; an connection-less protocol.
+
+TCP is a connection-oriented protocol as it establishes an end to end connection between computers before transferring the data. TCP is therefore, by contrast, ideal for SIP signaling. The somewhat unexpected fact that most SIP communication uses UDP should not discourage you from shooing TCP when possible. TCP often provide more stable contacts to endpoints/phones than UDP.
+
+TLS, operating as an application protocol layered directly over TCP, protects against attackers who try to listen on the signaling link but it does not provide end-to-end security to prevent espionage and law enforcement interception, as the encryption is only hop-by-hop and every single intermediate proxy has to be trusted.
+
+The media streams which are separate connections from the signaling stream, may be encrypted with the [Secure Real-time Transport Protocol](https://en.wikipedia.org/wiki/Secure_Real-time_Transport_Protocol) (SRTP). The key exchange for SRTP is performed with [SDES](https://en.wikipedia.org/wiki/SDES), or with [ZRTP](https://en.wikipedia.org/wiki/ZRTP).
 
 ### Ports, 5060, 5061 and 10000-20000
 
@@ -191,7 +195,7 @@ Second, you can stay with the default or user-defined `bridge` mode and instead 
 
 ## Network address translation (NAT)
 
-[Network address translation (NAT)](https://en.wikipedia.org/wiki/Network_address_translation) is a method of remapping one IP [address space](https://en.wikipedia.org/wiki/Address_space) into another by modifying [network address](https://en.wikipedia.org/wiki/Network_address) information in the [IP header](https://en.wikipedia.org/wiki/IP_header) of packets while they are in transit across a traffic [routing device](https://en.wikipedia.org/wiki/Router_(computing)). Here two network environments often results in NAT being used. First, the SIP server we deploy using  `mlan/asterisk` runs inside a docker container and depending on what type of network we choose docker will start a proxy process.
+[Network address translation (NAT)](https://en.wikipedia.org/wiki/Network_address_translation) is a method of remapping one IP [address space](https://en.wikipedia.org/wiki/Address_space) into another by modifying [network address](https://en.wikipedia.org/wiki/Network_address) information in the [IP header](https://en.wikipedia.org/wiki/IP_header) of packets while they are in transit across a traffic [routing device](https://en.wikipedia.org/wiki/Router_(computing)). Here two network environments often results in NAT being used. First, the SIP server we deploy using `mlan/asterisk` runs inside a docker container and depending on what type of network we choose docker will start a proxy process.
 
 ### Sip host and domain name
 
@@ -205,11 +209,11 @@ With these settings you should not need ICE, STUN or TURN.
 
 ## Security - Privacy and integrity
 
-[Transport Layer Security](http://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS) provides encryption for call signaling. A excellent guide for setting up TLS between Asterisk and a SIP client, involving creating key files, modifying Asterisk's SIP configuration to enable TLS, creating a SIP endpoint/user that's capable of TLS, and modifying the SIP client to connect  to Asterisk over TLS, can be found here [Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial). 
+[Transport Layer Security](http://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS) provides encryption for call signaling. A excellent guide for setting up TLS between Asterisk and a SIP client, involving creating key files, modifying Asterisk's SIP configuration to enable TLS, creating a SIP endpoint/user that's capable of TLS, and modifying the SIP client to connect to Asterisk over TLS, can be found here [Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial). 
 
 The PrivateDial configuration is already set up to provide both UDP and TCP. TLS and SDES SRTP are also prepared, but a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed for their activation. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key will automatically be generated.
 
-####  `TLS_KEYBITS`, `TLS_CERTDAYS`
+#### `TLS_KEYBITS`, `TLS_CERTDAYS`
 
  `TLS_KEYBITS=2048`, `TLS_CERTDAYS=30`.
 
@@ -271,21 +275,29 @@ X-PulseAudio-Properties=media.role=phone
 
 The `mlan/asterisk` repository contains add-ons that utilizes and extends the already impressive capabilities of Asterisk.
 
-## PrivateDial
+## [PrivateDial](src/privatedial/README.md)
 
-[PrivateDial](src/privatedial/README.md), an easily customized asterisk configuration. It is described [here](src/privatedial/doc/privatedial.md).
+PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to residential use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
 
-## AutoBan
+It uses the [PJSIP](https://www.pjsip.org/) [channel driver](https://wiki.asterisk.org/wiki/display/AST/Configuring+res_pjsip) and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
 
-[AutoBan](src/autoban/README.md) is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. It is described [here](src/autoban/doc/autoban.md).
+The underlying design idea is to separate the dial plan functionality from the user data. To achieve this all user specific data has been pushed out from the main `extensions.conf` file.
 
-## WebSMS
+## [AutoBan](src/autoban/README.md)
 
-The [websms](src/websms/README.md) service is described [here](src/websms/doc/websms.md).
+AutoBan is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. The intrusion detection is achieved by Asterisk itself. Asterisk generates security events which AutoBan listens to on the AMI interface. When security events occurs AutoBan start to watch the source IP address. Intrusion prevention is achieved by AutoBan asking the Linux kernel firewall [nftables](https://netfilter.org/projects/nftables/) to drop packages from offending source IP addresses.
+
+## [WebSMS](src/websms/README.md)
+
+Asterisk supports [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)), allowing SMS to be sent using the extended SIP method; MESSAGE, natively. Still many [Internet Telephony Service Providers](wikipedia.org/wiki/Internet_telephony_service_provider) (ITSP) does not offer SIMPLE but instead sends and receives SMS using a web [API](https://en.wikipedia.org/wiki/Application_programming_interface) based on [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) requests. This leaves your Asterisk server without a mechanisms to exchange SMS externally.
+
+The WebSMS service bridges this limitation, with the help of two components. One, `websmsd`, waits for incoming SMS to be sent from your ITSP and once received, forward it to Asterisk. The other, `websms`, is used by Asterisk to send outgoing SMS to your ITSP.
+
+#### `WEBSMSD_PORT`
+
+WebSMS uses the PHP integrated web server. The environment variable `WEBSMSD_PORT=80` determinate which port the web server listens to. If `WEBSMSD_PORT` is undefined or non-numeric the PHP web server is disabled and, consequently, WebSMS too. Disabling the web server might be desired in scenarios when the container runs in host mode and there are other services running on the host blocking ports of concern.
 
 # Missing
-
-TCP provides much more stable SIP functionality than UDP.
 
 ## Implementation
 

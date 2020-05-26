@@ -2,7 +2,7 @@
 
 The [Short Message Service (SMS)](https://en.wikipedia.org/wiki/SMS) [text messaging](https://en.wikipedia.org/wiki/Text_messaging) service, introduced in 1993, enabled mobile devices to exchange short text messages, using the [Short Message Peer-to-Peer (SMPP)](https://en.wikipedia.org/wiki/Short_Message_Peer-to-Peer) protocol. The [Session Initiation Protocol (SIP)](wikipedia.org/wiki/Session_Initiation_Protocol) include provision for [Instant Messaging (IM)](https://en.wikipedia.org/wiki/Instant_messaging) using the [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) protocol extension, serving a similar purpose.
 
-Asterisk supports [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)) natively. Still many [Internet Telephony Service Providers](wikipedia.org/wiki/Internet_telephony_service_provider) (ITSP) does not offer SIMPLE but instead sends and receives SMS using a web [API](https://en.wikipedia.org/wiki/Application_programming_interface) based on [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) requests. This leaves Asterisk without a mechanisms to exchange SMS externally.
+Asterisk supports [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)), allowing SMS to be sent using the extended SIP method; MESSAGE, natively. Still many [Internet Telephony Service Providers](wikipedia.org/wiki/Internet_telephony_service_provider) (ITSP) does not offer SIMPLE but instead sends and receives SMS using a web [API](https://en.wikipedia.org/wiki/Application_programming_interface) based on [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) requests. This leaves Asterisk without a mechanisms to exchange SMS externally.
 
 The WebSMS service bridges this limitation, with the help of two components. One, `websmsd`, waits for incoming SMS to be sent from your ITSP and once received, forward it to Asterisk. The other, `websms`, is used by Asterisk to send outgoing SMS to your ITSP.
 
@@ -112,7 +112,7 @@ SIP is a text-based protocol and uses the UTF-8 charset ([RFC 2279](https://tool
 
 Many API supports the full range of Unicode character encoding, but some do not. In case the API only support UCS-2, it might be required to force WebSMS to use it and thereby limit the Unicode character range to BNP (U+0000, U+FFFF). This is achieved by defining `val_unicode = UCS-2`.
 
-There are APIs that supports the full range but needs an additional key-value pair in the HTTP request data to handle non-BMP characters. When defining `val_unicode = "key=value"` the key-value pair `key:value` is added to the request data when the message body include non-BMP characters.
+There are APIs that supports the full range but needs an additional key-value pair in the HTTP request data to handle non-BMP characters. When defining `val_unicode = "key=value"` the key-value pair `key:value` is added to the request data when the message body include non-BMP characters.
 
 #### Outgoing static key-value pairs
 
@@ -257,6 +257,14 @@ url_path     [] = /incomming2
 key_body     [] = text
 ```
 
+## Environment variables
+
+WebSMS is configured using configuration files. Still, there one environmental variable that influence the behavior of WebSMS; `WEBSMSD_PORT`.
+
+#### `WEBSMSD_PORT`
+
+WebSMS uses the PHP integrated web server. The environment variable `WEBSMSD_PORT=80` determinate which port the web server listens to. If `WEBSMSD_PORT` is undefined or non-numeric the PHP web server is disabled and, consequently, WebSMS too. Disabling the web server might be desired in scenarios when the container runs in host mode and there are other services running on the host blocking ports of concern.
+
 ## Implementation
 
 implementing a PHP client script, which sends HTTP SMS requests, and a server that listens for HTTP POST request form your ITSP.
@@ -295,7 +303,7 @@ from your ITSP. One such request is received a call file is generated, which wil
 The PHP built-in web-server is started by issuing this command:
 
 ```bash
-php -S 0.0.0.0:80 /path/websmsd.php
+php -S 0.0.0.0:$WEBSMSD_PORT -t $DOCKER_PHP_DIR websmsd.php
 ```
 Now we describe the data flow of receiving a SMS from the ITSP for illustrative purposes. Assume that your ITSP receives a SMS addressed to your virtual number. Your ITSP forwards this SMS to your server by via its API which sends a HTTP request to the URL that you have registered with them and to which you have configured `websmsd.php` to listen to. The payload of such HTTP request might look like this:
 

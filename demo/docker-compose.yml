@@ -9,16 +9,17 @@ services:
       - net_admin
       - net_raw
     ports:
-      - "${SMS_PORT-8080}:80"
-      - "5060:5060/udp"
-      - "5060:5060"
-      - "5061:5061"
-      - "10000-10099:10000-10099/udp"
+      - "${SMS_PORT-8080}:${WEBSMSD_PORT:-80}" # WEBSMSD port mapping
+      - "5060:5060/udp"                     # SIP UDP port
+      - "5060:5060"                         # SIP TCP port
+      - "5061:5061"                         # SIP TLS port
+      - "10000-10099:10000-10099/udp"       # RTP ports
     environment:
       - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
       - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
       - PULSE_SERVER=unix:/run/pulse/socket # Use host audio
       - PULSE_COOKIE=/run/pulse/cookie      # Use host audio
+      - WEBSMSD_PORT=${WEBSMSD_PORT-80}     # WEBSMSD internal port
     volumes:
       - tele-conf:/srv
       - ./pulse:/run/pulse:rshared          # Use host audio

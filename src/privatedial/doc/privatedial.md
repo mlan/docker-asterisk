@@ -146,9 +146,11 @@ There is also a mechanism to use ACME lets encrypt certificates, which also use 
 
 ## Implementation
 
+### Dialplan
+
 The PrivateDial has its dialplan contexts organized in 3 levels. The entry, action and subroutine contexts. A SIP event will trigger the execution of the PrivateDial dial plan staring on one of the entry contexts. The entry contexts include some of the action contexts, and the action contexts call the subroutines.
 
-### Entry context
+#### Entry context
 
 The entry contexts are used to grant more access to users calling or texting as compared to external trunk calls or texts. All entry context start with including the `dp_lookup_user` context so that extension hints are always available.
 
@@ -175,7 +177,7 @@ include => dp_lookup_user
 include => dp_channel_answer
 ```
 
-### Action context
+#### Action context
 
 The action contexts calls the subroutines. Most subroutines use the `${HINT}` channel variable to identify the endpoint so `${EXTEN}` is set to the special `s`. Each subroutine is called in its turn and the call is not hung up until all subroutine calls has been made.
 
@@ -225,7 +227,7 @@ exten => _[+0-9].,1,Goto(dev-${DEVICE_STATE(${HINT})})
  same => n,Hangup()
 ```
 
-### Subroutine context
+#### Subroutine context
 
 The file `extension.conf` include some in line documentation of the subroutines.
 
@@ -234,3 +236,7 @@ Subroutines does not hang up but instead returns the data flow to the calling co
 Most subroutines use the `${HINT}` channel variable to identify the endpoint so `${EXTEN}` is set to the special `s`.
 
 When calling and texting endpoints an attempts are made to contact all contacts of the endpoints, such that for inbound calls all registered contacts (smart-pones) will ring and also receive inbound SMS.
+
+### Presence
+
+Asterisk support [presence state](https://wiki.asterisk.org/wiki/display/AST/Presence+State) an indicator that conveys the state of an endpoint to other endpoints. But, unfortunately, presence is only supported for Sangama/Digium phones, not for softphones. Consequentely, no attmpt has been made to support presence state in PrivateDial.

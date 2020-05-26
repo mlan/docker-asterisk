@@ -12,14 +12,18 @@ This (non official) repository provides dockerized asterisk PBX.
 
 Feature list follows below
 
-- Asterisk PBX
+- [Asterisk](http://www.asterisk.org/) powering IP PBX systems and VoIP gateways.
 - [PrivateDial](src/privatedial/README.md), an easily customized asterisk configuration
 - [WebSMS](srs/websms/README.md), send and receive Instant Messages, SMS over HTTP
 - [AutoBan](src/autoban/README.md), a built in intrusion detection and prevention system
-- Alpine Linux
-- demo
-- persistent storage
-- console audio
+- Small image size based on [Alpine Linux](https://alpinelinux.org/)
+- [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files
+- Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
+- Consolidated configuration and run data under `/srv` to facilitate persistent storage
+- [Container audio](#container-audio) using the PulseAudio unix socket of the host.
+- Health check
+- Log directed to docker daemon with configurable level
+- Multi-staged build providing the images `mini`, `base`, `full` and `xtra`
 
 ## Tags
 
@@ -28,14 +32,16 @@ used. In addition to the three number version number you can use two or
 one number versions numbers, which refers to the latest version of the 
 sub series. The tag `latest` references the build based on the latest commit to the repository.
 
-The `mlan/asterisk` repository contains a multi staged built. You select which build using the appropriate tag from `mini`, `base`, `full` and `xtra`. The image `mini` only contain Asterisk.
-To exemplify the usage of the tags, lets assume that the latest version is `1.0.0`. In this case `latest`, `1.0.0`, `1.0`, `1`, `full`, `full-1.0.0`, `full-1.0` and `full-1` all identify the same image.
+The `mlan/asterisk` repository contains a multi staged built. You select which build using the appropriate tag from `mini`, `base`, `full` and `xtra`. The image with the tag `mini` only contains Asterisk it self.
+The `base` tag also include support for TLS, logging, WebSMS and AutoBan. `full` adds support for console audio. The `xtra` tag includes all Asterisk packages.
+
+ To exemplify the usage of the tags, lets assume that the latest version is `1.0.0`. In this case `latest`, `1.0.0`, `1.0`, `1`, `full`, `full-1.0.0`, `full-1.0` and `full-1` all identify the same image.
 
 # Usage
 
 Often you want to configure Asterisk and its components. There are different methods available to achieve this. Moreover docker volumes or host directories with desired configuration files can be mounted in the container. And finally you can `docker exec` into a running container and modify configuration files directly.
 
-If you want to test the image right away, probably the best way is to clone the github repository and run the demo therein.
+If you want to test the image right away, probably the best way is to clone the [github](https://https://github.com/mlan/docker-asterisk) repository and run the demo therein.
 
 ```bash
 git clone https://github.com/mlan/docker-asterisk.git
@@ -51,29 +57,30 @@ version: '3'
 services:
   tele:
     image: mlan/asterisk
-    network_mode: bridge # Only here to help testing
+    network_mode: bridge                    # Only here to help testing
     cap_add:
-      - sys_ptrace       # Only here to help testing
-      - net_admin
-      - net_raw
+      - sys_ptrace                          # Only here to help testing
+      - net_admin                           # Allow NFT, used by AutoBan
+      - net_raw                             # Allow NFT, used by AutoBan
     ports:
-      - "${SMS_PORT-8080}:80"
-      - "5060:5060/udp"
-      - "5060:5060"
-      - "5061:5061"
-      - "10000-10099:10000-10099/udp"
+      - "${SMS_PORT-8080}:${WEBSMSD_PORT:-80}" # WEBSMSD port mapping
+      - "5060:5060/udp"                     # SIP UDP port
+      - "5060:5060"                         # SIP TCP port
+      - "5061:5061"                         # SIP TLS port
+      - "10000-10099:10000-10099/udp"       # RTP ports
     environment:
-      - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
+      - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}      # Logging
       - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
       - PULSE_SERVER=unix:/run/pulse/socket # Use host audio
       - PULSE_COOKIE=/run/pulse/cookie      # Use host audio
+      - WEBSMSD_PORT=${WEBSMSD_PORT-80}     # WEBSMSD internal port
     volumes:
-      - tele-conf:/srv
+      - tele-conf:/srv                      # Persistent storage
       - ./pulse:/run/pulse:rshared          # Use host audio
       - /etc/localtime:/etc/localtime:ro    # Use host timezone
 
 volumes:
-  tele-conf:
+  tele-conf:                                # Persistent storage
 ```
 
 This repository contains a `demo` directory which hold the `docker-compose.yml` file as well as a `Makefile` which might come handy. From within the `demo` directory you can start the container simply by typing:
@@ -114,7 +121,7 @@ Despite the fact that Asterisk is configured using configuration files, there is
 | HOSTNAME                                  | $(hostname)     | Used to identify the relevant TLS certificates in ACME_FILE  |
 | [TLS_CERTDAYS](#tls_keybits-tls_certdays) | 30              | Self-signed TLS certificate validity duration in days.       |
 | [TLS_KEYBITS](#tls_keybits-tls_certdays)  | 2048            | Self-signed TLS key length in bits.                          |
-| WEBSMSD_PORT(#websmsd_port)               | 80              | PHP web server port, used by WebSMS. Undefined or non-numeric, will disable the PHP web server. |
+| [WEBSMSD_PORT](#websmsd_port)             | 80              | PHP web server port, used by WebSMS. Undefined or non-numeric, will disable the PHP web server. |
 
 ## Configuration files
 
@@ -215,6 +222,8 @@ The PrivateDial configuration is already set up to provide both UDP and TCP. TLS
 
 #### `TLS_KEYBITS`, `TLS_CERTDAYS`
 
+TODO!
+
  `TLS_KEYBITS=2048`, `TLS_CERTDAYS=30`.
 
 There is also a mechanism to use ACME lets encrypt certificates.
@@ -225,7 +234,7 @@ Let’s Encrypt provide free, automated, authorized certificates when you can de
 
 #### `ACME_FILE`
 
-The `mlan/amavis` image looks for a file `ACME_FILE=/acme/acme.json`. at container startup and every time this file changes certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` is will be used for TLS support.
+The `mlan/asterisk` image looks for a file `ACME_FILE=/acme/acme.json`. at container startup and every time this file changes certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` is will be used for TLS support.
 
 So reusing certificates from Traefik will work out of the box if the `/acme` directory in the Traefik container is also mounted in the `mlan/asterisk` container.
 
@@ -241,34 +250,46 @@ Attempts by attackers to crack SIP passwords and hijack SIP accounts are very co
 
 When using non-standard ports the amount of attacks drop significantly, so it might be considered whenever practical. When changing port numbers they need to be updated both for docker and asterisk. To exemplify, assume we want to use 5560 for UDP and TCP and 5561 for TLS, in which case we update the configuration in two places:
 
-- docker/docker-compose, eg, `docker run -p "5560-5561:5560-5561" -p"5560:5560/udp" ...`
-- asterisk transport in `pjsip_transport.conf` (`pjsip.conf`), eg `bind = 0.0.0.0:5560` and `bind = 0.0.0.0:5561`
+- docker/docker-compose, e.g., `docker run -p "5560-5561:5560-5561" -p"5560:5560/udp" ...`
+- asterisk transport in `pjsip_transport.conf` (`pjsip.conf`), e.g. `bind = 0.0.0.0:5560` and `bind = 0.0.0.0:5561`
 
 ### SIP passwords strength
 
 It’s recommended that the minimum strength of a password used in a SIP digests are at least 8 characters long, preferably 10 characters, and have characters that include lower and upper case alphabetic, a number and a non-alphabetic, non-numeric ASCII character, see [SIP Password Security - How much is yours worth?](https://www.sipsorcery.com/mainsite/Help/SIPPasswordSecurity).
 
-# Console PulseAudio
+# Container audio
 
-`/etc/pulse/daemon.conf`
+The `mlan/asterisk` container supports two-way audio using [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/). This allows you to use the Asterisk console channel to do some management or debugging. The audio stream is passed between container and host by sharing the user's pulse unix socket.
 
-```ini
-default-fragments = 5
-default-fragment-size-msec = 1
+The method described here was chosen since it allows audio to be enabled on an already running container. The method involves a directory `./pulse:/run/pulse:rshared ` on the host being mounted on the container, see the [compose example](#docker-compose-example), and environment variables being set within the container, allowing pulse to locate the socket; `PULSE_SERVER=unix:/run/pulse/socket` and cookie; `PULSE_COOKIE=/run/pulse/cookie`.
+
+Often we are not interested in sharing audio with the container and the above bind mount and environment variables achieve nothing. But should there come a time when we want to enable the audio, we can do so in 3 simple steps: 1) Mount the user's pulse socket in the host directory `./pulse/socket` and, 2) copy the user's pulse cookie there too, `./pulse/cookie`. 3) Have asterisk, running inside the container, load the `chan_alsa.so` module. From a shell running on the host, these steps are:
+
+```sh
+cp -f ${PULSE_COOKIE-$HOME/.config/pulse/cookie} pulse/cookie
+sudo mount --bind $(pactl info | sed '1!d;s/.*:\s*//g') pulse/socket
+docker-compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so'
 ```
+A limitation of this approach is that you need sudo/root access do be able to bind mount on the host. Naturally, there needs to be a pulse server running on the host for any of this to work.
+
+## Playing with audio
+
+You can use the [demo](#docker-compose-example) above, and once the container is running, enable audio by typing from within the `demo` directory:
 
 ```bash
-pulseaudio -k
+make sound_enable
 ```
 
-`/usr/share/applications/asterisk.desktop`
+Now you can tryout any of the trivial sound checks, for example:
 
-```ini
-[Desktop Entry]
-Name=Asterisk
-Type=Application
-Categories=Telephony
-X-PulseAudio-Properties=media.role=phone
+```bash
+make sound_5
+```
+
+To disable audio, type:
+
+```bash
+make sound_disable
 ```
 
 # Add-ons
@@ -295,11 +316,19 @@ The WebSMS service bridges this limitation, with the help of two components. One
 
 #### `WEBSMSD_PORT`
 
-WebSMS uses the PHP integrated web server. The environment variable `WEBSMSD_PORT=80` determinate which port the web server listens to. If `WEBSMSD_PORT` is undefined or non-numeric the PHP web server is disabled and, consequently, WebSMS too. Disabling the web server might be desired in scenarios when the container runs in host mode and there are other services running on the host blocking ports of concern.
+WebSMS uses the PHP integrated web server. The environment variable `WEBSMSD_PORT=80` determinate which port the web server listens to. If `WEBSMSD_PORT` is undefined or non-numeric the PHP web server is disabled and, consequently, WebSMS too. Disabling the web server might be desired in scenarios when the container runs in host mode and there are other services running on the host blocking ports of concern.
 
-# Missing
+# Implementation
 
-## Implementation
+TODO!
+
+entrypoint.d
+
+Persistence
+
+
+
+
 
 Build variables.
 

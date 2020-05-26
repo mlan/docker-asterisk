@@ -3,11 +3,11 @@ version: '3'
 services:
   tele:
     image: mlan/asterisk
-    network_mode: bridge # Only here to help testing
+    network_mode: bridge                    # Only here to help testing
     cap_add:
-      - sys_ptrace       # Only here to help testing
-      - net_admin
-      - net_raw
+      - sys_ptrace                          # Only here to help testing
+      - net_admin                           # Allow NFT, used by AutoBan
+      - net_raw                             # Allow NFT, used by AutoBan
     ports:
       - "${SMS_PORT-8080}:${WEBSMSD_PORT:-80}" # WEBSMSD port mapping
       - "5060:5060/udp"                     # SIP UDP port
@@ -15,15 +15,15 @@ services:
       - "5061:5061"                         # SIP TLS port
       - "10000-10099:10000-10099/udp"       # RTP ports
     environment:
-      - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}
+      - SYSLOG_LEVEL=${SYSLOG_LEVEL-4}      # Logging
       - HOSTNAME=${TELE_SRV-tele}.${DOMAIN-docker.localhost}
       - PULSE_SERVER=unix:/run/pulse/socket # Use host audio
       - PULSE_COOKIE=/run/pulse/cookie      # Use host audio
       - WEBSMSD_PORT=${WEBSMSD_PORT-80}     # WEBSMSD internal port
     volumes:
-      - tele-conf:/srv
+      - tele-conf:/srv                      # Persistent storage
       - ./pulse:/run/pulse:rshared          # Use host audio
       - /etc/localtime:/etc/localtime:ro    # Use host timezone
 
 volumes:
-  tele-conf:
+  tele-conf:                                # Persistent storage

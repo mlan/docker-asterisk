@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 50_nft-load
+# 50-autoban-read-nftfile
 #
 # Load NFT state from file.
 #

@@ -5,6 +5,7 @@
 - [privatedial](src/privatedial) Work around bug in [MinivmGreet()](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmGreet).
 - [docker](README.md) Advancing documentation.
 - [websms](src/websms) `WEBSMSD_PORT=80` sets PHP web server port, used by WebSMS.
+- [repo](src) Harmonized file names in `entrypoint.d` and `exitpoint.d`.
 
 # 0.8.0
 
@@ -23,7 +24,7 @@
 # 0.7.0
 
 - [acme](src/acme/bin/dumpcerts.sh) Support both v1 and v2 formats of the acme.json file.
-- [acme](src/acme/entrypoint.d/50_setup-tlscert-acme) Support both host and domain wildcard TLS certificates.
+- [acme](src/acme/entrypoint.d/50-acme-monitor-tlscert) Support both host and domain wildcard TLS certificates.
 - [websms](src/websms) Complete documentation.
 - [privatedial](src/privatedial) Advancing documentation.
 - [docker](README.md) Advancing documentation.

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 50_update-loglevel
+# 50-docker-update-loglevel
 #
 # If SYSLOG_LEVEL is not empty update syslog level
 #

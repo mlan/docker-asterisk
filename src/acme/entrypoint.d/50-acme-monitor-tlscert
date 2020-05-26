@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 50_setup-tlscert-acme
+# 50-acme-monitor-tlscert
 #
 #
 #

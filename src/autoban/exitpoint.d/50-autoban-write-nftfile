@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 50_nft-save
+# 50-autoban-write-nftfile
 #
 # Save current NFT state to file.
 #

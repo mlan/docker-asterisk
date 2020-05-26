@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 51_setup-tlscert-selfsigned
+# 51-asterisk-generate-tlscert
 #
 #
 #

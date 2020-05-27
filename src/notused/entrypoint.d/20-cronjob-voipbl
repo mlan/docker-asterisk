@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# 20_cronjob-voipbl
+# 20-cronjob-voipbl
 #
 # DO NOT USE: blacklist is too long and asterisk chokes
 #

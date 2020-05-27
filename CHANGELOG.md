@@ -6,7 +6,7 @@
 - [docker](README.md) Advancing documentation.
 - [websms](src/websms) `WEBSMSD_PORT=80` sets PHP web server port, used by WebSMS.
 - [repo](src) Harmonized file names in `entrypoint.d` and `exitpoint.d`.
-- [repo](src) Use git submodule for third party projects.
+- [repo](sub) Use git submodule for third party projects.
 
 # 0.8.0
 

@@ -10,4 +10,4 @@ before_script:
   - sudo apt-get update -qq
 
 script:
-  - make test-up_0
+  - make test_0

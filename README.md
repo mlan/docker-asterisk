@@ -261,7 +261,12 @@ It’s recommended that the minimum strength of a password used in a SIP digests
 
 The `mlan/asterisk` container supports two-way audio using [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/). This allows you to use the Asterisk console channel to do some management or debugging. The audio stream is passed between container and host by sharing the user's pulse unix socket.
 
-The method described here was chosen since it allows audio to be enabled on an already running container. The method involves a directory `./pulse:/run/pulse:rshared ` on the host being mounted on the container, see the [compose example](#docker-compose-example), and environment variables being set within the container, allowing pulse to locate the socket; `PULSE_SERVER=unix:/run/pulse/socket` and cookie; `PULSE_COOKIE=/run/pulse/cookie`.
+The method described here was chosen since it allows audio to be enabled on an already running container. The method involves a directory `./pulse:/run/pulse:rshared ` on the host being mounted on the container, see the [compose example](#docker-compose-example), and environment variables being set within the container, allowing pulse to locate the socket; `PULSE_SERVER=unix:/run/pulse/socket` and cookie; `PULSE_COOKIE=/run/pulse/cookie`. To arrange the pulse directory on the host, from a shell, run:
+
+```sh
+mkdir -p pulse
+touch pulse/socket
+```
 
 Often we are not interested in sharing audio with the container and the above bind mount and environment variables achieve nothing. But should there come a time when we want to enable the audio, we can do so in 3 simple steps: 1) Mount the user's pulse socket in the host directory `./pulse/socket` and, 2) copy the user's pulse cookie there too, `./pulse/cookie`. 3) Have asterisk, running inside the container, load the `chan_alsa.so` module. From a shell running on the host, these steps are:
 
@@ -270,6 +275,7 @@ cp -f ${PULSE_COOKIE-$HOME/.config/pulse/cookie} pulse/cookie
 sudo mount --bind $(pactl info | sed '1!d;s/.*:\s*//g') pulse/socket
 docker-compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so'
 ```
+
 A limitation of this approach is that you need sudo/root access do be able to bind mount on the host. Naturally, there needs to be a pulse server running on the host for any of this to work.
 
 ## Playing with audio

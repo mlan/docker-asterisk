@@ -50,11 +50,6 @@ dep/autoban/php/ami.class.inc:
 	mkdir -p dep/autoban/php
 	wget -O dep/autoban/php/ami.class.inc https://raw.githubusercontent.com/ofbeaton/phpami/master/src/Ami.php
 
-dep/asterisk/bin/ast_tls_cert:
-	mkdir -p dep/asterisk/bin
-	wget -O dep/asterisk/bin/ast_tls_cert https://raw.githubusercontent.com/asterisk/asterisk/master/contrib/scripts/ast_tls_cert
-	chmod a+x dep/asterisk/bin/ast_tls_cert
-
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
 

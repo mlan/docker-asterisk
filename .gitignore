@@ -1,3 +1,4 @@
 *private
 local*
-dep
+sub/*
+!sub/module

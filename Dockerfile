@@ -42,7 +42,7 @@ COPY	src/*/bin $DOCKER_BIN_DIR/
 COPY	src/*/entrypoint.d $DOCKER_ENTRY_DIR/
 COPY	src/*/exitpoint.d $DOCKER_EXIT_DIR/
 COPY	src/*/php $DOCKER_PHP_DIR/
-COPY	dep/*/php $DOCKER_PHP_DIR/
+COPY	sub/*/php $DOCKER_PHP_DIR/
 COPY	src/*/config $DOCKER_SEED_CONF_DIR/
 COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 

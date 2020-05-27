@@ -1,0 +1,3 @@
+[submodule "sub/module/phpami"]
+	path = sub/module/phpami
+	url = https://github.com/ofbeaton/phpami.git

@@ -43,12 +43,15 @@ build: depends
 build_%: depends
 	docker build $(BLD_ARG) --target $* -t $(BLD_REPO):$(call _version,$*,$(BLD_VER)) .
 
-depends: Dockerfile dep/autoban/php/ami.class.inc
+depends: Dockerfile submodule sub/autoban/php/ami.class.inc
 	
 
-dep/autoban/php/ami.class.inc:
-	mkdir -p dep/autoban/php
-	wget -O dep/autoban/php/ami.class.inc https://raw.githubusercontent.com/ofbeaton/phpami/master/src/Ami.php
+submodule:
+	git submodule update --init --recursive
+
+sub/autoban/php/ami.class.inc:
+	mkdir -p sub/autoban/php
+	cp sub/module/phpami/src/Ami.php sub/autoban/php/ami.class.inc
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq

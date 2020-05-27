@@ -4,10 +4,6 @@
 
 - README.md
 
-## Dependencies
-
-- Reorganize. Use git submodules?
-
 ## PrivateDial
 
 - Make IVR custom-able

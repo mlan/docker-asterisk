@@ -26,7 +26,7 @@ source docker-common.sh
 #
 
 #
-# Run all executable scipts in entry direcory
+# Run all executable scripts in entry directory
 #
 run_dir() {
 	local rundir=${1}
@@ -36,9 +36,9 @@ run_dir() {
 }
 
 #
-# If the service is running, send it the TERM signal, and the CONT signal. 
-# If ./run exits, start ./finish if it exists.
-# After it stops, do not restart service.
+# If the service is running, send it the TERM signal, and the CONT signal.
+# If both files ./run and ./finish exits, execute ./finish.
+# After it stops, do not restart the service.
 #
 sv_down() { sv down ${DOCKER_RUNSV_DIR}/* ;}
 
@@ -55,7 +55,7 @@ term_trap() {
 
 
 #
-# Stage 0) Register signal hanglers and redirect stderr
+# Stage 0) Register signal handlers and redirect stderr
 #
 
 exec 2>&1

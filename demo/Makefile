@@ -159,7 +159,7 @@ sound_4: apk_add_pulseaudio-utils
 
 sound_5:
 	docker-compose exec $(SRV_NAME) asterisk -rx \
-	'channel originate console/+12025550160@dp_entry_user_calling application playback hello-world'
+	'channel originate console/+12025550160@dp_entry_call_inout application playback hello-world'
 
 sound_6:
 	docker-compose exec $(SRV_NAME) asterisk -rx 'console dial t@dp_ivr_recgreet'

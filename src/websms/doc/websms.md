@@ -133,8 +133,8 @@ When using the PrivateDial dial-plan (extensions.conf), which has integrated the
 
 ```ini
 [astqueue]
-channel_context = dp_entry_channel_open
-context         = dp_entry_trunk_texting
+channel_context = dp_entry_answer
+context         = dp_entry_text_in
 ```
 
 ### Configuring WebSMS, websms.conf
@@ -192,8 +192,8 @@ auth_secret     = secret
 [websmsd]
 
 [astqueue]
-channel_context = dp_entry_channel_open
-context         = dp_entry_trunk_texting
+channel_context = dp_entry_answer
+context         = dp_entry_text_in
 ```
 
 ### Multiple interface configuration
@@ -229,11 +229,11 @@ As can be seen, parameters that are common between configurations does not need 
 The channel variable, `WEBSMS_INDEX`, needs to match one of the indexes used in the `[websms]` section. Lets look at an example snippet of `pjsip_wizard.conf`
 
 ```ini
-[john.doe](tpl_softphone)
+[john.doe](w_term:mydoe)
 hint_exten = +12025550160
 endpoint/set_var = WEBSMS_INDEX=api-1
 
-[jane.doe](tpl_softphone)
+[jane.doe](w_term:mydoe)
 hint_exten = +12025550183
 endpoint/set_var = WEBSMS_INDEX=api-2
 ```
@@ -322,12 +322,12 @@ around that we encode ([RFC3986](https://tools.ietf.org/html/rfc3986), which obs
 
 The structure of a [call file](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Call+FIles) is illustrated by the example below, which includes a encoded MESSAGE(body).
 ```ini
-Channel: Local/+12025550160@dp_entry_channel_open
+Channel: Local/+12025550160@dp_entry_answer
 CallerID: "" <+15017122661>
 WaitTime: 45
 MaxRetries: 0
 RetryTime: 300
-Context: dp_entry_trunk_texting
+Context: dp_entry_text_in
 Extension: +12025550160
 Priority: 1
 Archive: yes

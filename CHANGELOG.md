@@ -1,9 +1,12 @@
-# 0.8.1
+# 0.9.0
 
 - [privatedial](src/privatedial) Break out endpoints from pjsip_wizard.conf to pjsip_endpoint.conf.
 - [privatedial](src/privatedial) Use Hangup() instead of Goto() when entering extension `h`.
 - [privatedial](src/privatedial) Work around bug in [MinivmGreet()](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmGreet).
-- [docker](README.md) Advancing documentation.
+- [privatedial](src/privatedial) Renamed dialplan contexts.
+- [privatedial](src/privatedial) Dialplan `[sub_voicemail]` now handles CHANUNAVAIL correctly.
+- [docker](README.md) Complete documentation.
+- [docker](src/docker) Now use alpine:3.12 (asterisk:16.7.0).
 - [websms](src/websms) `WEBSMSD_PORT=80` sets PHP web server port, used by WebSMS.
 - [repo](src) Harmonized file names in `entrypoint.d` and `exitpoint.d`.
 - [repo](sub) Use git submodule for third party projects.
@@ -81,9 +84,9 @@
 - [asterisk](src/asterisk) Configuration now supports UDP, TCP and TLS and SDES.
 - [asterisk](src/asterisk) Generate self-signed TLS certificate.
 - [asterisk](src/asterisk) Improved structure of `pjsip_wizard.conf`.
-- [asterisk](src/asterisk) Don't answer when device is UNAVAILABLE in `[dp_channel_answer]`
+- [asterisk](src/asterisk) Don't answer when device is UNAVAILABLE in `[dp_answer]`
 - [docker](src/docker) The [setup-runit.sh](src/docker/bin/setup-runit.sh) script now have options:  down, force, log, name, source, quiet.
-- [websms](src/websms) Added `number_format` parameter. Set to `omit+` to strip phone numbers from leading +.
+- [websms](src/websms) Added `val_numform` parameter. Set to `E164` to strip phone numbers from leading +.
 
 # 0.2.1
 

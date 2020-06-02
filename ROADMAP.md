@@ -1,9 +1,5 @@
 # Road map
 
-## Documentation
-
-- README.md
-
 ## PrivateDial
 
 - Make IVR custom-able

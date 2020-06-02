@@ -20,7 +20,8 @@ Feature list follows below
 - [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files
 - Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
 - Consolidated configuration and run data under `/srv` to facilitate persistent storage
-- [Container audio](#container-audio) using the PulseAudio unix socket of the host.
+- [Container audio](#container-audio) using the pulse socket of the host.
+- Use [runit](http://smarden.org/runit/), providing an init scheme and service supervision.
 - Health check
 - Log directed to docker daemon with configurable level
 - Multi-staged build providing the images `mini`, `base`, `full` and `xtra`
@@ -39,7 +40,7 @@ The `base` tag also include support for TLS, logging, WebSMS and AutoBan. `full`
 
 # Usage
 
-Often you want to configure Asterisk and its components. There are different methods available to achieve this. Moreover docker volumes or host directories with desired configuration files can be mounted in the container. And finally you can `docker exec` into a running container and modify configuration files directly.
+There are many tings to consider when configuring Asterisk and its components. We discuss some fundamentals here and in the separate documentation for the [add-ons](#add-ons).
 
 If you want to test the image right away, probably the best way is to clone the [github](https://https://github.com/mlan/docker-asterisk) repository and run the demo therein.
 
@@ -101,7 +102,7 @@ From the Asterisk CLI you can type
 pjsip show endpoints
 ```
 
-to see the endpoints (soft phones) that are configured in the `/etc/asterisk/pjsip_wizard.conf` configuration file that comes with the image by default.
+to see the endpoints (soft phones) that are configured in the `/etc/asterisk/pjsip_endpoint.conf` configuration file that comes with the image by default.
 
 When you are done testing you can destroy the test container by typing
 
@@ -147,21 +148,21 @@ The configuration files mentioned above are perhaps not the ones that require th
 
 ## Persistent storage
 
-By default, docker will store the configuration and run data within the container. This has the drawback that the configuration and state of the applications are lost together with the container should it be deleted. It can therefore be a good idea to use docker volumes and mount the configuration and spool directories directories there so that the data will survive a container deletion.
+By default, docker will store the configuration and run data within the container. This has the drawback that the configuration and state of the applications are lost together with the container, should it be deleted. It can therefore be a good idea to use docker volumes and mount the configuration and spool directories directories on such volumes so that the data will survive a container deletion.
 
-To facilitate such approach, to achieve persistent storage, the configuration and spool directories of the services has been consolidated under `/srv`. The applications running inside the container still finds files in their usual locations since symbolic links are there pointing back to `/srv`. With this approach simply mounting a docker volume at `/srv` let you keep application configuration and state persistent.
+To facilitate such approach, to achieve persistent storage, the configuration and spool directories of the services has been consolidated under `/srv`. The applications running inside the container still finds files in their usual locations since symbolic links are placed in these locations pointing back to `/srv`. With this approach simply mounting a docker volume at `/srv` let you keep application configuration and state persistent.
 
-The volume `tele-conf` in the [demo](#docker-compose-example) described above achieves this. An other way would be to run the container like this:
+The volume `tele-conf` in the [demo](#docker-compose-example), described above, achieves this. An other way would be to run the container like this:
 
 ```
 docker run -d -v tele-conf:/srv ... mlan/asterisk
 ```
 
-## Initialization procedure
+## Seeding procedure
 
 The `mlan/asterisk` image is built with sample configuration files placed in a seeding directory. The directories where the applications look for configuration files are empty. When the container is started the configuration directory, `etc/asterisk` , is scanned. If it is found to be empty, sample configuration files from the seeding directory are copied to the configuration directory.
 
-The initialization procedure will leave any existing configuration untouched. If configuration files are found, nothing is copied or modified during start up. Only when `etc/asterisk` is found to be empty, will seeding files be copied. This behavior should keep your conflagration safe also when upgrading to a new version of the `mlan/asterisk` image. Should a new version of the `mlan/asterisk` image come with interesting update to any sample configuration file, it need to manually be copied or merged with the present configuration files.
+The seeding procedure will leave any existing configuration untouched. If configuration files are found, nothing is copied or modified during start up. Only when `etc/asterisk` is found to be empty, will seeding files be copied. This behavior should keep your conflagration safe also when upgrading to a new version of the `mlan/asterisk` image. Should a new version of the `mlan/asterisk` image come with interesting update to any sample configuration file, it needs to manually be copied or merged with the present configuration files.
 
 ## Logging `SYSLOG_LEVEL`
 
@@ -202,39 +203,54 @@ Second, you can stay with the default or user-defined `bridge` mode and instead 
 
 ## Network address translation (NAT)
 
-[Network address translation (NAT)](https://en.wikipedia.org/wiki/Network_address_translation) is a method of remapping one IP [address space](https://en.wikipedia.org/wiki/Address_space) into another by modifying [network address](https://en.wikipedia.org/wiki/Network_address) information in the [IP header](https://en.wikipedia.org/wiki/IP_header) of packets while they are in transit across a traffic [routing device](https://en.wikipedia.org/wiki/Router_(computing)). Here two network environments often results in NAT being used. First, the SIP server we deploy using `mlan/asterisk` runs inside a docker container and depending on what type of network we choose docker will start a proxy process.
+[Network address translation (NAT)](https://en.wikipedia.org/wiki/Network_address_translation) is a method of remapping one IP [address space](https://en.wikipedia.org/wiki/Address_space) into another by modifying the [network address](https://en.wikipedia.org/wiki/Network_address) information in the [IP header](https://en.wikipedia.org/wiki/IP_header) of packets while they are in transit across a traffic [routing device](https://en.wikipedia.org/wiki/Router_(computing)). Network environments often results in NAT being used. On the one hand, the SIP server we deploy using `mlan/asterisk` often uses a Docker [bridge network](https://docs.docker.com/network/bridge/), connecting Dockers local network with the one the host is connected to. On the other, SIP clients running on mobile phones often end up connect to remote local networks.
 
-### Sip host and domain name
+### SIP server address
 
-The host name need to be set in three files:
+To provide SIP clients with the external network address of a server behind NAT it can explicitly be defined on the transport used which is configured in `pjsip_transport.conf`
 
-- docker/docker-compose, e.g., `docker run -e HOSTNAME=sip.example.com ...`
-- `pjsip-local.conf` `domain = sip.example.com`, `external_media_address = sip.example.com`, and `external_signaling_address = sip.example.com`
-- `pjsip_wizard.conf` `endpoint/from_domain = sip.example.com`
+```ini
+[t_wan](!)
+type = transport
+bind = 0.0.0.0:5060
+domain = example.com
+external_signaling_address = sip.example.com
+external_media_address = sip.example.com
+```
 
-With these settings you should not need ICE, STUN or TURN.
+For endpoints connected to remote local networks you need the following parameters which are defined in `pjsip_wizard.conf`
+
+```ini
+[_nat](!)
+endpoint/rewrite_contact = yes
+endpoint/force_rport = yes
+endpoint/direct_media = no
+endpoint/rtp_symmetric = yes
+```
+
+### ICE, STUN, and TURN
+
+Sometimes need for other more elaborate NAT traversal methods; [ICE, STUN or TURN](https://wiki.asterisk.org/wiki/display/~jcolp/ICE,+STUN,+and+TURN+Support), which are out of scope for this text.
 
 ## Security - Privacy and integrity
 
-[Transport Layer Security](http://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS) provides encryption for call signaling. A excellent guide for setting up TLS between Asterisk and a SIP client, involving creating key files, modifying Asterisk's SIP configuration to enable TLS, creating a SIP endpoint/user that's capable of TLS, and modifying the SIP client to connect to Asterisk over TLS, can be found here [Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial). 
+[Transport Layer Security](http://en.wikipedia.org/wiki/Transport_Layer_Security) (TLS) provides encryption for call signaling. A excellent guide for setting up TLS between Asterisk and a SIP client, involving creating key files, modifying Asterisk's SIP configuration to enable TLS, creating a SIP endpoint/user that's capable of TLS, and modifying the SIP client to connect to Asterisk over TLS, can be found here [Secure Calling Tutorial](https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial).
 
-The PrivateDial configuration is already set up to provide both UDP and TCP. TLS and SDES SRTP are also prepared, but a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed for their activation. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key will automatically be generated.
+The PrivateDial configuration is already set up to provide both UDP and TCP transport. TLS, SDES and DTSL SRTP are also prepared, but a [TLS/SSL server certificate](https://en.wikipedia.org/wiki/Public_key_certificate) and key are needed for their activation. If the certificate and key do not exist when the container starts a [self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate) and private key will automatically be generated.
 
 #### `TLS_KEYBITS`, `TLS_CERTDAYS`
 
-TODO!
-
- `TLS_KEYBITS=2048`, `TLS_CERTDAYS=30`.
-
-There is also a mechanism to use ACME lets encrypt certificates.
+The private key length and self-signed certificate validity duration can be configured using the environment variables: `TLS_KEYBITS=2048` and `TLS_CERTDAYS=30`.
 
 ### Let’s Encrypt LTS certificates using Traefik
 
-Let’s Encrypt provide free, automated, authorized certificates when you can demonstrate control over your domain. Automatic Certificate Management Environment (ACME) is the protocol used for such demonstration. There are many agents and applications that supports ACME, e.g., [certbot](https://certbot.eff.org/). The reverse proxy [Traefik](https://docs.traefik.io/) also supports ACME.
+[Let’s Encrypt](https://letsencrypt.org/) provide free, automated, authorized certificates when you can demonstrate control over your domain. Automatic Certificate Management Environment (ACME) is the protocol used for such demonstration.
+
+There are many agents and applications that supports ACME, e.g., [certbot](https://certbot.eff.org/). The reverse proxy [Traefik](https://docs.traefik.io/) also supports ACME. `mlan/asterisk` can use the LTS certificates Traefik has acquired.
 
 #### `ACME_FILE`
 
-The `mlan/asterisk` image looks for a file `ACME_FILE=/acme/acme.json`. at container startup and every time this file changes certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` is will be used for TLS support.
+The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` is will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and every time it changes the certificates will be exported anew. So when Traefik renews its certificates asterisk will automatically also renew its certificate.
 
 So reusing certificates from Traefik will work out of the box if the `/acme` directory in the Traefik container is also mounted in the `mlan/asterisk` container.
 
@@ -326,22 +342,23 @@ WebSMS uses the PHP integrated web server. The environment variable `WEBSMSD_POR
 
 # Implementation
 
-TODO!
+Here some implementation details are presented.
 
-### Startup
+## Container init scheme
 
-entrypoint.d
+The `mlan/asterisk` container use [runit](http://smarden.org/runit/), providing an init scheme and service supervision, allowing multiple services to be started.
 
-Persistence
+When the container is started, execution is handed over to the script [`entrypoint.sh`](src/docker/bin/entrypoint.sh). It has 4 stages; 0) *register* the SIGTERM [signal (IPC)](https://en.wikipedia.org/wiki/Signal_(IPC)) handler, which is programmed to run all exit scripts in `/etc/exitpoint.d/` and terminate all services, 1) *run* all entry scripts in `/etc/entrypoint.d/`, 2) *start* services registered in `/etc/service/`, 3) *wait* forever, allowing the signal handler to catch the SIGTERM and run the exit scripts and terminate all services.
 
-### utility scripts
+The entry scripts are responsible for tasks like, seeding configurations, register services and reading state files. These scripts are run before the services are started.
 
-`Dockerfile`
+There is also exit script that take care of tasks like, writing state files. These scripts are run when docker sends the SIGTERM signal to the main process in the container. Both `docker stop` and `docker kill --signal=TERM` sends SIGTERM.
+
+## Build assembly
+
+The entry and exit scripts, discussed above, as well as other utility scrips are copied to the image during the build phase. The source file tree was designed to facilitate simple scanning, using wild-card matching, sub-module directories for files that should be copied to image. Sub-directory names indicate its file types so they can be copied to the correct locations. The code snippet in the `Dockerfile` which achieves this is show below.
+
 ```dockerfile
-#
-# Copy utility scripts including entrypoint.sh to image
-#
-
 COPY	src/*/bin $DOCKER_BIN_DIR/
 COPY	src/*/entrypoint.d $DOCKER_ENTRY_DIR/
 COPY	src/*/exitpoint.d $DOCKER_EXIT_DIR/
@@ -351,37 +368,8 @@ COPY	src/*/config $DOCKER_SEED_CONF_DIR/
 COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 ```
 
-`.dockerignore`
+There is also a mechanism for excluding files from being copied to the image from some sub-module directories. Sub-module directories to be excluded are simply listed in the file [`.dockerignore`](https://docs.docker.com/engine/reference/builder/#dockerignore-file). Since we don't want files from the module `notused` so we list it in the `.dockerignore` file:
 
 ```sh
 src/notused
-```
-
-### Build variables
-
-| Variable             | Default                    | Description            |
-| -------------------- | -------------------------- | ---------------------- |
-| DOCKER_ACME_SSL_DIR  | ${DOCKER_SSL_DIR}/acme     |                        |
-| DOCKER_AST_SSL_DIR   | ${DOCKER_SSL_DIR}/asterisk |                        |
-| DOCKER_BIN_DIR       | /usr/local/bin             |                        |
-| DOCKER_CONF_DIR      | /etc/asterisk              |                        |
-| DOCKER_ENTRY_DIR     | /etc/entrypoint.d          |                        |
-| DOCKER_EXIT_DIR      | /etc/exitpoint.d           |                        |
-| DOCKER_LIB_DIR       | /var/lib/asterisk          |                        |
-| DOCKER_LOG_DIR       | /var/log/asterisk          |                        |
-| DOCKER_MOH_DIR       | ${DOCKER_LIB_DIR}/moh      |                        |
-| DOCKER_NFT_DIR       | /var/lib/nftables          |                        |
-| DOCKER_NFT_FILE      | autoban.nft                |                        |
-| DOCKER_PERSIST_DIR   | /srv                       |                        |
-| DOCKER_PHP_DIR       | /usr/share/php7            |                        |
-| DOCKER_RUN_DIR       | /var/run                   | Only in setup-runit.sh |
-| DOCKER_RUNSV_DIR     | /etc/service               |                        |
-| DOCKER_SEED_CONF_DIR | /usr/share/asterisk/config |                        |
-| DOCKER_SEED_NFT_DIR  | /etc/nftables              |                        |
-| DOCKER_SPOOL_DIR     | /var/spool/asterisk        |                        |
-| DOCKER_SSL_DIR       | /etc/ssl                   |                        |
-
-
-```
-
 ```

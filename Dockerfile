@@ -47,9 +47,7 @@ COPY	src/*/config $DOCKER_SEED_CONF_DIR/
 COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 
 #
-# Install
-#
-#
+# Facilitate persistent storage and install asterisk
 #
 
 RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
@@ -83,15 +81,14 @@ CMD	["asterisk", "-fp"]
 #
 # target: base
 #
-# Configure Runit, a process manager
-#
+# asterisk add-ons: WebSMS and AutoBan
 #
 #
 
 FROM	mini AS base
 
 #
-# Install
+# Install packages used by the add-ons and register services
 #
 
 RUN	apk --no-cache --update add \
@@ -139,7 +136,8 @@ HEALTHCHECK CMD sv status ${DOCKER_RUNSV_DIR}/*
 FROM	base AS full
 
 #
-# Install
+# Install packages supporting audio
+#
 
 RUN	apk --no-cache --update add \
 	asterisk-alsa \
@@ -151,14 +149,15 @@ RUN	apk --no-cache --update add \
 #
 # target: extra
 #
-#
+# all asterisk packages
 #
 #
 
 FROM	full AS xtra
 
 #
-# Install
+# Install all asterisk packages
+#
 
 RUN	apk --no-cache --update add \
 	asterisk-cdr-mysql \

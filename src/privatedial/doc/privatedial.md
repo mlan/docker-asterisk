@@ -41,15 +41,17 @@ When configuring the asterisk sever the following files often needs to be update
 
 ### SIP Trunk
 
-PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf` . For convenience the templates, `tpl_trunk`, `tpl_trunkout` and `tpl_trunkin` has been defined in `pjsip_wizard.conf`.
+PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf`. For convenience the template, `w_trunk` has been defined in `pjsip_wizard.conf`.
 
 Add an endpoint entry in `pjsip_endpoint.conf` based on the setup instructions provided by your trunk provider. This entry also hold your authentication credentials.
 
 `pjsip_endpoint.conf`
 
 ```ini
-[trunk:itsp](tpl_trunk)
-remote_hosts = sip.itsp.com
+[itsp:mydoe](w_trunk)
+remote_hosts = sip.mydoe.com
+sends_auth = yes
+sends_registrations = yes
 outbound_auth/username = username
 outbound_auth/password = password
 ```
@@ -58,20 +60,18 @@ With some ITSP SIP servers you need to explicitly state which transport to use. 
 
 ### SIP Users
 
-PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf`. For convenience the template, `tpl_softphone` has been defined in `pjsip_wizard.conf`.
+PJSIP endpoints are defined using the [PJSIP Wizard](https://wiki.asterisk.org/wiki/display/AST/PJSIP+Configuration+Wizard) in the configuration file `pjsip_endpoint.conf`. For convenience the template, `w_term_io` and `w_term_i` has been defined in `pjsip_wizard.conf`.
 
 Add an endpoint entry in `pjsip_endpoint.conf` for each user. Each user can simultaneously connect with several soft-phones, using the same account.
 
 `pjsip_endpoint.conf`
 
 ```ini
-[tpl_phone](!,tpl_softphone)
-endpoint/from_domain = example.com
-endpoint/language = en
-endpoint/set_var = TRUNK_ENDPOINT=trunk:itsp
+[w_term:mydoe](!,w_term_io)
+endpoint/set_var = TRUNK_ENDPOINT=itsp:mydoe
 endpoint/set_var = WEBSMS_INDEX=
 
-[john.doe](tpl_phone)
+[john.doe](w_term:mydoe)
 hint_exten = +12025550160
 endpoint/callerid = John Doe <+12025550160>
 endpoint/mailboxes = john.doe@example.com
@@ -103,11 +103,12 @@ When communicating with devices on local networks a more elaborate mechanism usi
 `pjsip_transport.conf`
 
 ```ini
-[tpl_wan](!)
+[t_wan](!)
 type = transport
+bind = 0.0.0.0:5060
 domain = example.com
-external_media_address = sip.example.com
 external_signaling_address = sip.example.com
+external_media_address = sip.example.com
 ```
 
 #### Custom SIP ports
@@ -120,12 +121,11 @@ When using non-standard ports the amount of attacks drop significantly, so it mi
 `pjsip_transport.conf`
 
 ```ini
-[tpl_wan](!)
+[t_wan](!)
 type = transport
 bind = 0.0.0.0:5560
 ...
-[tls](tpl_wan)
-type = transport
+[tls](t_wan)
 bind = 0.0.0.0:5561
 ...
 ```
@@ -137,7 +137,7 @@ To enable encryption of both the session and data packages (TLS and SDES SRTP) a
 `pjsip_transport.conf`
 
 ```ini
-[tls](tpl_wan)
+[tls](t_wan)
 cert_file = /etc/ssl/asterisk/asterisk.cert.pem
 priv_key_file = /etc/ssl/asterisk/asterisk.priv_key.pem
 ```
@@ -152,29 +152,29 @@ The PrivateDial has its dialplan contexts organized in 3 levels. The entry, acti
 
 #### Entry context
 
-The entry contexts are used to grant more access to users calling or texting as compared to external trunk calls or texts. All entry context start with including the `dp_lookup_user` context so that extension hints are always available.
+The entry contexts are used to grant more access to users calling or texting as compared to external trunk calls or texts. All entry context start with including the `dp_lookup` context so that extension hints are always available.
 
 ```ini
-[dp_entry_user_calling](+)
-include => dp_lookup_user
+[dp_entry_call_inout](+)
+include => dp_lookup
 include => dp_ivr_recgreet
-include => dp_user_dialing
+include => dp_call_inout
 
-[dp_entry_trunk_calling](+)
-include => dp_lookup_user
-include => dp_trunk_dialing
+[dp_entry_call_in](+)
+include => dp_lookup
+include => dp_call_in
 
-[dp_entry_user_texting](+)
-include => dp_lookup_user
-include => dp_user_texting
+[dp_entry_text_inout](+)
+include => dp_lookup
+include => dp_text_inout
 
-[dp_entry_trunk_texting](+)
-include => dp_lookup_user
-include => dp_trunk_texting
+[dp_entry_text_in](+)
+include => dp_lookup
+include => dp_text_in
 
-[dp_entry_channel_open](+)
-include => dp_lookup_user
-include => dp_channel_answer
+[dp_entry_answer](+)
+include => dp_lookup
+include => dp_answer
 ```
 
 #### Action context
@@ -182,38 +182,38 @@ include => dp_channel_answer
 The action contexts calls the subroutines. Most subroutines use the `${HINT}` channel variable to identify the endpoint so `${EXTEN}` is set to the special `s`. Each subroutine is called in its turn and the call is not hung up until all subroutine calls has been made.
 
 ```ini
-[dp_lookup_user]
+[dp_lookup]
 ; hints are placed here see hint_exten in pjsip_wizard.conf
 exten => _0ZXXXXXX.,1,Goto(${CONTEXT},+${GLOBAL(CONTRY_CODE)}${EXTEN:1},1)
 exten => _ZXXXXXX.,1,Goto(${CONTEXT},+${EXTEN},1)
 
-[dp_user_dialing]
+[dp_call_inout]
 exten => _[+0-9].,1,NoOp()
- same => n,Gosub(sub_dial_user,s,1(${HINT}))
+ same => n,Gosub(sub_dial_term,s,1(${HINT}))
  same => n,Gosub(sub_voicemail,s,1(${HINT}))
- same => n,Gosub(sub_dial_out,${EXTEN},1(${HINT}))
+ same => n,Gosub(sub_dial_trunk,${EXTEN},1(${HINT}))
  same => n,Hangup()
 
-[dp_trunk_dialing]
+[dp_call_in]
 exten => _[+0-9].,1,NoOp()
- same => n,Gosub(sub_dial_user,s,1(${HINT}))
+ same => n,Gosub(sub_dial_term,s,1(${HINT}))
  same => n,Gosub(sub_voicemail,s,1(${HINT}))
  same => n,Hangup()
 
-[dp_user_texting]
+[dp_text_inout]
 exten => _[+0-9].,1,NoOp()
  same => n,Gosub(sub_rewrite_from,s,1)
- same => n,Gosub(sub_text_user,s,1(${HINT}))
- same => n,Gosub(sub_text_out,${EXTEN},1(${HINT}))
+ same => n,Gosub(sub_text_term,s,1(${HINT}))
+ same => n,Gosub(sub_text_trunk,${EXTEN},1(${HINT}))
  same => n,Hangup()
 
-[dp_trunk_texting]
+[dp_text_in]
 exten => _[+0-9].,1,NoOp()
  same => n,Gosub(sub_decode_body,s,1)
- same => n,Gosub(sub_text_user,s,1(${HINT}))
+ same => n,Gosub(sub_text_term,s,1(${HINT}))
  same => n,Hangup()
 
-[dp_channel_answer]
+[dp_answer]
 exten => _[+0-9].,1,Goto(dev-${DEVICE_STATE(${HINT})})
  same => n(dev-NOT_INUSE),NoOp()
  same => n(dev-INUSE),NoOp()

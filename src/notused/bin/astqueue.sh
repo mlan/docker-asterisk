@@ -7,8 +7,8 @@ destexten=${2-+15558675310}
 message="${3-Local time is $(date)}"
 
 astspooldir=/var/spool/asterisk/outgoing
-message_context=dp_entry_trunk_texting
-exten_context=dp_entry_channel_open
+message_context=dp_entry_text_in
+exten_context=dp_entry_answer
 
 maxretry=100
 retryint=30

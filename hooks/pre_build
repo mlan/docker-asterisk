@@ -1,0 +1,15 @@
+#!/bin/bash
+# hooks/pre_build
+# $DOCKER_REPO and $DOCKER_TAG are injected into the build environment
+
+#printenv
+
+#
+#git submodule update --init --recursive
+#
+
+echo "mkdir -p sub/autoban/php"
+mkdir -p sub/autoban/php
+
+echo "ln -f sub/module/phpami/src/Ami.php sub/autoban/php/ami.class.inc"
+ln -f sub/module/phpami/src/Ami.php sub/autoban/php/ami.class.inc

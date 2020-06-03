@@ -327,7 +327,7 @@ make sound_disable
 
 The `mlan/asterisk` repository contains add-ons that utilizes and extends the already impressive capabilities of Asterisk.
 
-## [PrivateDial](src/privatedial/README.md)
+## [PrivateDial](src/privatedial)
 
 PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to residential use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
 
@@ -335,11 +335,11 @@ It uses the [PJSIP](https://www.pjsip.org/) [channel driver](https://wiki.asteri
 
 The underlying design idea is to separate the dial plan functionality from the user data. To achieve this all user specific data has been pushed out from the main `extensions.conf` file.
 
-## [AutoBan](src/autoban/README.md)
+## [AutoBan](src/autoban)
 
 AutoBan is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. The intrusion detection is achieved by Asterisk itself. Asterisk generates security events which AutoBan listens to on the AMI interface. When security events occurs AutoBan start to watch the source IP address. Intrusion prevention is achieved by AutoBan asking the Linux kernel firewall [nftables](https://netfilter.org/projects/nftables/) to drop packages from offending source IP addresses.
 
-## [WebSMS](src/websms/README.md)
+## [WebSMS](src/websms)
 
 Asterisk supports [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)), allowing SMS to be sent using the extended SIP method; MESSAGE, natively. Still many [Internet Telephony Service Providers](wikipedia.org/wiki/Internet_telephony_service_provider) (ITSP) does not offer SIMPLE but instead sends and receives SMS using a web [API](https://en.wikipedia.org/wiki/Application_programming_interface) based on [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) requests. This leaves your Asterisk server without a mechanisms to exchange SMS externally.
 
@@ -365,7 +365,7 @@ There is also exit script that take care of tasks like, writing state files. The
 
 ## Build assembly
 
-The entry and exit scripts, discussed above, as well as other utility scrips are copied to the image during the build phase. The source file tree was designed to facilitate simple scanning, using wild-card matching, sub-module directories for files that should be copied to image. Sub-directory names indicate its file types so they can be copied to the correct locations. The code snippet in the `Dockerfile` which achieves this is show below.
+The entry and exit scripts, discussed above, as well as other utility scrips are copied to the image during the build phase. The source file tree was designed to facilitate simple scanning, using wild-card matching, of source-module directories for files that should be copied to image. Sub-directory names indicate its file types so they can be copied to the correct locations. The code snippet in the `Dockerfile` which achieves this is show below.
 
 ```dockerfile
 COPY	src/*/bin $DOCKER_BIN_DIR/
@@ -377,7 +377,7 @@ COPY	src/*/config $DOCKER_SEED_CONF_DIR/
 COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 ```
 
-There is also a mechanism for excluding files from being copied to the image from some sub-module directories. Sub-module directories to be excluded are simply listed in the file [`.dockerignore`](https://docs.docker.com/engine/reference/builder/#dockerignore-file). Since we don't want files from the module `notused` so we list it in the `.dockerignore` file:
+There is also a mechanism for excluding files from being copied to the image from some source-module directories. Source-module directories to be excluded are simply listed in the file [`.dockerignore`](https://docs.docker.com/engine/reference/builder/#dockerignore-file). Since we don't want files from the module `notused` so we list it in the `.dockerignore` file:
 
 ```sh
 src/notused

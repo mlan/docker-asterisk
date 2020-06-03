@@ -171,4 +171,4 @@ RUN	apk --no-cache --update add \
 	asterisk-dbg \
 	asterisk-dev \
 	asterisk-sounds-moh \
-	man
+	man-pages

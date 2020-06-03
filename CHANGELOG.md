@@ -1,3 +1,8 @@
+# 0.9.1
+
+- [repo](hooks) Added hooks/pre_build which assembles files from sub-modules.
+
+
 # 0.9.0
 
 - [privatedial](src/privatedial) Break out endpoints from pjsip_wizard.conf to pjsip_endpoint.conf.

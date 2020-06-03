@@ -1,7 +1,7 @@
 # 0.9.1
 
 - [repo](hooks) Added hooks/pre_build which assembles files from sub-modules.
-
+- [docker](README.md) Fixed broken hyperlinks in documentation.
 
 # 0.9.0
 

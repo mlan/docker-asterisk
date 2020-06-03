@@ -13,9 +13,9 @@ This (non official) repository provides dockerized Asterisk PBX.
 Feature list follows below
 
 - [Asterisk](http://www.asterisk.org/) powering IP PBX systems and VoIP gateways.
-- [PrivateDial](src/privatedial/README.md), an easily customized asterisk configuration
-- [WebSMS](srs/websms/README.md), send and receive Instant Messages, SMS over HTTP
-- [AutoBan](src/autoban/README.md), a built in intrusion detection and prevention system
+- [PrivateDial](src/privatedial), an easily customized asterisk configuration
+- [WebSMS](srs/websms), send and receive Instant Messages, SMS over HTTP
+- [AutoBan](src/autoban), a built in intrusion detection and prevention system
 - Small image size based on [Alpine Linux](https://alpinelinux.org/)
 - [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files
 - Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
@@ -42,7 +42,7 @@ The `base` tag also include support for TLS, logging, WebSMS and AutoBan. `full`
 
 There are many tings to consider when configuring Asterisk and its components. We discuss some fundamentals here and in the separate documentation for the [add-ons](#add-ons).
 
-If you want to test the image right away, probably the best way is to clone the [github](https://https://github.com/mlan/docker-asterisk) repository and run the demo therein.
+If you want to test the image right away, probably the best way is to clone the [github](https://github.com/mlan/docker-asterisk) repository and run the demo therein.
 
 ```bash
 git clone https://github.com/mlan/docker-asterisk.git
@@ -144,7 +144,7 @@ Some of the collection of configuration files provided does not contain any user
 | pjproject.conf   | Common pjproject options                                     |
 | rtp.conf         | RTP configuration including port range                       |
 
-The configuration files mentioned above are perhaps not the ones that require the most attention. The configuration files defining key aspects of the Asterisk server like; the call flow and SIP trunk and phone details is the concern of the add-on [PrivateDial](#privatedial). Please refer to its separate [documentation](src/privatedial/README.md) for details.
+The configuration files mentioned above are perhaps not the ones that require the most attention. The configuration files defining key aspects of the Asterisk server like; the call flow and SIP trunk and phone details is the concern of the add-on [PrivateDial](#privatedial). Please refer to its separate [documentation](src/privatedial/doc/privatedial.md) for details.
 
 ## Persistent storage
 
@@ -167,6 +167,28 @@ The seeding procedure will leave any existing configuration untouched. If config
 ## Logging `SYSLOG_LEVEL`
 
 The level of output for logging is in the range from 0 to 8. 1 means emergency logging only, 2 for alert messages, 3 for critical messages only, 4 for error or worse, 5 for warning or worse, 6 for notice or worse, 7 for info or worse, 8 debug. Default: `SYSLOG_LEVEL=4`
+
+# Add-ons
+
+The `mlan/asterisk` repository contains add-ons that utilizes and extends the already impressive capabilities of Asterisk.
+
+## [PrivateDial](src/privatedial)
+
+PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to residential use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
+
+It uses the [PJSIP](https://www.pjsip.org/) [channel driver](https://wiki.asterisk.org/wiki/display/AST/Configuring+res_pjsip) and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
+
+The underlying design idea is to separate the dial plan functionality from the user data. To achieve this all user specific data has been pushed out from the main `extensions.conf` file.
+
+## [AutoBan](src/autoban)
+
+AutoBan is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. The intrusion detection is achieved by Asterisk itself. Asterisk generates security events which AutoBan listens to on the AMI interface. When security events occurs AutoBan start to watch the source IP address. Intrusion prevention is achieved by AutoBan asking the Linux kernel firewall [nftables](https://netfilter.org/projects/nftables/) to drop packages from offending source IP addresses.
+
+## [WebSMS](src/websms)
+
+Asterisk supports [SIMPLE](https://wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)), allowing SMS to be sent using the extended SIP method; MESSAGE, natively. Still many [Internet Telephony Service Providers](https://wikipedia.org/wiki/Internet_telephony_service_provider) (ITSP) does not offer SIMPLE but instead sends and receives SMS using a web [API](https://en.wikipedia.org/wiki/Application_programming_interface) based on [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) requests. This leaves your Asterisk server without a mechanisms to exchange SMS externally.
+
+The WebSMS service bridges this limitation, with the help of two components. One, `websmsd`, waits for incoming SMS to be sent from your ITSP and once received, forward it to Asterisk. The other, `websms`, is used by Asterisk to send outgoing SMS to your ITSP.
 
 # Networking
 SIP networking is quite complex and there is many things that can go wrong. We try to offer some guidance by discussing some fundamentals here.
@@ -322,28 +344,6 @@ To disable audio, type:
 ```bash
 make sound_disable
 ```
-
-# Add-ons
-
-The `mlan/asterisk` repository contains add-ons that utilizes and extends the already impressive capabilities of Asterisk.
-
-## [PrivateDial](src/privatedial)
-
-PrivateDial is a suite of [Asterisk configuration files](https://wiki.asterisk.org/wiki/display/AST/Asterisk+Configuration+Files). This configuration is tailored to residential use cases, supporting the capabilities of mobile smart phones, that is, voice, video, instant messaging or SMS, and voice mail delivered by email.
-
-It uses the [PJSIP](https://www.pjsip.org/) [channel driver](https://wiki.asterisk.org/wiki/display/AST/Configuring+res_pjsip) and therefore natively support simultaneous connection of several soft-phones to each user account/endpoint.
-
-The underlying design idea is to separate the dial plan functionality from the user data. To achieve this all user specific data has been pushed out from the main `extensions.conf` file.
-
-## [AutoBan](src/autoban)
-
-AutoBan is an intrusion detection and prevention system which is built in the `mlan/asterisk` container. The intrusion detection is achieved by Asterisk itself. Asterisk generates security events which AutoBan listens to on the AMI interface. When security events occurs AutoBan start to watch the source IP address. Intrusion prevention is achieved by AutoBan asking the Linux kernel firewall [nftables](https://netfilter.org/projects/nftables/) to drop packages from offending source IP addresses.
-
-## [WebSMS](src/websms)
-
-Asterisk supports [SIMPLE](wikipedia.org/wiki/SIMPLE_(instant_messaging_protocol)), allowing SMS to be sent using the extended SIP method; MESSAGE, natively. Still many [Internet Telephony Service Providers](wikipedia.org/wiki/Internet_telephony_service_provider) (ITSP) does not offer SIMPLE but instead sends and receives SMS using a web [API](https://en.wikipedia.org/wiki/Application_programming_interface) based on [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) requests. This leaves your Asterisk server without a mechanisms to exchange SMS externally.
-
-The WebSMS service bridges this limitation, with the help of two components. One, `websmsd`, waits for incoming SMS to be sent from your ITSP and once received, forward it to Asterisk. The other, `websms`, is used by Asterisk to send outgoing SMS to your ITSP.
 
 #### `WEBSMSD_PORT`
 

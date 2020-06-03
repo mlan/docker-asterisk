@@ -6,7 +6,7 @@
 ![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=flat-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=flat-square&logo=docker)
 
-This (non official) repository provides dockerized asterisk PBX.
+This (non official) repository provides dockerized Asterisk PBX.
 
 ## Features
 
@@ -136,7 +136,7 @@ Some of the collection of configuration files provided does not contain any user
 | asterisk.conf    | Asterisk global configuration including; debug, run-as-user and directory structure |
 | ccss.conf        | Call Completion Supplementary Services configuration         |
 | cli_aliases.conf | Asterisk Command Line Interface aliases                      |
-| features.conf    | Call Features (transfer, monitor/mixmonitor, etc) configuration |
+| features.conf    | Call Features (transfer, monitor, etc) configuration         |
 | indications.conf | Location specific tone indications                           |
 | logger.conf      | Logging configuration                                        |
 | modules.conf     | Module Loader configuration                                  |
@@ -223,14 +223,23 @@ For endpoints connected to remote local networks you need the following paramete
 ```ini
 [_nat](!)
 endpoint/rewrite_contact = yes
-endpoint/force_rport = yes
 endpoint/direct_media = no
 endpoint/rtp_symmetric = yes
+endpoint/bind_rtp_to_media_address = yes
+```
+
+### Strict RTP protection
+
+Strict RTP learning is not compatible with NAT. When enabled RTP, media, packets that have passed NAT will be dropped. Disable strict RTP learning in `rtp.conf`
+
+```ini
+[general]
+strictrtp = no
 ```
 
 ### ICE, STUN, and TURN
 
-Sometimes need for other more elaborate NAT traversal methods; [ICE, STUN or TURN](https://wiki.asterisk.org/wiki/display/~jcolp/ICE,+STUN,+and+TURN+Support), which are out of scope for this text.
+Sometimes there is a need for other more elaborate NAT traversal methods; [ICE, STUN or TURN](https://wiki.asterisk.org/wiki/display/~jcolp/ICE,+STUN,+and+TURN+Support), which are out of scope for this text.
 
 ## Security - Privacy and integrity
 
@@ -240,7 +249,7 @@ The PrivateDial configuration is already set up to provide both UDP and TCP tran
 
 #### `TLS_KEYBITS`, `TLS_CERTDAYS`
 
-The private key length and self-signed certificate validity duration can be configured using the environment variables: `TLS_KEYBITS=2048` and `TLS_CERTDAYS=30`.
+The private key length and self-signed certificate validity duration can be configured using the environment variables: `TLS_KEYBITS=2048` and `TLS_CERTDAYS=30`.
 
 ### Let’s Encrypt LTS certificates using Traefik
 
@@ -250,7 +259,7 @@ There are many agents and applications that supports ACME, e.g., [certbot](https
 
 #### `ACME_FILE`
 
-The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` is will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and every time it changes the certificates will be exported anew. So when Traefik renews its certificates asterisk will automatically also renew its certificate.
+The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` is will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and every time it changes the certificates will be exported anew. So when Traefik renews its certificates Asterisk will automatically also renew its certificate.
 
 So reusing certificates from Traefik will work out of the box if the `/acme` directory in the Traefik container is also mounted in the `mlan/asterisk` container.
 
@@ -356,7 +365,7 @@ There is also exit script that take care of tasks like, writing state files. The
 
 ## Build assembly
 
-The entry and exit scripts, discussed above, as well as other utility scrips are copied to the image during the build phase. The source file tree was designed to facilitate simple scanning, using wild-card matching, sub-module directories for files that should be copied to image. Sub-directory names indicate its file types so they can be copied to the correct locations. The code snippet in the `Dockerfile` which achieves this is show below.
+The entry and exit scripts, discussed above, as well as other utility scrips are copied to the image during the build phase. The source file tree was designed to facilitate simple scanning, using wild-card matching, sub-module directories for files that should be copied to image. Sub-directory names indicate its file types so they can be copied to the correct locations. The code snippet in the `Dockerfile` which achieves this is show below.
 
 ```dockerfile
 COPY	src/*/bin $DOCKER_BIN_DIR/

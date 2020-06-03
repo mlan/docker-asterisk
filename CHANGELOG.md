@@ -5,6 +5,7 @@
 - [privatedial](src/privatedial) Work around bug in [MinivmGreet()](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmGreet).
 - [privatedial](src/privatedial) Renamed dialplan contexts.
 - [privatedial](src/privatedial) Dialplan `[sub_voicemail]` now handles CHANUNAVAIL correctly.
+- [privatedial](src/privatedial) Added `endpoint/bind_rtp_to_media_address = yes`
 - [docker](README.md) Complete documentation.
 - [docker](src/docker) Now use alpine:3.12 (asterisk:16.7.0).
 - [websms](src/websms) `WEBSMSD_PORT=80` sets PHP web server port, used by WebSMS.

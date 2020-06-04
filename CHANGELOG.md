@@ -1,6 +1,8 @@
 # 0.9.1
 
 - [repo](hooks) Added hooks/pre_build which assembles files from sub-modules.
+- [repo](.travis.yml) Revisited `.travis.yml`.
+- [docker](README.md) Proofread documentation.
 - [docker](README.md) Fixed broken hyperlinks in documentation.
 
 # 0.9.0

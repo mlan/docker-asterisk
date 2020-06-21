@@ -20,7 +20,7 @@ Consider fixing the code in [app_minivm.c](https://github.com/asterisk/asterisk/
 ## AutoBan
 
 - Add option to get reverse DNS using gethostbyaddr($ip); in `show who`.
-- Perhaps replace entrypoint.d/ with /etc/conf.d/nftables?
+- Perhaps replace entry.d/ with /etc/conf.d/nftables?
 - Allow intervals, eg 192.168.1.1-192.168.1.200, in blacklist and whitelist.
 
 ## WebSMS

@@ -138,8 +138,8 @@ To enable encryption of both the session and data packages (TLS and SDES SRTP) a
 
 ```ini
 [tls](t_wan)
-cert_file = /etc/ssl/asterisk/asterisk.cert.pem
-priv_key_file = /etc/ssl/asterisk/asterisk.priv_key.pem
+cert_file = /etc/ssl/asterisk/cert.pem
+priv_key_file = /etc/ssl/asterisk/priv_key.pem
 ```
 
 There is also a mechanism to use ACME lets encrypt certificates, which also use these file names.

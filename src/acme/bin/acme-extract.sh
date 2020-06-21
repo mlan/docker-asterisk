@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 # Copyright (c) 2017 Brian 'redbeard' Harrington <redbeard@dead-city.org>
 #
-# dumpcerts.sh - A simple utility to explode a Traefik acme.json file into a
+# acme-export.sh - A simple utility to explode a Traefik acme.json file into a
 #                directory of certificates and a private key
 #
-# Usage - dumpcerts.sh /etc/traefik/acme.json /etc/ssl/
+# Usage - acme-export.sh /etc/traefik/acme.json /etc/ssl/
 #
 # Dependencies -
 #   util-linux
@@ -51,7 +51,7 @@ CMD_DECODE_BASE64="base64 -d"
 usage() { echo "$(basename $0) <path to acme> <destination cert directory>" ;}
 
 test_args() {
-	# when called by inotifyd the first argument is the single character 
+	# when called by inotifyd the first argument is the single character
 	# event desciptior, lets drop it
 	dc_log 7 "Called with args $@"
 	[ $# -ge 0 ] && [ ${#1} -eq 1 ] && shift

@@ -1,3 +1,15 @@
+# 0.9.2
+
+- [docker](src/docker) Use the native envvar `SVDIR` instead of `DOCKER_RUNSV_DIR`.
+- [docker](src/docker) Update docker-common.sh.
+- [docker](src/docker) Now use docker-config.sh.
+- [docker](src/docker) Update docker-entrypoint.sh.
+- [docker](src/docker) Update docker-service.sh.
+- [docker](src/docker) Now use DOCKER_ENTRY_DIR=/etc/docker/entry.d and DOCKER_EXIT_DIR=/etc/docker/exit.d.
+- [acme](src/acme/bin/acme-extract.sh) Update module.
+- [privatedial](src/privatedial) Breaking change. Now use `cert_file=/etc/ssl/asterisk/cert.pem` and `priv_key_file=/etc/ssl/asterisk/priv_key.pem`
+- [docker](Makefile) Improved smoke test.
+
 # 0.9.1
 
 - [repo](hooks) Added hooks/pre_build which assembles files from sub-modules.
@@ -16,7 +28,7 @@
 - [docker](README.md) Complete documentation.
 - [docker](src/docker) Now use alpine:3.12 (asterisk:16.7.0).
 - [websms](src/websms) `WEBSMSD_PORT=80` sets PHP web server port, used by WebSMS.
-- [repo](src) Harmonized file names in `entrypoint.d` and `exitpoint.d`.
+- [repo](src) Harmonized file names in `entry.d` and `exit.d`.
 - [repo](sub) Use git submodule for third party projects.
 
 # 0.8.0
@@ -35,8 +47,8 @@
 
 # 0.7.0
 
-- [acme](src/acme/bin/dumpcerts.sh) Support both v1 and v2 formats of the acme.json file.
-- [acme](src/acme/entrypoint.d/50-acme-monitor-tlscert) Support both host and domain wildcard TLS certificates.
+- [acme](src/acme/bin/acme-extract.sh) Support both v1 and v2 formats of the acme.json file.
+- [acme](src/acme/entry.d/50-acme-monitor-tlscert) Support both host and domain wildcard TLS certificates.
 - [websms](src/websms) Complete documentation.
 - [privatedial](src/privatedial) Advancing documentation.
 - [docker](README.md) Advancing documentation.
@@ -93,7 +105,7 @@
 - [asterisk](src/asterisk) Generate self-signed TLS certificate.
 - [asterisk](src/asterisk) Improved structure of `pjsip_wizard.conf`.
 - [asterisk](src/asterisk) Don't answer when device is UNAVAILABLE in `[dp_answer]`
-- [docker](src/docker) The [setup-runit.sh](src/docker/bin/setup-runit.sh) script now have options:  down, force, log, name, source, quiet.
+- [docker](src/docker) The [docker-service.sh](src/docker/bin/docker-service.sh) script now have options:  down, force, log, name, source, quiet.
 - [websms](src/websms) Added `val_numform` parameter. Set to `E164` to strip phone numbers from leading +.
 
 # 0.2.1
@@ -113,8 +125,8 @@
 - [repo](src) Now reorganize repo files according to which service they provide
 - [docker](Dockerfile) alpine 3.10.3 released so now build using alpine:3.10
 - [docker](Dockerfile) Added Health check
-- [docker](src/docker) Introduce a `SIGTERM` trap in `entrypoint.sh` allowing graceful container termination with `exitpoint.d` script execution
-- [docker](src/docker) [setup-runit.sh](src/docker/bin/setup-runit.sh) now also take switches -n and -l.
+- [docker](src/docker) Introduce a `SIGTERM` trap in `docker-entrypoint.sh` allowing graceful container termination with `exit.d` script execution
+- [docker](src/docker) [docker-service.sh](src/docker/bin/docker-service.sh) now also take switches -n and -l.
 - [docker](src/docker) We now create directory structure when an empty volume is mounted at /srv.
 - [asterisk](src/asterisk) Based on live testing updated templates in pjsip_wizard.conf
 - [asterisk](src/asterisk) Now use extensions-local.conf to keep all local configurations
@@ -127,7 +139,7 @@
 - [autoban](src/autoban) Restricting Autoban's AMI access to a minimum
 - [autoban](src/autoban) Autoban now has `repeatmult` punishing repeat offenders progressively more severely
 - [autoban](src/autoban) Autoban now use nftables timeouts
-- [autoban](src/autoban) Added `entrypoint.d`  and  `exitpoint.d` scripts so that the `nft` state is loaded/saved at container startup/shutdown.
+- [autoban](src/autoban) Added `entry.d`  and  `exit.d` scripts so that the `nft` state is loaded/saved at container startup/shutdown.
 
 # 0.1.0
 

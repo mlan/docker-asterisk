@@ -13,11 +13,11 @@ ARG	REL=latest
 FROM	$DIST:$REL AS mini
 LABEL	maintainer=mlan
 
-ENV	DOCKER_RUNSV_DIR=/etc/service \
+ENV	SVDIR=/etc/service \
 	DOCKER_PERSIST_DIR=/srv \
 	DOCKER_BIN_DIR=/usr/local/bin \
-	DOCKER_ENTRY_DIR=/etc/entrypoint.d \
-	DOCKER_EXIT_DIR=/etc/exitpoint.d \
+	DOCKER_ENTRY_DIR=/etc/docker/entry.d \
+	DOCKER_EXIT_DIR=/etc/docker/exit.d \
 	DOCKER_PHP_DIR=/usr/share/php7 \
 	DOCKER_SPOOL_DIR=/var/spool/asterisk \
 	DOCKER_CONF_DIR=/etc/asterisk \
@@ -30,17 +30,17 @@ ENV	DOCKER_RUNSV_DIR=/etc/service \
 	SYSLOG_LEVEL=4 \
 	SYSLOG_OPTIONS=-SDt \
 	WEBSMSD_PORT=80
-ENV	DOCKER_MOH_DIR=${DOCKER_LIB_DIR}/moh \
-	DOCKER_ACME_SSL_DIR=${DOCKER_SSL_DIR}/acme \
-	DOCKER_AST_SSL_DIR=${DOCKER_SSL_DIR}/asterisk
+ENV	DOCKER_MOH_DIR=$DOCKER_LIB_DIR/moh \
+	DOCKER_ACME_SSL_DIR=$DOCKER_SSL_DIR/acme \
+	DOCKER_APPL_SSL_DIR=$DOCKER_SSL_DIR/asterisk
 
 #
-# Copy utility scripts including entrypoint.sh to image
+# Copy utility scripts including docker-entrypoint.sh to image
 #
 
 COPY	src/*/bin $DOCKER_BIN_DIR/
-COPY	src/*/entrypoint.d $DOCKER_ENTRY_DIR/
-COPY	src/*/exitpoint.d $DOCKER_EXIT_DIR/
+COPY	src/*/entry.d $DOCKER_ENTRY_DIR/
+COPY	src/*/exit.d $DOCKER_EXIT_DIR/
 COPY	src/*/php $DOCKER_PHP_DIR/
 COPY	sub/*/php $DOCKER_PHP_DIR/
 COPY	src/*/config $DOCKER_SEED_CONF_DIR/
@@ -50,22 +50,16 @@ COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 # Facilitate persistent storage and install asterisk
 #
 
-RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
-	${DOCKER_PERSIST_DIR}${DOCKER_CONF_DIR} \
-	${DOCKER_PERSIST_DIR}${DOCKER_LOG_DIR} \
-	${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR} \
-	${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR} \
-	${DOCKER_PERSIST_DIR}${DOCKER_ACME_SSL_DIR} \
-	${DOCKER_PERSIST_DIR}${DOCKER_AST_SSL_DIR} \
-	${DOCKER_LIB_DIR} \
-	${DOCKER_SSL_DIR} \
-	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} $DOCKER_SPOOL_DIR \
-	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_CONF_DIR} $DOCKER_CONF_DIR \
-	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_LOG_DIR} $DOCKER_LOG_DIR \
-	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_MOH_DIR} $DOCKER_MOH_DIR \
-	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR} $DOCKER_NFT_DIR \
-	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_ACME_SSL_DIR} $DOCKER_ACME_SSL_DIR \
-	&& ln -sf ${DOCKER_PERSIST_DIR}${DOCKER_AST_SSL_DIR} $DOCKER_AST_SSL_DIR \
+RUN	source docker-common.sh \
+	&& source docker-config.sh \
+	&& dc_persist_dirs \
+	$DOCKER_ACME_SSL_DIR \
+	$DOCKER_APPL_SSL_DIR \
+	$DOCKER_CONF_DIR \
+	$DOCKER_LOG_DIR \
+	$DOCKER_MOH_DIR \
+	$DOCKER_NFT_DIR \
+	$DOCKER_SPOOL_DIR \
 	&& apk --no-cache --update add \
 	asterisk
 
@@ -73,7 +67,7 @@ RUN	mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_SPOOL_DIR} \
 # Entrypoint, how container is run
 #
 
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD	["asterisk", "-fp"]
 
 
@@ -104,7 +98,7 @@ RUN	apk --no-cache --update add \
 	bash \
 	nftables \
 	jq \
-	&& setup-runit.sh \
+	&& docker-service.sh \
 	"syslogd -nO- -l$SYSLOG_LEVEL $SYSLOG_OPTIONS" \
 	"crond -f -c /etc/crontabs" \
 	"-q asterisk -pf" \
@@ -116,13 +110,13 @@ RUN	apk --no-cache --update add \
 # Have runit's runsvdir start all services
 #
 
-CMD	runsvdir -P ${DOCKER_RUNSV_DIR}
+CMD	runsvdir -P ${SVDIR}
 
 #
 # Check if all services are running
 #
 
-HEALTHCHECK CMD sv status ${DOCKER_RUNSV_DIR}/*
+HEALTHCHECK CMD sv status ${SVDIR}/*
 
 
 #

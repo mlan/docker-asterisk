@@ -2,15 +2,13 @@
 
 ![travis-ci test](https://img.shields.io/travis/mlan/docker-asterisk.svg?label=build&style=flat-square&logo=travis)
 ![docker build](https://img.shields.io/docker/cloud/build/mlan/asterisk.svg?label=build&style=flat-square&logo=docker)
-![image size](https://img.shields.io/docker/image-size/mlan/asterisk.svg?label=size&style=flat-square&logo=docker)
+![image size](https://img.shields.io/docker/image-size/mlan/asterisk/latest.svg?label=size&style=flat-square&logo=docker)
 ![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=flat-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=flat-square&logo=docker)
 
 This (non official) repository provides dockerized Asterisk PBX.
 
 ## Features
-
-Feature list follows below
 
 - [Asterisk](http://www.asterisk.org/) powering IP PBX systems and VoIP gateways
 - [PrivateDial](src/privatedial), customizable Asterisk configuration
@@ -369,7 +367,7 @@ Here some implementation details are presented.
 
 The `mlan/asterisk` container use [runit](http://smarden.org/runit/), providing an init scheme and service supervision, allowing multiple services to be started.
 
-When the container is started, execution is handed over to the script [`entrypoint.sh`](src/docker/bin/entrypoint.sh). It has 4 stages; 0) *register* the SIGTERM [signal (IPC)](https://en.wikipedia.org/wiki/Signal_(IPC)) handler, which is programmed to run all exit scripts in `/etc/exitpoint.d/` and terminate all services, 1) *run* all entry scripts in `/etc/entrypoint.d/`, 2) *start* services registered in `/etc/service/`, 3) *wait* forever, allowing the signal handler to catch the SIGTERM and run the exit scripts and terminate all services.
+When the container is started, execution is handed over to the script [`docker-entrypoint.sh`](src/docker/bin/docker-entrypoint.sh). It has 4 stages; 0) *register* the SIGTERM [signal (IPC)](https://en.wikipedia.org/wiki/Signal_(IPC)) handler, which is programmed to run all exit scripts in `DOCKER_EXIT_DIR=/etc/docker/exit.d` and terminate all services, 1) *run* all entry scripts in `DOCKER_ENTRY_DIR=/etc/docker/entry.d`, 2) *start* services registered in `/etc/service/`, 3) *wait* forever, allowing the signal handler to catch the SIGTERM and run the exit scripts and terminate all services.
 
 The entry scripts are responsible for tasks like, seeding configurations, register services and reading state files. These scripts are run before the services are started.
 
@@ -381,8 +379,8 @@ The entry and exit scripts, discussed above, as well as other utility scrips are
 
 ```dockerfile
 COPY	src/*/bin $DOCKER_BIN_DIR/
-COPY	src/*/entrypoint.d $DOCKER_ENTRY_DIR/
-COPY	src/*/exitpoint.d $DOCKER_EXIT_DIR/
+COPY	src/*/entry.d $DOCKER_ENTRY_DIR/
+COPY	src/*/exit.d $DOCKER_EXIT_DIR/
 COPY	src/*/php $DOCKER_PHP_DIR/
 COPY	sub/*/php $DOCKER_PHP_DIR/
 COPY	src/*/config $DOCKER_SEED_CONF_DIR/

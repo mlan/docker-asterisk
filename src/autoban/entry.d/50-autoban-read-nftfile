@@ -32,7 +32,7 @@ mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR}
 #
 
 if [ -z "$(ls -A $DOCKER_NFT_DIR 2>/dev/null)" ]; then
-	dc_log 5 "Seeding configuration."
+	dc_log 5 "Seeding nft configuration."
 	cp -p -u $DOCKER_SEED_NFT_DIR/$DOCKER_NFT_FILE $DOCKER_NFT_DIR
 fi
 

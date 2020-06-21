@@ -29,6 +29,7 @@ TST_XTRA ?= --cap-add SYS_PTRACE \
 	--cap-add=NET_ADMIN \
 	--cap-add=NET_RAW \
 	-e SYSLOG_LEVEL=8
+TST_W8   ?= 1
 CNT_ENV  ?= --hostname $(CNT_HOST) $(TST_PORT) $(TST_XTRA)
 CNT_VOL  ?=
 CNT_CMD  ?= asterisk -pf -vvvddd
@@ -71,12 +72,12 @@ prune-all:
 test-all: test_0
 	
 
-test_%: test-up_% test-down_%
+test_%: test-up_% test-wait_% test-logs_% test-ping_% test-down_%
 	
 
 test-up_0:
 	#
-	# test (0) run with defaults
+	# test (0) run with defaults (is there smoke?)
 	#
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
@@ -102,6 +103,20 @@ test-up_3: test-up-net
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		--network $(TST_NET) \
 		$(IMG_REPO):$(call _version,$(BLD_TGT),$(IMG_VER))
+
+test-ping_%: test-version_%
+	#
+	# test ($*) successful
+	#
+
+test-version_%:
+	docker exec -it $(CNT_NAME) asterisk -x "pjsip show version" | grep PJPROJECT
+
+test-logs_%:
+	docker container logs $(CNT_NAME) | grep 'docker-entrypoint.sh' || true
+
+test-wait_%:
+	sleep $(TST_W8)
 
 test-up-net:
 	docker network create $(TST_NET) 2>/dev/null || true

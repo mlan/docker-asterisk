@@ -87,7 +87,7 @@ env:
 	docker-compose exec $(SRV_NAME) env
 
 sv:
-	docker-compose exec $(SRV_NAME) sh -c 'sv status $$DOCKER_RUNSV_DIR/*'
+	docker-compose exec $(SRV_NAME) sh -c 'sv status $$SVDIR/*'
 
 nft:
 	docker-compose exec $(SRV_NAME) nft list ruleset

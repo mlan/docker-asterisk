@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# 50-acme-monitor-tlscert
+#
+# Functions defined in:
+# 10-acme-common
+#
+
+#
+# Setup ACME monitor and arrange certificate symlinks
+#
+acme_monitor_tls_cert
+acme_symlink_tls_cert

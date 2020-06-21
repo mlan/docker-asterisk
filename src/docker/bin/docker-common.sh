@@ -4,9 +4,9 @@
 #
 # Defines common functions. Source this file from other scripts.
 #
-export DOCKER_LOGLEVEL=${DOCKER_LOGLEVEL-5}
-export DOCKER_LOGENTRY=${DOCKER_LOGENTRY-entrypoint.sh}
-export DOCKER_LOGUSAGE=${DOCKER_LOGUSAGE-usage}
+DOCKER_LOGLEVEL=${DOCKER_LOGLEVEL-5}
+DOCKER_LOGENTRY=${DOCKER_LOGENTRY-docker-entrypoint.sh}
+DOCKER_LOGUSAGE=${DOCKER_LOGUSAGE-usage}
 
 #
 # Write messages to console if interactive or syslog if not.
@@ -58,7 +58,7 @@ dc_log_tag() {
 		6|info)    c=92; l=INFO ;;
 		7|debug)   c=92; l=DEBUG ;;
 	esac
-	printf "\e[1m\e[%sm%s %s\e[0m\n" $c $string $l
+	printf "\e[%sm%s %s\e[0m\n" $c $string $l
 }
 
 #
@@ -79,13 +79,24 @@ dc_log_level() {
 # $DOCKER_LOGENTRY is not running.
 #
 dc_log_stamp() {
-	if pidof $DOCKER_LOGENTRY >/dev/null; then
+	if grep -q $DOCKER_LOGENTRY /proc/1/cmdline; then
 		date +'%b %e %X '
 	fi
 }
 
 #
-# true if pkg is installed
+# Tests
 #
-dc_is_installed() { apk -e info $1 &>/dev/null ;}
+dc_is_installed() { apk -e info $1 &>/dev/null ;} # true if pkg is installed
 
+#
+# Update loglevel
+#
+dc_update_loglevel() {
+	loglevel=${1-$SYSLOG_LEVEL}
+	if [ -n "$loglevel" ]; then
+		dc_log 5 "Setting syslogd level=$loglevel."
+		docker-service.sh "syslogd -nO- -l$loglevel $SYSLOG_OPTIONS"
+		[ -n "$DOCKER_RUNFUNC" ] && sv restart syslogd
+	fi
+}

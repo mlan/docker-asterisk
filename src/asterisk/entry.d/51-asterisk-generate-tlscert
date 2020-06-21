@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# 51-asterisk-generate-tlscert
+#
+# Variables defined in 10-acme-common
+# DOCKER_APPL_SSL_CERT DOCKER_APPL_SSL_KEY
+#
+
+#
+# Generate self signed certificate if  but no certificates
+# are given.
+#
+if ([ ! -s $DOCKER_APPL_SSL_CERT ] || [ ! -s $DOCKER_APPL_SSL_KEY ]) && \
+	dc_is_installed openssl; then
+	dc_log 5 "No TLS certificates found, so generating self-signed cert for host $HOSTNAME"
+	dc_tls_setup_selfsigned_cert $DOCKER_APPL_SSL_CERT $DOCKER_APPL_SSL_KEY
+fi
+

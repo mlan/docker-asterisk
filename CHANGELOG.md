@@ -6,9 +6,9 @@
 - [docker](src/docker) Update docker-entrypoint.sh.
 - [docker](src/docker) Update docker-service.sh.
 - [docker](src/docker) Now use DOCKER_ENTRY_DIR=/etc/docker/entry.d and DOCKER_EXIT_DIR=/etc/docker/exit.d.
+- [docker](Makefile) Improved smoke test.
 - [acme](src/acme/bin/acme-extract.sh) Update module.
 - [privatedial](src/privatedial) Breaking change. Now use `cert_file=/etc/ssl/asterisk/cert.pem` and `priv_key_file=/etc/ssl/asterisk/priv_key.pem`
-- [docker](Makefile) Improved smoke test.
 
 # 0.9.1
 

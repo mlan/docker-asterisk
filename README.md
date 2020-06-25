@@ -293,9 +293,11 @@ The private key length and self-signed certificate validity duration can be conf
 
 There are many agents and applications that supports ACME, e.g., [certbot](https://certbot.eff.org/). The reverse proxy [Traefik](https://docs.traefik.io/) also supports ACME. `mlan/asterisk` can use the LTS certificates Traefik has acquired.
 
-#### `ACME_FILE`
+#### `ACME_FILE`, `ACME_POSTHOOK`
 
-The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are exported and if the host name of one of those certificates matches `HOSTNAME=$(hostname)` it will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and should it change the certificates will be exported anew. So when Traefik renews its certificates Asterisk will automatically also have access to the new certificate.
+The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are exported. If the host or domain name of one of those certificates matches `HOSTNAME=$(hostname)` or `DOMAIN=${HOSTNAME#*.}` it will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and should it change the certificates will be exported anew. So when Traefik renews its certificates Asterisk will automatically also have access to the new certificate. When the `ACME_FILE=/acme/acme.json` file changes and the certificates are updated we first remove all old saved certs and keys. Otherwise we might pick an old certificate in error.
+
+Once the certificates and keys have been updated, we run the command in the environment variable `ACME_POSTHOOK='asterisk -x "module reload res_pjsip.so"'`.
 
 Using Traefik's certificates will work "out of the box" simply by making sure that the `/acme` directory in the Traefik container is also is mounted in the `mlan/asterisk` container.
 

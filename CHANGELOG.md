@@ -1,3 +1,9 @@
+# 0.9.3
+
+- [acme](src/acme) Remove all certs and keys when `ACME_FILE=/acme/acme.json` is updated. Otherwise we might pick old certificates in error.
+- [acme](src/acme) Introduce `ACME_POSTHOOK='asterisk -x "module reload res_pjsip.so"'` and run that after we have updated the certificates.
+- [privatedial](src/privatedial) In `pjsip_transport.conf` add `allow_reload = yes` so that we can reload the TLS certificates.
+
 # 0.9.2
 
 - [docker](src/docker) Use the native envvar `SVDIR` instead of `DOCKER_RUNSV_DIR`.

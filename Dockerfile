@@ -27,6 +27,7 @@ ENV	SVDIR=/etc/service \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
 	DOCKER_SEED_NFT_DIR=/etc/nftables \
 	DOCKER_SSL_DIR=/etc/ssl \
+	ACME_POSTHOOK='asterisk -x "module reload res_pjsip.so"' \
 	SYSLOG_LEVEL=4 \
 	SYSLOG_OPTIONS=-SDt \
 	WEBSMSD_PORT=80

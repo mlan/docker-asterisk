@@ -295,15 +295,17 @@ There are many agents and applications that supports ACME, e.g., [certbot](https
 
 #### `ACME_FILE`, `ACME_POSTHOOK`
 
-The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are exported. If the host or domain name of one of those certificates matches `HOSTNAME=$(hostname)` or `DOMAIN=${HOSTNAME#*.}` it will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and should it change the certificates will be exported anew. So when Traefik renews its certificates Asterisk will automatically also have access to the new certificate. When the `ACME_FILE=/acme/acme.json` file changes and the certificates are updated we first remove all old saved certs and keys. Otherwise we might pick an old certificate in error.
+The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are extracted. If the host or domain name of one of those certificates matches `HOSTNAME=$(hostname)` or `DOMAIN=${HOSTNAME#*.}` it will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and should it change the certificates will be exported anew. So when Traefik renews its certificates Asterisk will automatically also have access to the new certificate.
 
-Once the certificates and keys have been updated, we run the command in the environment variable `ACME_POSTHOOK='asterisk -x "module reload res_pjsip.so"'`.
+Once the certificates and keys have been updated, we run the command in the environment variable `ACME_POSTHOOK="sv restart asterisk"`. Asterisk needs to be restarted to reload the transport, i.e., LTS paramerets to be updated. If automatic restarting of Asterisk is not desired, set `ACME_POSTHOOK=` to empty.
 
 Using Traefik's certificates will work "out of the box" simply by making sure that the `/acme` directory in the Traefik container is also is mounted in the `mlan/asterisk` container.
 
 ```bash
 docker run -d -v proxy-acme:/acme:ro mlan/asterisk
 ```
+
+Note, if the target certificate Common Name (CN) or Subject Alternate Name (SAN) is changed the container needs to be restarted.
 
 ## Security - Intrusion prevention
 

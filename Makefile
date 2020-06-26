@@ -29,8 +29,9 @@ TST_XTRA ?= --cap-add SYS_PTRACE \
 	--cap-add=NET_ADMIN \
 	--cap-add=NET_RAW \
 	-e SYSLOG_LEVEL=8
+TST_CUST ?=
 TST_W8   ?= 1
-CNT_ENV  ?= --hostname $(CNT_HOST) $(TST_PORT) $(TST_XTRA)
+CNT_ENV  ?= --hostname $(CNT_HOST) $(TST_PORT) $(TST_XTRA) $(TST_CUST)
 CNT_VOL  ?=
 CNT_CMD  ?= asterisk -pf -vvvddd
 

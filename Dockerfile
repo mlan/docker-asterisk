@@ -27,7 +27,7 @@ ENV	SVDIR=/etc/service \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
 	DOCKER_SEED_NFT_DIR=/etc/nftables \
 	DOCKER_SSL_DIR=/etc/ssl \
-	ACME_POSTHOOK='asterisk -x "module reload res_pjsip.so"' \
+	ACME_POSTHOOK="sv restart asterisk" \
 	SYSLOG_LEVEL=4 \
 	SYSLOG_OPTIONS=-SDt \
 	WEBSMSD_PORT=80
@@ -54,13 +54,13 @@ COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 RUN	source docker-common.sh \
 	&& source docker-config.sh \
 	&& dc_persist_dirs \
-	$DOCKER_ACME_SSL_DIR \
 	$DOCKER_APPL_SSL_DIR \
 	$DOCKER_CONF_DIR \
 	$DOCKER_LOG_DIR \
 	$DOCKER_MOH_DIR \
 	$DOCKER_NFT_DIR \
 	$DOCKER_SPOOL_DIR \
+	&& mkdir -p $DOCKER_ACME_SSL_DIR \
 	&& apk --no-cache --update add \
 	asterisk
 

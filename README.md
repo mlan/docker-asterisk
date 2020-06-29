@@ -297,7 +297,7 @@ There are many agents and applications that supports ACME, e.g., [certbot](https
 
 The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are extracted. If the host or domain name of one of those certificates matches `HOSTNAME=$(hostname)` or `DOMAIN=${HOSTNAME#*.}` it will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and should it change the certificates will be exported anew. So when Traefik renews its certificates Asterisk will automatically also have access to the new certificate.
 
-Once the certificates and keys have been updated, we run the command in the environment variable `ACME_POSTHOOK="sv restart asterisk"`. Asterisk needs to be restarted to reload the transport, i.e., LTS paramerets to be updated. If automatic restarting of Asterisk is not desired, set `ACME_POSTHOOK=` to empty.
+Once the certificates and keys have been updated, we run the command in the environment variable `ACME_POSTHOOK="sv restart asterisk"`. Asterisk needs to be restarted to reload the transport, i.e., LTS parameters to be updated. If automatic restarting of Asterisk is not desired, set `ACME_POSTHOOK=` to empty.
 
 Using Traefik's certificates will work "out of the box" simply by making sure that the `/acme` directory in the Traefik container is also is mounted in the `mlan/asterisk` container.
 
@@ -324,7 +324,7 @@ It’s recommended that the minimum strength of a password used in a SIP digests
 
 # Container audio
 
-The `mlan/asterisk` container supports two-way audio using [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/). This allows you to use the Asterisk console channel to do some management or debugging. The audio stream is passed between the container and host by sharing the user's pulse unix socket.
+The `mlan/asterisk` container supports two-way audio using [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/). This allows you to use the Asterisk console channel to do some management or debugging. The audio stream is passed between the container and host by sharing the user's pulse UNIX socket.
 
 The method described here was chosen since it allows audio to be enabled on an already running container. The method involves a directory `./pulse:/run/pulse:rshared` on the host being mounted in the container, see the [compose example](#docker-compose-example), and environment variables being set within the container, allowing pulse to locate the socket; `PULSE_SERVER=unix:/run/pulse/socket` and cookie; `PULSE_COOKIE=/run/pulse/cookie`. To arrange the pulse directory on the host, from a shell, run:
 

@@ -1,6 +1,5 @@
 # 0.9.3
 
-- [acme](src/acme) Remove all certs and keys when `ACME_FILE=/acme/acme.json` is updated. Otherwise we might pick old certificates in error.
 - [acme](src/acme) Introduce `ACME_POSTHOOK="sv restart asterisk"` and run that after we have updated the certificates.
 - [docker](src/docker) Don't move `DOCKER_APPL_SSL_DIR=$DOCKER_SSL_DIR/asterisk` to persistent storage. Data there is updated at container startup anyway. Moreover there is no need to remove old data when it is updated.
 - [privatedial](src/privatedial) In `pjsip_transport.conf` set `method=tlsv1_2` to harden TLS.

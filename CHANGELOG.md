@@ -1,3 +1,7 @@
+# 0.9.4
+
+- [websms](src/websms) Use `prox_addr = 172.16.0.0/12,192.168.0.0/16` by default.
+
 # 0.9.3
 
 - [acme](src/acme) Introduce `ACME_POSTHOOK="sv restart asterisk"` and run that after we have updated the certificates.

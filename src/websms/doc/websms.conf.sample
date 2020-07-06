@@ -28,7 +28,7 @@
 ;key_echo        = ""      ;some ITSP test that the client respond by echoing it value, eg "zd_echo"
 ;key_from        = From    ;http POST key name holding sms origination phone number
 ;key_to          = To      ;http POST key name holding sms destination phone number
-;prox_addr       = 172.16.0.0/12 ;Trust "prox_header" from these IPs, eg 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+;prox_addr       = 172.16.0.0/12,192.168.0.0/16 ;Trust "prox_header" from these IPs, eg 10.0.0.0/8
 ;prox_header     = HTTP_X_FORWARDED_FOR ;Behind a proxy this header hold the real client IP
 ;remt_addr       = ""      ;if defined, only listed addrs are accepted, eg 185.45.152.42,3.104.90.0/24,3.1.77.0/24
 ;resp_ack        = ""      ;report success, eg, "<Response></Response>"

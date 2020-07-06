@@ -43,7 +43,7 @@ class Websms {
 			'key_echo'    => null,
 			'key_from'    => "From",
 			'key_to'      => "To",
-			'prox_addr'   => "172.16.0.0/12",
+			'prox_addr'   => "172.16.0.0/12,192.168.0.0/16",
 			'prox_header' => "HTTP_X_FORWARDED_FOR",
 			'remt_addr'   => null,
 			'resp_ack'    => "",
@@ -152,6 +152,7 @@ class Websms {
 			else trigger_error(
 					sprintf("REMOTE_ADDR (%s) is NOT allowed",
 					$remt_addr), E_USER_WARNING);
+			if($this->debug) trigger_error(file_get_contents('php://input') . print_r($_SERVER, TRUE));
 		}
 		/*
 		Wait until now to call $this->config('websmsd','uri') since

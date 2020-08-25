@@ -12,7 +12,7 @@ This (non official) repository provides dockerized Asterisk PBX.
 
 - [Asterisk](http://www.asterisk.org/) powering IP PBX systems and VoIP gateways
 - [PrivateDial](src/privatedial), customizable Asterisk configuration
-- [WebSMS](srs/websms), send and receive messages, SMS, over HTTP
+- [WebSMS](src/websms), send and receive messages, SMS, over HTTP
 - [AutoBan](src/autoban), a built in intrusion detection and prevention system
 - Small image size based on [Alpine Linux](https://alpinelinux.org/)
 - [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files

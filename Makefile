@@ -4,6 +4,7 @@ BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.12
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
+BLD_CDC  ?= ast160
 
 IMG_REPO ?= $(BLD_REPO)
 IMG_VER  ?= $(BLD_VER)
@@ -45,7 +46,7 @@ build: depends
 build_%: depends
 	docker build $(BLD_ARG) --target $* -t $(BLD_REPO):$(call _version,$*,$(BLD_VER)) .
 
-depends: Dockerfile sub/autoban/php/ami.class.inc
+depends: Dockerfile sub/autoban/php/ami.class.inc subcodecs
 	
 
 submodule:
@@ -54,6 +55,14 @@ submodule:
 sub/autoban/php/ami.class.inc: submodule
 	mkdir -p sub/autoban/php
 	ln -f sub/module/phpami/src/Ami.php sub/autoban/php/ami.class.inc
+
+subcodecs: sub/codecs/module/codec_g723.so sub/codecs/module/codec_g729.so
+	
+
+sub/codecs/module/%.so:
+	mkdir -p sub/codecs/module
+	wget -O sub/codecs/module/$*.so http://asterisk.hosting.lv/bin/$*-$(BLD_CDC)-gcc4-glibc-x86_64-core2.so
+	chmod 0755 sub/codecs/module/$*.so
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq

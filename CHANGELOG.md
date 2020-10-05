@@ -1,3 +1,7 @@
+# 0.9.5
+
+- [codec](sub/codec) Copy the [G.729](http://asterisk.hosting.lv/) and [G.723.1](http://asterisk.hosting.lv/) codecs to the image.
+
 # 0.9.4
 
 - [websms](src/websms) Use `prox_addr = 172.16.0.0/12,192.168.0.0/16` by default.

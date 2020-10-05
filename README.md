@@ -14,6 +14,7 @@ This (non official) repository provides dockerized Asterisk PBX.
 - [PrivateDial](src/privatedial), customizable Asterisk configuration
 - [WebSMS](src/websms), send and receive messages, SMS, over HTTP
 - [AutoBan](src/autoban), a built in intrusion detection and prevention system
+- Includes the [G.729](http://asterisk.hosting.lv/) and [G.723.1](http://asterisk.hosting.lv/) codecs.
 - Small image size based on [Alpine Linux](https://alpinelinux.org/)
 - [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files
 - Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)

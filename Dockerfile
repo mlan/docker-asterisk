@@ -23,6 +23,7 @@ ENV	SVDIR=/etc/service \
 	DOCKER_CONF_DIR=/etc/asterisk \
 	DOCKER_LOG_DIR=/var/log/asterisk \
 	DOCKER_LIB_DIR=/var/lib/asterisk \
+	DOCKER_DL_DIR=/usr/lib/asterisk/modules \
 	DOCKER_NFT_DIR=/var/lib/nftables \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
 	DOCKER_SEED_NFT_DIR=/etc/nftables \
@@ -129,6 +130,12 @@ HEALTHCHECK CMD sv status ${SVDIR}/*
 #
 
 FROM	base AS full
+
+#
+# Copy non-free codecs to image
+#
+
+COPY	sub/*/module $DOCKER_DL_DIR/
 
 #
 # Install packages supporting audio

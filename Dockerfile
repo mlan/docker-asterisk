@@ -132,7 +132,7 @@ HEALTHCHECK CMD sv status ${SVDIR}/*
 FROM	base AS full
 
 #
-# Copy non-free codecs to image
+# Copy patent-encumbered codecs to image
 #
 
 COPY	sub/*/module $DOCKER_DL_DIR/

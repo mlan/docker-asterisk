@@ -14,7 +14,7 @@ This (non official) repository provides dockerized Asterisk PBX.
 - [PrivateDial](src/privatedial), customizable Asterisk configuration
 - [WebSMS](src/websms), send and receive messages, SMS, over HTTP
 - [AutoBan](src/autoban), a built in intrusion detection and prevention system
-- Includes the [G.729](http://asterisk.hosting.lv/) and [G.723.1](http://asterisk.hosting.lv/) codecs.
+- Additionally provide the [G.729](https://en.wikipedia.org/wiki/G.729) and [G.723.1](https://en.wikipedia.org/wiki/G.723.1) audio codecs
 - Small image size based on [Alpine Linux](https://alpinelinux.org/)
 - [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files
 - Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
@@ -323,6 +323,10 @@ When using non-standard ports the amount of attacks drop significantly, so it mi
 
 It’s recommended that the minimum strength of a password used in a SIP digests are at least 8 characters long, preferably 10 characters, and have characters that include lower and upper case alphabetic, a number and a non-alphabetic, non-numeric ASCII character, see [SIP Password Security - How much is yours worth?](https://www.sipsorcery.com/mainsite/Help/SIPPasswordSecurity)
 
+## Codec modules
+
+Asterisk natively provides several audio and video [codec modules](https://wiki.asterisk.org/wiki/display/AST/Codec+Modules). Additionally the [G.729](https://en.wikipedia.org/wiki/G.729) and [G.723.1](https://en.wikipedia.org/wiki/G.723.1) audio codecs has been copied to the image. These are maintained by [arkadijs/asterisk-g72x](https://github.com/arkadijs/asterisk-g72x).
+
 # Container audio
 
 The `mlan/asterisk` container supports two-way audio using [PulseAudio](https://www.freedesktop.org/wiki/Software/PulseAudio/). This allows you to use the Asterisk console channel to do some management or debugging. The audio stream is passed between the container and host by sharing the user's pulse UNIX socket.
@@ -390,6 +394,7 @@ COPY	src/*/php $DOCKER_PHP_DIR/
 COPY	sub/*/php $DOCKER_PHP_DIR/
 COPY	src/*/config $DOCKER_SEED_CONF_DIR/
 COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
+COPY	sub/*/module $DOCKER_DL_DIR/
 ```
 
 There is also a mechanism for excluding files from being copied to the image from some source-module directories. Source-module directories to be excluded are listed in the file [`.dockerignore`](https://docs.docker.com/engine/reference/builder/#dockerignore-file). Since we don't want files from the module `notused` we list it in the `.dockerignore` file:

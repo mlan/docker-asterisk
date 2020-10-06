@@ -1,6 +1,7 @@
 # 0.9.5
 
-- [codec](sub/codec) Copy the [G.729](http://asterisk.hosting.lv/) and [G.723.1](http://asterisk.hosting.lv/) codecs to the image.
+- [codec](sub/codec) Provide the [G.729](https://en.wikipedia.org/wiki/G.729) and [G.723.1](https://en.wikipedia.org/wiki/G.723.1) audio codecs.
+- [codec](sub/codec) Improved handling of codec versions (`BLD_CVER` in Makefile).
 
 # 0.9.4
 

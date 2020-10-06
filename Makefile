@@ -4,7 +4,7 @@ BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.12
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
-BLD_CDC  ?= ast160
+BLD_CVER ?= ast160
 
 IMG_REPO ?= $(BLD_REPO)
 IMG_VER  ?= $(BLD_VER)
@@ -36,8 +36,6 @@ CNT_ENV  ?= --hostname $(CNT_HOST) $(TST_PORT) $(TST_XTRA) $(TST_CUST)
 CNT_VOL  ?=
 CNT_CMD  ?= asterisk -pf -vvvddd
 
-.PHONY:
-
 build-all: build_mini build_base build_full build_xtra
 
 build: depends
@@ -46,23 +44,32 @@ build: depends
 build_%: depends
 	docker build $(BLD_ARG) --target $* -t $(BLD_REPO):$(call _version,$*,$(BLD_VER)) .
 
-depends: Dockerfile sub/autoban/php/ami.class.inc subcodecs
+depends: Dockerfile sub-autoban sub-codecs
 	
+
+sub-autoban: sub/autoban/php/ami.class.inc
+	
+
+sub-codecs: codec_g723.so codec_g729.so
+	
+
+sub/autoban/php/ami.class.inc: submodule
+	mkdir -p $(@D)
+	ln -f sub/module/phpami/src/Ami.php $@
 
 submodule:
 	git submodule update --init --recursive
 
-sub/autoban/php/ami.class.inc: submodule
-	mkdir -p sub/autoban/php
-	ln -f sub/module/phpami/src/Ami.php sub/autoban/php/ami.class.inc
-
-subcodecs: sub/codecs/module/codec_g723.so sub/codecs/module/codec_g729.so
-	
-
-sub/codecs/module/%.so:
+codec_%.so: sub/codecs/download/codec_%-$(BLD_CVER).so
 	mkdir -p sub/codecs/module
-	wget -O sub/codecs/module/$*.so http://asterisk.hosting.lv/bin/$*-$(BLD_CDC)-gcc4-glibc-x86_64-core2.so
-	chmod 0755 sub/codecs/module/$*.so
+	ln -f $< sub/codecs/module/$@
+
+.PRECIOUS: sub/codecs/download/%.so
+
+sub/codecs/download/%.so:
+	mkdir -p $(@D)
+	wget -O $@ http://asterisk.hosting.lv/bin/$*-gcc4-glibc-x86_64-core2.so
+	chmod 0755 $@
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq

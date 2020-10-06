@@ -1,3 +1,7 @@
+# 0.9.6
+
+- [repo](hooks) Fixed bug in hooks/pre_build. Now call `make depends`.
+
 # 0.9.5
 
 - [codec](sub/codec) Provide the [G.729](https://en.wikipedia.org/wiki/G.729) and [G.723.1](https://en.wikipedia.org/wiki/G.723.1) audio codecs.

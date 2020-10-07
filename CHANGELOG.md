@@ -1,6 +1,6 @@
 # 0.9.6
 
-- [repo](hooks) Fixed bug in hooks/pre_build. Now call `make depends`.
+- [repo](hooks) Fixed bug in hooks/pre_build. Use curl in `make pre_build`.
 
 # 0.9.5
 

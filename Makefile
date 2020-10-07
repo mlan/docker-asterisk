@@ -5,6 +5,7 @@ BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
 BLD_CVER ?= ast160
+BLD_DNLD ?= curl -o
 
 IMG_REPO ?= $(BLD_REPO)
 IMG_VER  ?= $(BLD_VER)
@@ -38,19 +39,19 @@ CNT_CMD  ?= asterisk -pf -vvvddd
 
 build-all: build_mini build_base build_full build_xtra
 
-build: depends
+build: pre_build
 	docker build $(BLD_ARG) --target $(BLD_TGT) -t $(BLD_REPO):$(BLD_VER) .
 
-build_%: depends
+build_%: pre_build
 	docker build $(BLD_ARG) --target $* -t $(BLD_REPO):$(call _version,$*,$(BLD_VER)) .
 
-depends: Dockerfile sub-autoban sub-codecs
+pre_build: Dockerfile pre_autoban pre_codecs
 	
 
-sub-autoban: sub/autoban/php/ami.class.inc
+pre_autoban: sub/autoban/php/ami.class.inc
 	
 
-sub-codecs: codec_g723.so codec_g729.so
+pre_codecs: codec_g723.so codec_g729.so
 	
 
 sub/autoban/php/ami.class.inc: submodule
@@ -68,7 +69,7 @@ codec_%.so: sub/codecs/download/codec_%-$(BLD_CVER).so
 
 sub/codecs/download/%.so:
 	mkdir -p $(@D)
-	wget -O $@ http://asterisk.hosting.lv/bin/$*-gcc4-glibc-x86_64-core2.so
+	$(BLD_DNLD) $@ http://asterisk.hosting.lv/bin/$*-gcc4-glibc-x86_64-core2.so
 	chmod 0755 $@
 
 variables:

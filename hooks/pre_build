@@ -1,7 +1,17 @@
 #!/bin/bash
 # hooks/pre_build
-# $DOCKER_REPO and $DOCKER_TAG are injected into the build environment
+# $DOCKER_REPO and $DOCKER_TAG are injected into the docker hub build environment
 
-#printenv
+#
+# Explore the docker hub build environment
+#
+uname -a || true
+for utility in apt dpkg curl wget; do
+	which $utility || true
+done
+printenv || true
 
-make depends
+#
+# make pre_build
+#
+make make pre_build

@@ -6,12 +6,12 @@
 # Explore the docker hub build environment
 #
 uname -a || true
-for utility in apt dpkg curl wget; do
+for utility in apt curl wget; do
 	which $utility || true
 done
-printenv || true
+#printenv || true
 
 #
 # make pre_build
 #
-make make pre_build
+make pre_build

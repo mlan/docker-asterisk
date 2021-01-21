@@ -1,3 +1,7 @@
+# 1.0.0
+
+- [docker](src/docker) Now use alpine:3.13 (asterisk:18.1.1).
+
 # 0.9.6
 
 - [repo](hooks) Fixed bug in hooks/pre_build. Use curl in `make pre_build`.

@@ -1,6 +1,6 @@
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.12
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.13
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
@@ -95,28 +95,40 @@ test_%: test-up_% test-wait_% test-logs_% test-ping_% test-down_%
 
 test-up_0:
 	#
+	#
+	#
 	# test (0) run with defaults (is there smoke?)
+	#
 	#
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
 
 test-up_1:
 	#
+	#
+	#
 	# test (1) run with $(CNT_CMD)
+	#
 	#
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER)) $(CNT_CMD)
 
 test-up_2:
 	#
+	#
+	#
 	# test (2) run using srv vol
+	#
 	#
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		$(IMG_REPO):$(call _version,full,$(IMG_VER))
 
 test-up_3: test-up-net
 	#
+	#
+	#
 	# test (3) run using srv vol and test net
+	#
 	#
 	docker run -d --name $(CNT_NAME) $(CNT_ENV) $(CNT_VOL) \
 		--network $(TST_NET) \
@@ -124,7 +136,10 @@ test-up_3: test-up-net
 
 test-ping_%: test-version_%
 	#
-	# test ($*) successful
+	#
+	# test ($*) success ☺
+	#
+	#
 	#
 
 test-version_%:

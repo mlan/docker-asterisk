@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+# 20-docker-print-versions
+#
+dc_pkg_versions asterisk

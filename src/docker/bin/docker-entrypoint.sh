@@ -16,10 +16,10 @@ DOCKER_EXIT_DIR=${DOCKER_EXIT_DIR-/etc/docker/exit.d}
 SVDIR=${SVDIR-/etc/service}
 
 #
-# source common functions
+# Source common functions.
 #
-source docker-common.sh
-source docker-config.sh
+. docker-common.sh
+. docker-config.sh
 
 #
 # Functions

@@ -38,7 +38,7 @@
 #
 # configuration
 #
-source docker-common.sh
+. docker-common.sh
 
 DOCKER_ACME_SSL_DIR=${DOCKER_ACME_SSL_DIR-/etc/ssl/acme}
 ACME_FILE=${ACME_FILE-/acme/acme.json}
@@ -52,7 +52,7 @@ usage() { echo "$(basename $0) <path to acme> <destination cert directory>" ;}
 
 test_args() {
 	# when called by inotifyd the first argument is the single character
-	# event desciptior, lets drop it
+	# event descriptor, lets drop it
 	dc_log 7 "Called with args $@"
 	[ $# -ge 0 ] && [ ${#1} -eq 1 ] && shift
 	readonly acmefile="${1-$ACME_FILE}"
@@ -177,6 +177,7 @@ run_posthook() {
 		[ -n "$out" ] && dc_log 7 "$ACME_POSTHOOK : $out"
 	fi
 }
+
 #
 # run
 #

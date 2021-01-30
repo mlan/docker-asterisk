@@ -1,6 +1,7 @@
-# 1.0.0
+# 0.9.7
 
 - [docker](src/docker) Now use alpine:3.13 (asterisk:18.1.1).
+- [test](test/Makefile) Move tests into test dir.
 
 # 0.9.6
 

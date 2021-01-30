@@ -11,6 +11,8 @@ HOSTNAME=${HOSTNAME-$(hostname)}
 DOMAIN=${HOSTNAME#*.}
 TLS_KEYBITS=${TLS_KEYBITS-2048}
 TLS_CERTDAYS=${TLS_CERTDAYS-30}
+DOCKER_CRONTAB_FILE=${DOCKER_CRONTAB_FILE-/etc/crontab}
+DOCKER_CRONTAB_ENV=${DOCKER_CRONTAB_ENV-CRONTAB_ENTRY}
 
 #
 # general file manipulation commands, used both during build and run time
@@ -141,14 +143,34 @@ dc_persist_mvdirs() {
 
 #
 # Conditionally change owner of files.
+# -a all
+# -r readable
+# -w writable
+# -x executable
 #
-dc_chowncond() {
+dc_cond_chown() {
+	dc_log 7 "Called with args: $@"
+	OPTIND=1
+	local find_opts="! -perm -404"
+	while getopts ":arwx" opts; do
+		case "${opts}" in
+			a) find_opts="";;
+			r) find_opts="! -perm -404";;
+			w) find_opts="! -perm -606";;
+			x) find_opts="! -perm -505";;
+		esac
+	done
+	shift $((OPTIND -1))
 	local user=$1
-	local dir=$2
+	shift
 	if id $user > /dev/null 2>&1; then
-		if [ -n "$(find $dir ! -user $user -print -exec chown -h $user: {} \;)" ]; then
-			dc_log 5 "Changed owner to $user for some files in $dir"
-		fi
+		for dir in $@; do
+			if [ -n "$(find $dir ! -user $user $find_opts -print -exec chown -h $user: {} \;)" ]; then
+				dc_log 5 "Changed owner to $user for some files in $dir"
+			fi
+		done
+	else
+		dc_log 3 "User $user is unknown."
 	fi
 }
 
@@ -213,6 +235,18 @@ dc_prune_pidfiles() {
 }
 
 #
+# Setup crontab entries
+#
+dc_crontab_entries() {
+	local entries="$(eval echo \${!$DOCKER_CRONTAB_ENV*})"
+	for entry in $entries; do
+		[ -z "${changed+x}" ] && local changed= && sed -i '/^\s*[0-9*]/d' $DOCKER_CRONTAB_FILE
+		echo "${!entry}" >> $DOCKER_CRONTAB_FILE
+		dc_log 5 "Added entry ${!entry} in $DOCKER_CRONTAB_FILE"
+	done
+}
+
+#
 # TLS/SSL Certificates [openssl]
 #
 dc_tls_setup_selfsigned_cert() {
@@ -230,15 +264,17 @@ dc_tls_setup_selfsigned_cert() {
 # Configuration Lock
 #
 dc_lock_config() {
-	if dc_is_unlocked; then
+	if [ -f "$DOCKER_UNLOCK_FILE" ]; then
 		rm $DOCKER_UNLOCK_FILE
 		dc_log 5 "Removing unlock file, locking the configuration."
+	elif [ -n "$FORCE_CONFIG" ]; then
+		dc_log 5 "Configuration update was forced, since we got FORCE_CONFIG=$FORCE_CONFIG"
 	else
 		dc_log 5 "No unlock file found, so not touching configuration."
 	fi
 }
 
 #
-# true if there is no lock file or FORCE_CONFIG is not empty
+# true if there is no unlock file or FORCE_CONFIG is not empty
 #
 dc_is_unlocked() { [ -f "$DOCKER_UNLOCK_FILE" ] || [ -n "$FORCE_CONFIG" ] ;}

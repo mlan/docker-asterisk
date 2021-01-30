@@ -7,7 +7,7 @@
 #
 
 #
-# Setup ACME monitor and arrange certificate symlinks
+# Setup ACME monitor and arrange certificate symbolic links
 #
 acme_monitor_tls_cert
 acme_symlink_tls_cert

@@ -4,9 +4,4 @@
 #
 # If SYSLOG_LEVEL is not empty update syslog level
 #
-source docker-common.sh
-
-if [ -n "$SYSLOG_LEVEL" ]; then
-	dc_log 5 "Setting syslogd level=$SYSLOG_LEVEL."
-	docker-service.sh "syslogd -nO- -l$SYSLOG_LEVEL $SYSLOG_OPTIONS"
-fi
+dc_update_loglevel

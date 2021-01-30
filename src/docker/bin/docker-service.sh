@@ -2,7 +2,7 @@
 #
 # docker-service.sh
 #
-source docker-common.sh
+. docker-common.sh
 
 # use /etc/service if $SVDIR not already defined
 SVDIR=${SVDIR-/etc/service}
@@ -61,6 +61,8 @@ init_service() {
 	local clearpid=
 	local sourcefile=
 	local sv_name cmd runsv_dir svlog_dir sv_log sv_down sv_force options
+	dc_log 7 "Called with args $@"
+	OPTIND=1
 	while getopts ":dfhln:s:q" opts; do
 		case "${opts}" in
 			d) sv_down="down"; add_opt "down";;
@@ -104,6 +106,8 @@ init_service() {
 			!cat
 			chmod +x $runsv_dir/log/run
 		fi
+	else
+		dc_log 4 "Cannot find command."
 	fi
 	}
 

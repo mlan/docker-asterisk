@@ -12,12 +12,12 @@ DOCKER_LOGUSAGE=${DOCKER_LOGUSAGE-usage}
 # Write messages to console if interactive or syslog if not.
 # Usage: inform priority message
 # The priority may be specified numerically or as a facility.level pair.
-# Example user.notice, or 1.6 level is one of: 
+# Example user.notice, or 1.6 level is one of:
 # 0|emerg|1|alert|2|crit|3|err|4|warning|5|notice|6|info|7|debug
 #
 dc_log() {
 	local script=$(basename $0)
-	local stamp=$(dc_log_stamp)
+	local stamp="$(dc_log_stamp)"
 	local prio=$1
 	local level=${prio#*.}
 	local logtag="${script}[${$}]"
@@ -85,9 +85,25 @@ dc_log_stamp() {
 }
 
 #
-# Tests
+# Tests if command is in the path
 #
-dc_is_installed() { apk -e info $1 &>/dev/null ;} # true if pkg is installed
+dc_is_command() { [ -x "$(command -v $1)" ] ;}
+
+#
+# Tests if pkgs are installed
+#
+dc_is_installed() {
+	if dc_is_command apk; then
+		ver_cmd="apk -e info"
+	elif dc_is_command dpkg; then
+		ver_cmd="dpkg -s"
+	else
+		dc_log 5 "No package manager found among: apk dpkg"
+	fi
+	for cmd in $@; do
+		$ver_cmd $cmd > /dev/null 2>&1 || return 1
+	done
+}
 
 #
 # Update loglevel
@@ -99,4 +115,32 @@ dc_update_loglevel() {
 		docker-service.sh "syslogd -nO- -l$loglevel $SYSLOG_OPTIONS"
 		[ -n "$DOCKER_RUNFUNC" ] && sv restart syslogd
 	fi
+}
+
+#
+# Print package versions
+#
+dc_pkg_versions() {
+	local pkgs="$@"
+	local len=$(echo $pkgs | tr " " "\n" | wc -L)
+	local ver ver_cmd sed_flt
+	local os=$(sed -rn 's/PRETTY_NAME="(.*)"/\1/p' /etc/os-release)
+	local kern=$(uname -r)
+	local host=$(uname -n)
+	dc_log 5 $host $os $kern
+	if dc_is_command apk; then
+		ver_cmd="apk info -s"
+		sed_flt="s/.*-(.*)-.*/\1/p"
+	elif dc_is_command dpkg; then
+		ver_cmd="dpkg -s"
+		sed_flt="s/Version: ([[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+).*/\1/p"
+	else
+		dc_log 5 "No package manager found among: apk dpkg"
+	fi
+	for pkg in $pkgs; do
+		ver=$($ver_cmd $pkg 2> /dev/null | sed -rn "$sed_flt")
+		if [ -n "$ver" ]; then
+			printf "\t%-${len}s\t%s\n" $pkg $ver
+		fi
+	done
 }

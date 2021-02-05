@@ -29,7 +29,7 @@ build-all: build_mini build_base build_full build_xtra
 
 build: build_$(BLD_TGT)
 
-build_%: Dockerfile
+build_%: pre_build
 	docker build $(BLD_ARG) --target $* \
 	$(addprefix --tag $(BLD_REPO):,$(call _version,$*,$(BLD_VER))) .
 

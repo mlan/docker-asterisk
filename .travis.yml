@@ -3,4 +3,4 @@ os: linux
 dist: bionic
 services: docker
 install: make build-all
-script: make test_0
+script: make test-all

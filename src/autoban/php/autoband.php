@@ -45,28 +45,33 @@ $ami->addEventHandler('InvalidPassword',         'eventAbuse');
  Start code execution.
  Wait 1s allowing Asterisk time to setup the Asterisk Management Interface (AMI).
  If autoban is activated try to connect to the AMI. If successful, start
- listening for events indefinitely. If connection fails, exit and let the
- system supervisor start us again, so we can retry to connect.
+ listening for events indefinitely. If connection fails, retry to connect.
  If autoban is deactivated stay in an infinite loop instead of exiting.
  Otherwise the system supervisor will relentlessly just try to restart us.
 */
-sleep(1);
+$wait_init  = 2;
+$wait_extra = 58;
+$wait_off   = 3600;
 if ($ban->config['autoban']['enabled']) {
-	if ($ami->connect(null,null,null,'on') === false) {
-		$connected = false;
-		trigger_error('Unable to connect to Asterisk Management Interface',E_USER_ERROR);
-	} else {
-		$connected = true;
-		trigger_error('Activated and connected to Asterisk Management Interface',E_USER_NOTICE);
+	while(true) {
+		sleep($wait_init);
+		if ($ami->connect()) {
+			trigger_error('Activated and connected to AMI',E_USER_NOTICE);
+			$ami->waitResponse(); // listen for events until connection fails
+			$ami->disconnect();
+		} else {
+			trigger_error('Unable to connect to AMI',E_USER_ERROR);
+			sleep($wait_extra);
+		}
 	}
-	while($connected) { $ami->waitResponse(); }
 } else {
-	trigger_error('Disabled! Activate autoban using conf file (/etc/asterisk/autoban.conf)',E_USER_NOTICE);
-	while(true) { sleep(60); }
+	trigger_error('Disabled! Activate autoban using conf file '.
+	'(/etc/asterisk/autoban.conf)',E_USER_NOTICE);
+	while(true) { sleep($wait_off); }
 }
 
+
 /*------------------------------------------------------------------------------
- We normally will not come here.
+ We will never come here.
 */
-$ami->disconnect();
 ?>

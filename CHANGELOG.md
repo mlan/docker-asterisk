@@ -1,3 +1,7 @@
+# 0.9.8
+
+- [autoban](src/autoban) Let autoband handle AMI connection failures nicely.
+
 # 0.9.7
 
 - [docker](src/docker) Now use alpine:3.13 (asterisk:18.1.1).

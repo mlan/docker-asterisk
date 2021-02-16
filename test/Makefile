@@ -39,7 +39,7 @@ PBX_ENV  ?= $(NET_ENV) $(EXP_ENV) $(CAP_ENV) \
 -e SYSLOG_LEVEL=8
 PBXV_ENV ?= -v $(PBX_NAME):/srv
 
-TST_W8   ?= 1
+TST_W8   ?= 5
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
@@ -98,7 +98,6 @@ test-ping_%: test-version_%
 	#
 
 test-version_%:
-	sleep 2
 	docker exec -it $(PBX_NAME) asterisk -x "pjsip show version" | grep PJPROJECT
 
 test-logs_%:
@@ -123,7 +122,7 @@ test-down-vol:
 
 
 $(addprefix test-,diff env htop imap logs pop3 sh sv):
-	${MAKE} $(patsubst test-%,srv-%,$@)
+	${MAKE} $(patsubst test-%,pbx-%,$@)
 
 $(addsuffix -sh,$(CNT_LIST)):
 	docker exec -it $(patsubst %-sh,$(TST_NAME)-%,$@) sh -c 'exec $$(getent passwd root | sed "s/.*://g")'

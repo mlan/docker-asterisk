@@ -1,3 +1,8 @@
+# 0.9.9
+
+- [docker](src/docker) Now use alpine:3.14 (asterisk:18.2.2).
+- [docker](ROADMAP.md) Use [travis-ci.com](https://travis-ci.com/).
+
 # 0.9.8
 
 - [autoban](src/autoban) Let autoband handle AMI connection failures nicely.

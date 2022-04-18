@@ -79,7 +79,7 @@ prune:
 	docker image prune -f
 
 clean:
-	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi
+	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi | true
 
 $(TST_TGTE):
 	${MAKE} $(TST_ENV) $@

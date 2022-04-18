@@ -46,7 +46,7 @@ COPY	src/*/exit.d $DOCKER_EXIT_DIR/
 COPY	src/*/php $DOCKER_PHP_DIR/
 COPY	sub/*/php $DOCKER_PHP_DIR/
 COPY	src/*/config $DOCKER_SEED_CONF_DIR/
-COPY	src/*/nft $DOCKER_NFT_DIR/
+COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
 
 #
 # Facilitate persistent storage and install asterisk

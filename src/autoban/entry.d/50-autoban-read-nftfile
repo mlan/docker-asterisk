@@ -31,27 +31,25 @@ if ! dc_is_installed nftables; then exit; fi
 mkdir -p ${DOCKER_PERSIST_DIR}${DOCKER_NFT_DIR}
 
 #
-# If DOCKER_NFT_DIR is empty, initialize it with files from
-# DOCKER_SEED_NFT_DIR. We don't want to overwrite any files,
-# but we only have "cp -u" (only copy newer) in busybox.
-# The directory should be empty when we try to copy,
-# so this is just an extra precaution.
+# If DOCKER_NFT_FILE is empty or is missing
+# initialize it with files from DOCKER_SEED_NFT_DIR.
 #
 
-if [ -z "$(ls -A $DOCKER_NFT_DIR 2>/dev/null)" ]; then
+nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
+
+if [ ! -s ${nft_file} ]; then
 	dc_log 5 "Seeding nft configuration."
-	cp -p -u $DOCKER_SEED_NFT_DIR/$DOCKER_NFT_FILE $DOCKER_NFT_DIR
+	cp $DOCKER_SEED_NFT_DIR/$DOCKER_NFT_FILE $DOCKER_NFT_DIR
 fi
 
 #
 # If nft_file exists have NFT import it
 #
 
-#nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
-#if [ -f "$nft_file" ]; then
-#	dc_log 5 "Importing $nft_file."
-#	if nft delete table $DOCKER_NFT_TABLE 2>/dev/null; then
-#		dc_log 4 "nft table $DOCKER_NFT_TABLE was overwritten"
-#	fi
-#	nft -f ${nft_file}
-#fi
+if [ -f ${nft_file} ]; then
+	dc_log 5 "Importing $nft_file."
+	if nft delete table $DOCKER_NFT_TABLE 2>/dev/null; then
+		dc_log 4 "nft table $DOCKER_NFT_TABLE was overwritten"
+	fi
+	nft -f ${nft_file}
+fi

@@ -18,7 +18,7 @@ class Nft {
 	private const TIME_UNITS = ['d' => 86400, 'h' => 3600, 'm' => 60, 's' => 1];
 	private const SHOW_MARK = 'X';
 	private const SHOW_ID = 'addr';
-	private const NFT_DIR = '/var/lib/nftables';
+	private const NFT_DIR = '/etc/nftables.d';
 	private const NFT_FILE = 'autoban.nft';
 	private $nft_statefile;
 	public $debug = false;

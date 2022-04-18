@@ -7,13 +7,13 @@
 
 #
 # Configuration
-# Note that the templates are in /etc/nftables and the actual state file is kept
-# in /var/lib/nftables, which might be perceived to be counter intuitive.
+# The templates are in /usr/share/nftables and the actual state file is kept
+# in /etc/nftables.d.
 #
 source docker-common.sh
 
-DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
-DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
+DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/etc/nftables.d}
+DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/usr/share/nftables}
 DOCKER_NFT_FILE=${DOCKER_NFT_FILE-autoban.nft}
 DOCKER_NFT_TABLE=${DOCKER_NFT_TABLE-autoban}
 
@@ -47,11 +47,11 @@ fi
 # If nft_file exists have NFT import it
 #
 
-nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
-if [ -f "$nft_file" ]; then
-	dc_log 5 "Importing $nft_file."
-	if nft delete table $DOCKER_NFT_TABLE 2>/dev/null; then
-		dc_log 4 "nft table $DOCKER_NFT_TABLE was overwritten"
-	fi
-	nft -f ${nft_file}
-fi
+#nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
+#if [ -f "$nft_file" ]; then
+#	dc_log 5 "Importing $nft_file."
+#	if nft delete table $DOCKER_NFT_TABLE 2>/dev/null; then
+#		dc_log 4 "nft table $DOCKER_NFT_TABLE was overwritten"
+#	fi
+#	nft -f ${nft_file}
+#fi

@@ -24,9 +24,9 @@ ENV	SVDIR=/etc/service \
 	DOCKER_LOG_DIR=/var/log/asterisk \
 	DOCKER_LIB_DIR=/var/lib/asterisk \
 	DOCKER_DL_DIR=/usr/lib/asterisk/modules \
-	DOCKER_NFT_DIR=/var/lib/nftables \
+	DOCKER_NFT_DIR=/etc/nftables.d \
 	DOCKER_SEED_CONF_DIR=/usr/share/asterisk/config \
-	DOCKER_SEED_NFT_DIR=/etc/nftables \
+	DOCKER_SEED_NFT_DIR=/usr/share/nftables \
 	DOCKER_SSL_DIR=/etc/ssl \
 	ACME_POSTHOOK="sv restart asterisk" \
 	SYSLOG_LEVEL=4 \
@@ -46,7 +46,7 @@ COPY	src/*/exit.d $DOCKER_EXIT_DIR/
 COPY	src/*/php $DOCKER_PHP_DIR/
 COPY	sub/*/php $DOCKER_PHP_DIR/
 COPY	src/*/config $DOCKER_SEED_CONF_DIR/
-COPY	src/*/nft $DOCKER_SEED_NFT_DIR/
+COPY	src/*/nft $DOCKER_NFT_DIR/
 
 #
 # Facilitate persistent storage and install asterisk

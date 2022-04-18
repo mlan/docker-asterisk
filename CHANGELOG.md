@@ -1,7 +1,8 @@
-# 0.9.10
+# 1.0.0
 
 - [docker](src/docker) Now use alpine:3.15 (asterisk:18.2.2).
-- [autoban](src/autoban) Let autoban manipulate nft without breaking docker networking. Since docker 5:20.10 container DNS resolve is based on nft rules (previoulsy implemented with iptables) which autoban's nft impementation interfered with resulting in container unable to resolve network names.
+- [autoban](src/autoban) Let autoban manipulate nft without breaking docker networking. Since docker 5:20.10 container DNS resolve is based on nft rules (previously implemented with iptables) which autoban's nft implementation interfered with resulting in container unable to resolve network names.
+- [build](test/Makefile) Now push images to registry.
 
 # 0.9.9
 

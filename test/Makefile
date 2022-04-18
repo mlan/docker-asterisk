@@ -8,7 +8,6 @@
 TST_REPO ?= mlan/asterisk
 TST_VER  ?= latest
 TST_NAME ?= test
-_ver      = $(if $(findstring latest,$(1)),$(2),$(2)-$(1))
 
 NET_NAME ?= $(TST_NAME)-net
 NET_ENV  ?= --network $(NET_NAME)
@@ -60,7 +59,7 @@ test-up_1: test-up-net
 	# test (1) run mini with defaults (is there smoke?)
 	#
 	#
-	docker run -d $(PBX_ENV) $(TST_REPO):$(call _ver,$(TST_VER),mini)
+	docker run -d $(PBX_ENV) $(TST_REPO):$(call bld_tag,mini,$(TST_VER))
 
 test-up_2: test-up-net
 	#
@@ -69,7 +68,7 @@ test-up_2: test-up-net
 	# test (2) run base
 	#
 	#
-	docker run -d $(PBX_ENV) $(TST_REPO):$(call _ver,$(TST_VER),base)
+	docker run -d $(PBX_ENV) $(TST_REPO):$(call bld_tag,base,$(TST_VER))
 
 test-up_3: test-up-net
 	#
@@ -78,7 +77,7 @@ test-up_3: test-up-net
 	# test (3) run full
 	#
 	#
-	docker run -d $(PBX_ENV) $(TST_REPO):$(call _ver,$(TST_VER),full)
+	docker run -d $(PBX_ENV) $(TST_REPO):$(call bld_tag,full,$(TST_VER))
 
 test-up_4: test-up-net
 	#
@@ -87,7 +86,7 @@ test-up_4: test-up-net
 	# test (4) run xtra
 	#
 	#
-	docker run -d $(PBX_ENV) $(TST_REPO):$(call _ver,$(TST_VER),xtra)
+	docker run -d $(PBX_ENV) $(TST_REPO):$(call bld_tag,xtra,$(TST_VER))
 
 test-ping_%: test-version_%
 	#

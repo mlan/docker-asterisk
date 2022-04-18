@@ -9,6 +9,8 @@ BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.15
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
+BLD_TGTS ?= mini base full xtra
+BLD_CMT  ?= HEAD
 BLD_CVER ?= ast160
 BLD_DNLD ?= curl -o
 
@@ -21,17 +23,24 @@ TST_TGTI ?= $(addprefix test_,$(TST_INDX)) $(addprefix test-up_,$(TST_INDX))
 
 export TST_REPO TST_VER
 
-_version  = $(if $(findstring $(BLD_TGT),$(1)),\
-$(if $(findstring latest,$(2)),latest $(1),$(2) $(1)-$(2)),\
-$(if $(findstring latest,$(2)),$(1),$(1)-$(2)))
+push:
+	#
+	# ARE YOU SURE YOU WANT TO PUSH THESE IMAGES TO THE REGISTRY?
+	#
+	@docker image ls $(BLD_REPO)
+	#
+	# PRESS [CTRL-C] IF THIS IS NOT WHAT YOU WANT!
+	#
+	@read dmyvar
+	docker push --all-tags $(BLD_REPO)
 
-build-all: build_mini build_base build_full build_xtra
+build-all: $(addprefix build_,$(BLD_TGTS))
 
 build: build_$(BLD_TGT)
 
 build_%: pre_build
 	docker build $(BLD_ARG) --target $* \
-	$(addprefix --tag $(BLD_REPO):,$(call _version,$*,$(BLD_VER))) .
+	$(addprefix --tag $(BLD_REPO):,$(call bld_tags,$*,$(BLD_VER))) .
 
 pre_build: Dockerfile pre_autoban pre_codecs
 	

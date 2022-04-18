@@ -29,8 +29,7 @@ push:
 	#
 	@docker image ls $(BLD_REPO)
 	#
-	# ARE YOU SURE YOU WANT TO PUSH THESE IMAGES TO THE REGISTRY [y]?
-	#
+	# ARE YOU SURE YOU WANT TO PUSH THESE IMAGES TO THE REGISTRY? [yN]
 	@read input; [ "$${input}" = "y" ]
 	docker push --all-tags $(BLD_REPO)
 
@@ -79,7 +78,7 @@ prune:
 	docker image prune -f
 
 clean:
-	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi | true
+	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi
 
 $(TST_TGTE):
 	${MAKE} $(TST_ENV) $@

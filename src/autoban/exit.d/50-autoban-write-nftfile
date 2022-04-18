@@ -18,6 +18,12 @@ DOCKER_NFT_FILE=${DOCKER_NFT_FILE-autoban.nft}
 DOCKER_NFT_TABLE=${DOCKER_NFT_TABLE-autoban}
 
 #
+# Only proceed if nftables is installed
+#
+
+if ! dc_is_installed nftables; then exit; fi
+
+#
 # Save current NFT state to file. Omit any "expires time-string" by using
 # the option --stateless, since NFT refuse to load files with them.
 #

@@ -7,7 +7,7 @@ class Nft {
 		'cmd'    => 'nft',
 		'opt'    => '--stateless',
 		'sub'    => null,
-		'family' => 'inet',
+		'family' => 'ip',
 		'table'  => 'autoban',
 		'chain'  => null,
 		'set'    => null,

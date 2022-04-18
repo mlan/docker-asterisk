@@ -33,7 +33,7 @@ CAP_ENV  ?= \
 --cap-add SYS_PTRACE \
 --cap-add=NET_ADMIN \
 --cap-add=NET_RAW
-PBX_ENV  ?= $(NET_ENV) $(EXP_ENV) $(CAP_ENV) \
+PBX_ENV  ?= $(NET_ENV) $(EXP_ENV) $(CAP_ENV) $(LOC_ENV) \
 --name $(PBX_NAME) \
 --hostname $(PBX_FQDN) \
 -e SYSLOG_LEVEL=8

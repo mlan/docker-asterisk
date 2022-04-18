@@ -1,7 +1,7 @@
 #!/usr/sbin/nft -f
 #
 
-table inet autoban {
+table ip autoban {
 	set watch {
 		type ipv4_addr
 		flags timeout
@@ -22,7 +22,7 @@ table inet autoban {
 	}
 
 	chain incoming {
-		type filter hook input priority 0; policy accept;
+		type filter hook input priority security; policy accept;
 		ip saddr @whitelist accept
 		ip saddr @blacklist drop
 		ip saddr @jail drop

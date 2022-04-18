@@ -15,6 +15,7 @@ source docker-common.sh
 DOCKER_NFT_DIR=${DOCKER_NFT_DIR-/var/lib/nftables}
 DOCKER_SEED_NFT_DIR=${DOCKER_SEED_NFT_DIR-/etc/nftables}
 DOCKER_NFT_FILE=${DOCKER_NFT_FILE-autoban.nft}
+DOCKER_NFT_TABLE=${DOCKER_NFT_TABLE-autoban}
 
 #
 # Make sure that we have the required directory structure in place under
@@ -43,6 +44,6 @@ fi
 nft_file=$DOCKER_NFT_DIR/$DOCKER_NFT_FILE
 if [ -f "$nft_file" ]; then
 	dc_log 5 "Importing $nft_file."
-	nft flush ruleset
+	nft delete table $DOCKER_NFT_TABLE
 	nft -f ${nft_file}
 fi

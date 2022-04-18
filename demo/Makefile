@@ -1,14 +1,10 @@
 -include    *.mk .env .init.env
 
-_ip       = $(shell docker inspect -f \
-	'{{range .NetworkSettings.Networks}}{{println .IPAddress}}{{end}}' \
-	$(1) | head -n1)
-
 SRV_NAME ?= tele
-CNT_NAME ?= $(COMPOSE_PROJECT_NAME)_$(SRV_NAME)_1
+
 CNT_CLI  ?= asterisk -rvvvddd
 
-SIPS_URL ?= $(call _ip,$(CNT_NAME)):5061
+SIPS_URL ?= $(call dkr_srv_ip,$(SRV_NAME)):5061
 
 SMS_HOST ?= 127.0.0.1:8080
 SMS_URL1 ?= /hook/1
@@ -69,7 +65,7 @@ sms2:
 	--data "Body=$(SMS_BODY)"
 
 logs:
-	docker container logs $(CNT_NAME)
+	docker-compose logs $(SRV_NAME)
 
 sh:
 	docker-compose exec $(SRV_NAME) bash
@@ -78,10 +74,10 @@ cli:
 	docker-compose exec $(SRV_NAME) $(CNT_CLI)
 
 diff:
-	docker container diff $(CNT_NAME)
+	docker container diff $(call dkr_srv_cnt,$(SRV_NAME))
 
 top:
-	docker container top $(CNT_NAME)
+	docker-compose top $(SRV_NAME)
 
 env:
 	docker-compose exec $(SRV_NAME) env
@@ -127,7 +123,7 @@ xdebug_install:
 	docker-compose exec $(SRV_NAME) sv restart websmsd autoband
 
 xdebug_getdata:
-	docker cp $(CNT_NAME):tmp/. local/xdebug
+	docker cp $(call dkr_srv_cnt,$(SRV_NAME)):tmp/. local/xdebug
 
 sips_test:
 	docker run --rm -it --network bridge drwetter/testssl.sh $(SIPS_URL) || true

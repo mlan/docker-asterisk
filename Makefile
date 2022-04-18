@@ -25,13 +25,13 @@ export TST_REPO TST_VER
 
 push:
 	#
-	# ARE YOU SURE YOU WANT TO PUSH THESE IMAGES TO THE REGISTRY?
+	# PLEASE REVIEW THESE IMAGES WHICH ARE ABOUT TO BE PUSHED TO THE REGISTRY
 	#
 	@docker image ls $(BLD_REPO)
 	#
-	# PRESS [CTRL-C] IF THIS IS NOT WHAT YOU WANT!
+	# ARE YOU SURE YOU WANT TO PUSH THESE IMAGES TO THE REGISTRY [y]?
 	#
-	@read dmyvar
+	@read input; [ "$${input}" = "y" ]
 	docker push --all-tags $(BLD_REPO)
 
 build-all: $(addprefix build_,$(BLD_TGTS))

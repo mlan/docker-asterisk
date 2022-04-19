@@ -5,6 +5,7 @@
 - [autoban](src/autoban) Now use DOCKER_NFT_DIR=/etc/nftables.d.
 - [build](Makefile) Now push images to registry.
 - [demo](demo) Updated demo to also work with docker-compose >= 2.
+- [privatedial](src/privatedial) In `pjsip_transport.conf` added `ca_list_file` and `ca_list_path` introduced with pjproject 2.4.
 
 # 0.9.9
 

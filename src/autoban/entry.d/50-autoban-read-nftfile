@@ -21,7 +21,10 @@ DOCKER_NFT_TABLE=${DOCKER_NFT_TABLE-autoban}
 # Only proceed if nftables is installed
 #
 
-if ! dc_is_installed nftables; then exit; fi
+if ! dc_is_installed nftables; then
+	dc_log 5 "Not possible to seed nft configuration since nftables is not installed."
+	return
+fi
 
 #
 # Make sure that we have the required directory structure in place under

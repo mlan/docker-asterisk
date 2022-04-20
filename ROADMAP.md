@@ -24,16 +24,6 @@ Consider fixing the code in [app_minivm.c](https://github.com/asterisk/asterisk/
 - Perhaps replace entry.d/ with /etc/conf.d/nftables?
 - Allow intervals, eg 192.168.1.1-192.168.1.200, in blacklist and whitelist.
 
-### How to inpspect container networking
-
-From the docker host you can inspect the container network namespace in the following way.
-
-```bash
-nsenter -n -t $(docker inspect --format {{.State.Pid}} test-pbx) iptables -t nat -nvL
-nsenter -n -t $(docker inspect --format {{.State.Pid}} test-pbx) nft list ruleset
-nsenter -n -p -t $(docker inspect --format {{.State.Pid}} test-pbx) ss -utnlp | grep dockerd
-```
-
 ## WebSMS
 
 ## Asterisk modules

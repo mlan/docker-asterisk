@@ -1,11 +1,12 @@
 # 1.0.0
 
 - [docker](src/docker) Now use alpine:3.15 (asterisk:18.2.2).
-- [autoban](src/autoban) Let autoban manipulate nft without breaking docker networking. Since docker 5:20.10 container DNS resolve is based on nft rules (previously implemented with iptables) which autoban's nft implementation interfered with resulting in container unable to resolve network names.
+- [autoban](src/autoban) Let autoban manipulate nft without breaking docker networking. Since docker 5:20.10 container DNS resolve is based on nft rules (with iptables-nft) which autoban's nft implementation interfered with resulting in container unable to resolve network names.
 - [autoban](src/autoban) Now use DOCKER_NFT_DIR=/etc/nftables.d.
+- [autoban](src/autoban) Only load `.nft` files if nft is installed.
 - [build](Makefile) Now push images to registry.
 - [demo](demo) Updated demo to also work with docker-compose >= 2.
-- [privatedial](src/privatedial) In `pjsip_transport.conf` added `ca_list_file` and `ca_list_path` introduced with pjproject 2.4.
+- [test](test/Makefile) Added container name-space network inspection targets.
 
 # 0.9.9
 

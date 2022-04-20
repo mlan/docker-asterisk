@@ -41,6 +41,14 @@ PBXV_ENV ?= -v $(PBX_NAME):/srv
 TST_W8S  ?= 5
 TST_W8L  ?= 10
 
+NET_SYSP := $(shell command -v nft)
+
+ifdef NET_SYSP
+	NET_RULE := nft list ruleset
+else
+	NET_RULE := iptables -t nat -nvL
+endif
+
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
 
@@ -151,6 +159,11 @@ $(addsuffix -htop,$(CNT_LIST)):
 $(addsuffix -sv,$(CNT_LIST)):
 	docker exec -it $(patsubst %-sv,$(TST_NAME)-%,$@) sh -c 'sv status $$SVDIR/*'
 
+$(addsuffix -nsrule,$(CNT_LIST)):
+	sudo nsenter -n -t $(call dkr_cnt_pid,$(patsubst %-nsrule,$(TST_NAME)-%,$@)) $(NET_RULE)
+
+$(addsuffix -nsss,$(CNT_LIST)):
+	sudo nsenter -n -t $(call dkr_cnt_pid,$(patsubst %-nsss,$(TST_NAME)-%,$@)) ss -utnlp
 
 acme-destroy: ssl-destroy
 	rm -f acme/*

@@ -1,3 +1,8 @@
+# 1.0.1
+
+- [build](Makefile) Now use alpine:3.16 (asterisk:18.11.2).
+- [build](Dockerfile) Switch to php8.
+
 # 1.0.0
 
 - [docker](src/docker) Now use alpine:3.15 (asterisk:18.2.2).

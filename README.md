@@ -5,7 +5,7 @@
 ![image size](https://img.shields.io/docker/image-size/mlan/asterisk/latest.svg?label=size&style=flat-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=flat-square&logo=docker)
 ![docker stars](https://img.shields.io/docker/stars/mlan/asterisk.svg?label=stars&style=flat-square&logo=docker)
-![github stars](https://img.shields.io/github/stars/mlan/docker-asterisk.svg?label=stars&style=popout-square&logo=github)
+![github stars](https://img.shields.io/github/stars/mlan/docker-asterisk.svg?label=stars&style=flat-square&logo=github)
 
 This (non official) repository provides dockerized Asterisk PBX.
 

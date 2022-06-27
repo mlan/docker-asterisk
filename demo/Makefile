@@ -117,9 +117,9 @@ tools_install:
 
 xdebug_install:
 	docker-compose exec $(SRV_NAME) apk --no-cache --update add \
-	php7-pecl-xdebug
-	docker-compose exec $(SRV_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/php7/php.ini
-	docker-compose exec $(SRV_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/php7/conf.d/xdebug.ini
+	php8-pecl-xdebug
+	docker-compose exec $(SRV_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/php8/php.ini
+	docker-compose exec $(SRV_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/php8/conf.d/xdebug.ini
 	docker-compose exec $(SRV_NAME) sv restart websmsd autoband
 
 xdebug_getdata:

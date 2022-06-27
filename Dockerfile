@@ -18,7 +18,7 @@ ENV	SVDIR=/etc/service \
 	DOCKER_BIN_DIR=/usr/local/bin \
 	DOCKER_ENTRY_DIR=/etc/docker/entry.d \
 	DOCKER_EXIT_DIR=/etc/docker/exit.d \
-	DOCKER_PHP_DIR=/usr/share/php7 \
+	DOCKER_PHP_DIR=/usr/share/php8 \
 	DOCKER_SPOOL_DIR=/var/spool/asterisk \
 	DOCKER_CONF_DIR=/etc/asterisk \
 	DOCKER_LOG_DIR=/var/log/asterisk \
@@ -93,9 +93,9 @@ RUN	apk --no-cache --update add \
 	asterisk-srtp \
 	openssl \
 	curl \
-	php7 \
-	php7-curl \
-	php7-json \
+	php8 \
+	php8-curl \
+	php8-json \
 	runit \
 	bash \
 	nftables \

@@ -292,7 +292,7 @@ The payload of the HTTP request might look like this:
 For testing purposes, you can use `websms.php` to send a SMS from the command line inside the container:
 
 ```bash
-/usr/share/php7/websms.php +12025550183 +12025550160 "Outgoing message!"
+/usr/share/php8/websms.php +12025550183 +12025550160 "Outgoing message!"
 ```
 
 ### websmsd.php receiving SMS from ITSP

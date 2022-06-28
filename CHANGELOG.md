@@ -1,9 +1,9 @@
-# 1.0.1
+# 1.1.0
 
 - [build](Makefile) Now use alpine:3.16 (asterisk:18.11.2).
 - [build](Dockerfile) Switch to php8.
 - [demo](demo) Switch to php8.
-- [privatedial](src/privatedial) In `extensions.conf` now use `APP_SMS = /usr/local/bin/websms`. 
+- [privatedial](src/privatedial) BREAKING. In `extensions.conf` now use `APP_SMS = /usr/local/bin/websms`.
 
 # 1.0.0
 

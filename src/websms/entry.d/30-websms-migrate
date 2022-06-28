@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# 30-websms-migrate
+#
+# Try to make configs compatible with new version if MIGRATE_CONFIG is defined.
+# Set MIGRATE_CONFIG=1 2 3 to list of fixes or MIGRATE_CONFIG=all to attempt all fixes.
+#
+APP_SMS_OLD=/usr/share/php7/websms.php
+APP_SMS_NEW=/usr/local/bin/websms
+
+websms_apply_migrate_fixes() {
+	local applied
+	if [ -n "$MIGRATE_CONFIG" ]; then
+		for fix in ${MIGRATE_CONFIG/all/1}; do # list all fixes here
+		case $fix in
+		1) # Make sure websms application can be found
+			websms_migrate_php FIX
+		;;
+		*) fix= ;;
+		esac
+		if [ -n "$fix" ]; then
+			applied="$applied $fix"
+		fi
+		done
+		if [ -n "$applied" ]; then
+			dc_log 5 "Applied fixes;$applied to configuration since MIGRATE_CONFIG=$MIGRATE_CONFIG"
+		fi
+	fi
+}
+
+websms_notify_compat_issues() {
+	websms_migrate_php
+}
+
+websms_migrate_php() {
+	if grep "^APP_SMS = $APP_SMS_OLD" $DOCKER_CONF_DIR/extensions.conf >/dev/null; then
+		if [ "$1" = "FIX" ]; then
+			sed -i 's|'$APP_SMS_OLD'|'$APP_SMS_NEW'|g' $DOCKER_CONF_DIR/extensions.conf
+		    dc_log 5 "Setting APP_SMS = $APP_SMS_NEW in $DOCKER_CONF_DIR/extensions.conf"
+		else
+			dc_log 4 "WEBSMS might not work. Found incompatible APP_SMS = $APP_SMS_OLD in $DOCKER_CONF_DIR/extensions.conf. Use APP_SMS = $APP_SMS_NEW or set MIGRATE_CONFIG=all to fix."
+		fi
+	fi
+}
+#
+# run
+#
+websms_apply_migrate_fixes
+websms_notify_compat_issues

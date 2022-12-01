@@ -1,3 +1,9 @@
+# 1.1.1
+
+- [build](Makefile) Now use alpine:3.17 (asterisk:18.15.0).
+- [build](Dockerfile) Switch to php81.
+- [test](.travis.yml) Updated dist to jammy.
+
 # 1.1.0
 
 - [build](Makefile) Now use alpine:3.16 (asterisk:18.11.2).

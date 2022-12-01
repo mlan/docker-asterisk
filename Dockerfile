@@ -93,9 +93,9 @@ RUN	apk --no-cache --update add \
 	asterisk-srtp \
 	openssl \
 	curl \
-	php8 \
-	php8-curl \
-	php8-json \
+	php81 \
+	php81-curl \
+	php81-json \
 	runit \
 	bash \
 	nftables \

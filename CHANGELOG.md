@@ -1,3 +1,7 @@
+# 1.1.2
+
+- [build](Dockerfile) Fix the bug; websmsd not working. We need to set DOCKER_PHP_DIR=/usr/share/php81.
+
 # 1.1.1
 
 - [build](Makefile) Now use alpine:3.17 (asterisk:18.15.0).

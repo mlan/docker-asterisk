@@ -18,7 +18,7 @@ This (non official) repository provides dockerized Asterisk PBX.
 - Additionally provide the [G.729](https://en.wikipedia.org/wiki/G.729) and [G.723.1](https://en.wikipedia.org/wiki/G.723.1) audio codecs
 - Small image size based on [Alpine Linux](https://alpinelinux.org/)
 - [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files
-- Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
+- Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) TLS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
 - Persistent storage facilitated by configuration and run data being consolidated under `/srv`
 - [Container audio](#container-audio) using the pulse socket of the host
 - Use [runit](http://smarden.org/runit/), providing an init scheme and service supervision

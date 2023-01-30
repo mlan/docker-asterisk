@@ -3,7 +3,6 @@
 - [repo](src) Fix the bug; websms and autoban not working. We need to use softlinks to ../../share/php81/.
 - [docker](README.md) Corrected misspelling.
 
-
 # 1.1.2
 
 - [build](Dockerfile) Fix the bug; websmsd not working. We need to set DOCKER_PHP_DIR=/usr/share/php81.

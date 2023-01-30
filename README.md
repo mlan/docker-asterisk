@@ -18,7 +18,7 @@ This (non official) repository provides dockerized Asterisk PBX.
 - Additionally provide the [G.729](https://en.wikipedia.org/wiki/G.729) and [G.723.1](https://en.wikipedia.org/wiki/G.723.1) audio codecs
 - Small image size based on [Alpine Linux](https://alpinelinux.org/)
 - [Demo](#docker-compose-example) based on `docker-compose.yml` and `Makefile` files
-- Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
+- Automatic integration of [Let’s Encrypt](https://letsencrypt.org/) TLS certificates using the reverse proxy [Traefik](https://docs.traefik.io/)
 - Persistent storage facilitated by configuration and run data being consolidated under `/srv`
 - [Container audio](#container-audio) using the pulse socket of the host
 - Use [runit](http://smarden.org/runit/), providing an init scheme and service supervision
@@ -289,17 +289,17 @@ The PrivateDial configuration is already set up to provide both UDP and TCP tran
 
 The private key length and self-signed certificate validity duration can be configured using the environment variables: `TLS_KEYBITS=2048` and `TLS_CERTDAYS=30`.
 
-### Let’s Encrypt LTS certificates using Traefik
+### Let’s Encrypt TLS certificates using Traefik
 
 [Let’s Encrypt](https://letsencrypt.org/) provide free, automated, authorized certificates when you can demonstrate control over your domain. Automatic Certificate Management Environment (ACME) is the protocol used for such demonstration.
 
-There are many agents and applications that supports ACME, e.g., [certbot](https://certbot.eff.org/). The reverse proxy [Traefik](https://docs.traefik.io/) also supports ACME. `mlan/asterisk` can use the LTS certificates Traefik has acquired.
+There are many agents and applications that supports ACME, e.g., [certbot](https://certbot.eff.org/). The reverse proxy [Traefik](https://docs.traefik.io/) also supports ACME. `mlan/asterisk` can use the TLS certificates Traefik has acquired.
 
 #### `ACME_FILE`, `ACME_POSTHOOK`
 
 The `mlan/asterisk` image looks for the file `ACME_FILE=/acme/acme.json` at container startup. If it is found certificates within this file are extracted. If the host or domain name of one of those certificates matches `HOSTNAME=$(hostname)` or `DOMAIN=${HOSTNAME#*.}` it will be used by the TLS transport. Moreover, the `ACME_FILE` will be monitored and should it change the certificates will be exported anew. So when Traefik renews its certificates Asterisk will automatically also have access to the new certificate.
 
-Once the certificates and keys have been updated, we run the command in the environment variable `ACME_POSTHOOK="sv restart asterisk"`. Asterisk needs to be restarted to reload the transport, i.e., LTS parameters to be updated. If automatic restarting of Asterisk is not desired, set `ACME_POSTHOOK=` to empty.
+Once the certificates and keys have been updated, we run the command in the environment variable `ACME_POSTHOOK="sv restart asterisk"`. Asterisk needs to be restarted to reload the transport, i.e., TLS parameters to be updated. If automatic restarting of Asterisk is not desired, set `ACME_POSTHOOK=` to empty.
 
 Using Traefik's certificates will work "out of the box" simply by making sure that the `/acme` directory in the Traefik container is also is mounted in the `mlan/asterisk` container.
 

@@ -1,6 +1,8 @@
 # 1.1.3
 
 - [repo](src) Fix the bug; websms and autoban not working. We need to use softlinks to ../../share/php81/.
+- [docker](README.md) Corrected misspelling.
+
 
 # 1.1.2
 
@@ -164,7 +166,7 @@
 
 # 0.3.0
 
-- [acme](src/acme) New support for [Let’s Encrypt](https://letsencrypt.org/) LTS certificates using [Traefik](https://traefik.io/) using `ACME_FILE=/acme/acme.json`.
+- [acme](src/acme) New support for [Let’s Encrypt](https://letsencrypt.org/) TLS certificates using [Traefik](https://traefik.io/) using `ACME_FILE=/acme/acme.json`.
 - [asterisk](src/asterisk) Configuration now supports UDP, TCP and TLS and SDES.
 - [asterisk](src/asterisk) Generate self-signed TLS certificate.
 - [asterisk](src/asterisk) Improved structure of `pjsip_wizard.conf`.

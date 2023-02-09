@@ -1,3 +1,8 @@
+# 1.1.4
+
+- [privatedial](src/privatedial) Allow all TLS protocols in the `minivm-send` bash script.
+- [test](test/Makefile) Now also test the PHP is setup correctly.
+
 # 1.1.3
 
 - [repo](src) Fix the bug; websms and autoban not working. We need to use softlinks to ../../share/php81/.

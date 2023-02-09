@@ -58,7 +58,7 @@ ps:
 test-all: $(addprefix test_,1 2 3 4)
 	
 
-test_%: test-up_% test-wait_% test-logs_% test-ping_% test-down_%
+test_%: test-up_% test-wait_% test-logs_% test-autoban_% test-ping_% test-down_%
 	
 
 test-up_1: test-up-net
@@ -107,6 +107,9 @@ test-ping_%: test-version_%
 
 test-version_%:
 	docker exec -it $(PBX_NAME) asterisk -x "pjsip show version" | grep PJPROJECT
+
+test-autoban_%:
+	case $* in [2-3]) docker exec -it $(PBX_NAME) autoban;; esac
 
 test-logs_%:
 	docker container logs $(PBX_NAME) | grep 'docker-entrypoint.sh' || true

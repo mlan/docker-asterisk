@@ -43,9 +43,9 @@ done
 #
 case "$sendmail_proto" in
 starttls)
-	sendmail_args+=("-H" "openssl s_client -quiet -tls1 -starttls smtp -connect $sendmail_host") ;;
+	sendmail_args+=("-H" "openssl s_client -quiet -starttls smtp -connect $sendmail_host") ;;
 smtps|tls)
-	sendmail_args+=("-H" "openssl s_client -quiet -tls1 -connect $sendmail_host") ;;
+	sendmail_args+=("-H" "openssl s_client -quiet -connect $sendmail_host") ;;
 smtp|*)
 	sendmail_args+=("-S" "$sendmail_host") ;;
 esac
@@ -55,15 +55,18 @@ esac
 # Asterisk pass the message via stdin to this script and
 # that stream is inherited here
 #
-sendmail "${sendmail_args[@]}" &>/dev/null
-sendmail_extival=$?
+sendmail_output=$(sendmail "${sendmail_args[@]}" 2>&1)
+sendmail_exitval=$?
+sendmail_cmd="sendmail ${sendmail_args[@]}"
 
 #
 # Log sendmail status and exit
 #
-if [ $sendmail_extival -eq 0 ]; then
+if [ $sendmail_exitval -eq 0 ]; then
 	logger "${logger_args[@]}" -p mail.info "INFO: Successfully sent mail ($sendmail_host)"
 else
 	logger "${logger_args[@]}" -p mail.err "ERROR: Unable to send mail ($sendmail_host)"
+	logger "${logger_args[@]}" -p mail.err "$sendmail_cmd"
+	logger "${logger_args[@]}" -p mail.err "$sendmail_output"
 fi
-exit $sendmail_extival
+exit $sendmail_exitval

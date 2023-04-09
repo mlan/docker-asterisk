@@ -152,7 +152,7 @@ By default, docker will store the configuration and run data within the containe
 
 To facilitate such approach, to achieve persistent storage, the configuration and spool directories of the services has been consolidated under `/srv`. The applications running inside the container still finds files in their usual locations since symbolic links are placed in these locations pointing back to `/srv`. With this approach simply mounting a docker volume at `/srv` let you keep application configuration and state persistent.
 
-The volume `tele-conf` in the [demo](#docker-compose-example), which uses `docker-compose`, described above, achieves this. Mounting a volume using the docker CLI, can look like this:
+The volume `tele-conf` in the [demo](#docker-compose-example), which uses `docker compose`, described above, achieves this. Mounting a volume using the docker CLI, can look like this:
 
 ```
 docker run -d -v tele-conf:/srv ... mlan/asterisk
@@ -317,7 +317,7 @@ Attempts by attackers to crack SIP passwords and hijack SIP accounts are very co
 
 When using non-standard ports the amount of attacks drop significantly, so it might be considered whenever practical. When changing port numbers they need to be updated both for docker and asterisk. To exemplify, assume we want to use 5560 for UDP and TCP and 5561 for TLS, in which case we update the configuration in two places:
 
-- docker or docker-compose, e.g., `docker run -p "5560-5561:5560-5561" -p "5560:5560/udp" …`
+- docker or docker compose, e.g., `docker run -p "5560-5561:5560-5561" -p "5560:5560/udp" …`
 - asterisk transport in `pjsip_transport.conf` (`pjsip.conf`), e.g. `bind = 0.0.0.0:5560` and `bind = 0.0.0.0:5561`
 
 ### SIP passwords strength
@@ -344,7 +344,7 @@ Without additional steps, the bind mount and environment variables described abo
 ```sh
 sudo mount --bind $(pactl info | sed '1!d;s/.*:\s*//g') pulse/socket
 cp -f ${PULSE_COOKIE-$HOME/.config/pulse/cookie} pulse/cookie
-docker-compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so'
+docker compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so'
 ```
 
 A limitation of this approach is that you need sudo/root access do be able to bind mount on the host. And, naturally, there needs to be a pulse server running on the host for any of this to work.

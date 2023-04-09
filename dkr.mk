@@ -6,7 +6,7 @@
 #
 # $(call dkr_srv_cnt,app) -> d03dda046e0b90c...
 #
-dkr_srv_cnt = $(shell docker-compose ps -q $(1) | head -n1)
+dkr_srv_cnt = $(shell docker compose ps -q $(1) | head -n1)
 #
 # $(call dkr_cnt_ip,demo-app-1) -> 172.28.0.3
 #
@@ -18,7 +18,7 @@ dkr_cnt_ip   = $(shell docker inspect -f \
 #
 dkr_srv_ip   = $(shell docker inspect -f \
 	'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
-	$$(docker-compose ps -q $(1)) | head -n1)
+	$$(docker compose ps -q $(1)) | head -n1)
 #
 # $(call dkr_cnt_pid,demo-app-1) -> 9755
 #

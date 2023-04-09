@@ -13,6 +13,7 @@ BLD_TGTS ?= mini base full xtra
 BLD_CMT  ?= HEAD
 BLD_CVER ?= ast160
 BLD_DNLD ?= curl -o
+BLD_KIT  ?= DOCKER_BUILDKIT=0
 
 TST_REPO ?= $(BLD_REPO)
 TST_VER  ?= $(BLD_VER)
@@ -38,7 +39,7 @@ build-all: $(addprefix build_,$(BLD_TGTS))
 build: build_$(BLD_TGT)
 
 build_%: pre_build
-	docker build $(BLD_ARG) --target $* \
+	$(BLD_KIT) docker build $(BLD_ARG) --target $* \
 	$(addprefix --tag $(BLD_REPO):,$(call bld_tags,$*,$(BLD_VER))) .
 
 pre_build: Dockerfile pre_autoban pre_codecs

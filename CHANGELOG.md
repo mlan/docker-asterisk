@@ -1,3 +1,9 @@
+# 1.1.5
+
+- [demo](demo/Makefile) Now depend on the docker-compose-plugin.
+- [build](Makefile) Set `DOCKER_BUILDKIT=0` to make `docker build` handle our symbolic links as we intended.
+
+
 # 1.1.4
 
 - [privatedial](src/privatedial) Allow all TLS protocols in the `minivm-send` bash script.

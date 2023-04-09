@@ -20,25 +20,25 @@ variables:
 init: up
 
 ps:
-	docker-compose ps
+	docker compose ps
 
 up:
-	docker-compose up -d
+	docker compose up -d
 
 start:
-	docker-compose start
+	docker compose start
 
 stop:
-	docker-compose stop
+	docker compose stop
 
 down:
-	docker-compose down
+	docker compose down
 
 destroy:
-	docker-compose down -v
+	docker compose down -v
 
 config:
-	docker-compose config
+	docker compose config
 
 wait_%:
 	sleep 10
@@ -65,62 +65,62 @@ sms2:
 	--data "Body=$(SMS_BODY)"
 
 logs:
-	docker-compose logs $(SRV_NAME)
+	docker compose logs $(SRV_NAME)
 
 sh:
-	docker-compose exec $(SRV_NAME) bash
+	docker compose exec $(SRV_NAME) bash
 
 cli:
-	docker-compose exec $(SRV_NAME) $(CNT_CLI)
+	docker compose exec $(SRV_NAME) $(CNT_CLI)
 
 diff:
 	docker container diff $(call dkr_srv_cnt,$(SRV_NAME))
 
 top:
-	docker-compose top $(SRV_NAME)
+	docker compose top $(SRV_NAME)
 
 env:
-	docker-compose exec $(SRV_NAME) env
+	docker compose exec $(SRV_NAME) env
 
 sv:
-	docker-compose exec $(SRV_NAME) sh -c 'sv status $$SVDIR/*'
+	docker compose exec $(SRV_NAME) sh -c 'sv status $$SVDIR/*'
 
 nft:
-	docker-compose exec $(SRV_NAME) nft list ruleset
+	docker compose exec $(SRV_NAME) nft list ruleset
 
 autoban:
-	docker-compose exec $(SRV_NAME) autoban show
+	docker compose exec $(SRV_NAME) autoban show
 
 htop: tools_install
-	docker-compose exec $(SRV_NAME) htop
+	docker compose exec $(SRV_NAME) htop
 
 ipcs:
-	docker-compose exec $(SRV_NAME) ipcs
+	docker compose exec $(SRV_NAME) ipcs
 
 logger:
-	docker-compose exec $(SRV_NAME) asterisk -rx \
+	docker compose exec $(SRV_NAME) asterisk -rx \
 	'logger add channel console notice,warning,error,verbose'
 
 restart_%:
-	docker-compose exec $(SRV_NAME) sv restart $*
+	docker compose exec $(SRV_NAME) sv restart $*
 
 apk_list:
-	docker-compose exec $(SRV_NAME) /bin/sh -c 'for pkg in $$(apk info 2>/dev/null); do printf "%9s  %s\n" $$(apk info -s $$pkg 2>/dev/null | sed -n "2{p;q}") $$pkg; done | sort'
+	docker compose exec $(SRV_NAME) /bin/sh -c 'for pkg in $$(apk info 2>/dev/null); do printf "%9s  %s\n" $$(apk info -s $$pkg 2>/dev/null | sed -n "2{p;q}") $$pkg; done | sort'
 
 apk_add_%:
-	docker-compose exec $(SRV_NAME) apk -q --no-cache --update add $*
+	docker compose exec $(SRV_NAME) apk -q --no-cache --update add $*
 
 tools_install:
-	docker-compose exec $(SRV_NAME) apk --no-cache --update add \
+	docker compose exec $(SRV_NAME) apk --no-cache --update add \
 	nano lsof htop openldap-clients bind-tools iputils strace util-linux \
 	pulseaudio-utils alsa-utils
 
 xdebug_install:
-	docker-compose exec $(SRV_NAME) apk --no-cache --update add \
+	docker compose exec $(SRV_NAME) apk --no-cache --update add \
 	php8-pecl-xdebug
-	docker-compose exec $(SRV_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/php81/php.ini
-	docker-compose exec $(SRV_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/php81/conf.d/50_xdebug.ini
-	docker-compose exec $(SRV_NAME) sv restart websmsd autoband
+	docker compose exec $(SRV_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/php81/php.ini
+	docker compose exec $(SRV_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/php81/conf.d/50_xdebug.ini
+	docker compose exec $(SRV_NAME) sv restart websmsd autoband
 
 xdebug_getdata:
 	docker cp $(call dkr_srv_cnt,$(SRV_NAME)):tmp/. ../local/xdebug
@@ -131,7 +131,7 @@ sips_test:
 sound_enable: pulse/socket
 	cp -f $${PULSE_COOKIE-$$HOME/.config/pulse/cookie} pulse/cookie
 	sudo mount --bind $$(pactl info | sed '1!d;s/.*:\s*//g') pulse/socket
-	docker-compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so' || true
+	docker compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so' || true
 
 sound_disable:
 	rm pulse/cookie
@@ -142,21 +142,21 @@ pulse/socket:
 	touch pulse/socket
 
 sound_1:
-	docker-compose exec $(SRV_NAME) play -nq -t alsa synth 1 sine 300
+	docker compose exec $(SRV_NAME) play -nq -t alsa synth 1 sine 300
 
 sound_2:
-	docker-compose exec $(SRV_NAME) play -q /var/lib/asterisk/sounds/en/hello-world.gsm
+	docker compose exec $(SRV_NAME) play -q /var/lib/asterisk/sounds/en/hello-world.gsm
 
 sound_3: apk_add_alsa-utils
-	docker-compose exec $(SRV_NAME) aplay -Dpulse /usr/share/sounds/alsa/Front_Right.wav
+	docker compose exec $(SRV_NAME) aplay -Dpulse /usr/share/sounds/alsa/Front_Right.wav
 
 sound_4: apk_add_pulseaudio-utils
-	docker-compose exec $(SRV_NAME) paplay /usr/share/sounds/alsa/Front_Center.wav
+	docker compose exec $(SRV_NAME) paplay /usr/share/sounds/alsa/Front_Center.wav
 
 sound_5:
-	docker-compose exec $(SRV_NAME) asterisk -rx \
+	docker compose exec $(SRV_NAME) asterisk -rx \
 	'channel originate console/+12025550160@dp_entry_call_inout application playback hello-world'
 
 sound_6:
-	docker-compose exec $(SRV_NAME) asterisk -rx 'console dial t@dp_ivr_recgreet'
+	docker compose exec $(SRV_NAME) asterisk -rx 'console dial t@dp_ivr_recgreet'
 

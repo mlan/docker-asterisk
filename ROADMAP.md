@@ -1,5 +1,8 @@
 # Road map
 
+- Fix STUN timeout
+stun.c:252 in handle_stun_timeout: Attempt 3 to send STUN request to '127.0.0.1' timed out. Check that the server address is correct and reachable
+
 ## PrivateDial
 
 - Make IVR custom-able

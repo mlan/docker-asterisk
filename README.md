@@ -1,6 +1,6 @@
 # The `mlan/asterisk` repository
 
-![travis-ci test](https://img.shields.io/travis/com/mlan/docker-asterisk.svg?label=build&style=flat-square&logo=travis)
+![github action ci](https://img.shields.io/github/actions/workflow/status/mlan/docker-asterisk/testimage.yml?label=build&style=flat-square&logo=github)
 ![docker version](https://img.shields.io/docker/v/mlan/asterisk?logo=docker&style=flat-square)
 ![image size](https://img.shields.io/docker/image-size/mlan/asterisk/latest.svg?label=size&style=flat-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/asterisk.svg?label=pulls&style=flat-square&logo=docker)

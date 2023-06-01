@@ -1,0 +1,21 @@
+name: Docker Image Makefile CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build docker images
+      run: make build-all
+
+    - name: Run tests
+      shell: 'script -q -e -c "bash {0}"'
+      run: |
+        make test-all

@@ -1,5 +1,6 @@
 # 1.1.5
 
+- [github](.github/workflows/testimage.yml) Now use GitHub Actions to test image.
 - [demo](demo/Makefile) Now depend on the docker-compose-plugin.
 - [build](Makefile) Set `DOCKER_BUILDKIT=0` to make `docker build` handle our symbolic links as we intended.
 

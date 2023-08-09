@@ -163,7 +163,6 @@ FROM	full AS xtra
 
 RUN	apk --no-cache --update add \
 	asterisk-cdr-mysql \
-	asterisk-dahdi \
 	asterisk-doc \
 	asterisk-fax \
 	asterisk-mobile \

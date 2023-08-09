@@ -1,9 +1,13 @@
+# 1.1.6
+
+- [build](Makefile) Now use alpine:3.18 (asterisk:18.15.1).
+- [build](Dockerfile) Removed unavaiable package.
+
 # 1.1.5
 
 - [github](.github/workflows/testimage.yml) Now use GitHub Actions to test image.
 - [demo](demo/Makefile) Now depend on the docker-compose-plugin.
 - [build](Makefile) Set `DOCKER_BUILDKIT=0` to make `docker build` handle our symbolic links as we intended.
-
 
 # 1.1.4
 

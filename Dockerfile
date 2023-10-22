@@ -10,7 +10,7 @@ ARG	REL=latest
 #
 #
 
-FROM	$DIST:$REL AS mini
+FROM	$DIST:$REL AS full
 LABEL	maintainer=mlan
 
 ENV	SVDIR=/etc/service \

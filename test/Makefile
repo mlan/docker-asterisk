@@ -115,7 +115,7 @@ test-logs_%:
 	docker container logs $(PBX_NAME) | grep 'docker-entrypoint.sh' || true
 
 test-wait_%:
-	case $* in [1-3]) sleep $(TST_W8S);; [4-9]) sleep $(TST_W8L);; esac
+	case $* in [1-2]) sleep $(TST_W8S);; [3-9]) sleep $(TST_W8L);; esac
 
 test-up-net:
 	docker network create $(NET_NAME) 2>/dev/null || true

@@ -75,16 +75,17 @@ init_service() {
 		esac
 	done
 	shift $((OPTIND -1))
-	cmd=$(which "$1")
-	sv_name=${sv_name-$(base_name $1)}
+	cmd=$1
+	cmd_path=$(which "$cmd")
+	sv_name=${sv_name-$(base_name $cmd)}
 	runsv_dir=$SVDIR/$sv_name
 	svlog_dir=$DOCKER_SVLOG_DIR/$sv_name
 	if [ -n "$sv_force" ]; then
 		forcepid="$(echo rm -f $(pid_name $sv_name)*)"
 	fi
 	shift
-	if [ ! -z "$cmd" ]; then
-		dc_log 5 "Setting up ($sv_name) options ($options) args ($@)"
+	if [ ! -z "$cmd_path" ]; then
+		dc_log 5 "Setting up ($sv_name) options ($options) cmd ($cmd_path) args ($@)"
 		mkdir -p $runsv_dir
 		cat <<-!cat > $runsv_dir/run
 			#!/bin/sh -e
@@ -92,7 +93,7 @@ init_service() {
 			$forcepid
 			$redirstd
 			$sourcefile
-			exec $cmd $@
+			exec $cmd_path $@
 		!cat
 		chmod +x $runsv_dir/run
 		if [ -n "$sv_down" ]; then
@@ -107,7 +108,7 @@ init_service() {
 			chmod +x $runsv_dir/log/run
 		fi
 	else
-		dc_log 4 "Cannot find command."
+		dc_log 4 "Cannot find command: $cmd"
 	fi
 	}
 
@@ -115,6 +116,6 @@ init_service() {
 # run
 #
 
-for cmd in "$@" ; do
-	init_service $cmd
+for args in "$@" ; do
+	init_service $args
 done

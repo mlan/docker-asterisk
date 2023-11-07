@@ -13,7 +13,7 @@ BLD_TGTS ?= mini base full xtra
 BLD_CMT  ?= HEAD
 BLD_CVER ?= ast160
 BLD_DNLD ?= curl -o
-BLD_KIT  ?= DOCKER_BUILDKIT=0
+BLD_KIT  ?= DOCKER_BUILDKIT=1
 
 TST_REPO ?= $(BLD_REPO)
 TST_VER  ?= $(BLD_VER)
@@ -79,7 +79,7 @@ prune:
 	docker image prune -f
 
 clean:
-	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi
+	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi || true
 
 $(TST_TGTE):
 	${MAKE} $(TST_ENV) $@

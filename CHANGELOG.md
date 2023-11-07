@@ -1,3 +1,9 @@
+# 1.1.7
+
+- [build](Dockerfile) Switch to php82 and make it a build argument: `--build-arg PHP_VER=php82`.
+- [build](Makefile) Now set `DOCKER_BUILDKIT=1` since we don't use special symbolic links.
+- [docker](src/docker) Improve debug message in [docker-service.sh](src/docker/bin/docker-service.sh).
+
 # 1.1.6
 
 - [build](Makefile) Now use alpine:3.18 (asterisk:18.15.1).

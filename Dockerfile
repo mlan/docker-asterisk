@@ -1,5 +1,5 @@
-ARG	DIST=alpine
-ARG	REL=latest
+ARG 	DIST=alpine
+ARG 	REL=latest
 
 
 #
@@ -11,14 +11,16 @@ ARG	REL=latest
 #
 
 FROM	$DIST:$REL AS mini
+ARG 	PHP_VER=php82
 LABEL	maintainer=mlan
 
-ENV	SVDIR=/etc/service \
+ENV	PHP_VER=$PHP_VER \
+	SVDIR=/etc/service \
 	DOCKER_PERSIST_DIR=/srv \
 	DOCKER_BIN_DIR=/usr/local/bin \
 	DOCKER_ENTRY_DIR=/etc/docker/entry.d \
 	DOCKER_EXIT_DIR=/etc/docker/exit.d \
-	DOCKER_PHP_DIR=/usr/share/php81 \
+	DOCKER_PHP_DIR=/usr/share/$PHP_VER \
 	DOCKER_SPOOL_DIR=/var/spool/asterisk \
 	DOCKER_CONF_DIR=/etc/asterisk \
 	DOCKER_LOG_DIR=/var/log/asterisk \
@@ -62,6 +64,8 @@ RUN	source docker-common.sh \
 	$DOCKER_NFT_DIR \
 	$DOCKER_SPOOL_DIR \
 	&& mkdir -p $DOCKER_ACME_SSL_DIR \
+	&& ln -sf $DOCKER_PHP_DIR/autoban.php $DOCKER_BIN_DIR/autoban \
+	&& ln -sf $DOCKER_PHP_DIR/websms.php $DOCKER_BIN_DIR/websms \
 	&& apk --no-cache --update add \
 	asterisk
 
@@ -93,13 +97,14 @@ RUN	apk --no-cache --update add \
 	asterisk-srtp \
 	openssl \
 	curl \
-	php81 \
-	php81-curl \
-	php81-json \
+	$PHP_VER \
+	$PHP_VER-curl \
+	$PHP_VER-json \
 	runit \
 	bash \
 	nftables \
 	jq \
+	&& ln -sf /usr/bin/$PHP_VER /usr/bin/php \
 	&& docker-service.sh \
 	"syslogd -nO- -l$SYSLOG_LEVEL $SYSLOG_OPTIONS" \
 	"crond -f -c /etc/crontabs" \

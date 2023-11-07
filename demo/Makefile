@@ -116,10 +116,11 @@ tools_install:
 	pulseaudio-utils alsa-utils
 
 xdebug_install:
+	$(eval PHP_VER=$(shell docker compose exec $(SRV_NAME) sh -c 'echo $$PHP_VER'))
 	docker compose exec $(SRV_NAME) apk --no-cache --update add \
-	php8-pecl-xdebug
-	docker compose exec $(SRV_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/php81/php.ini
-	docker compose exec $(SRV_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/php81/conf.d/50_xdebug.ini
+	$(PHP_VER)-pecl-xdebug
+	docker compose exec $(SRV_NAME) sed -i '1 a xdebug.profiler_enable = 1' /etc/$(PHP_VER)/php.ini
+	docker compose exec $(SRV_NAME) sed -i '2 a zend_extension=xdebug.so' /etc/$(PHP_VER)/conf.d/50_xdebug.ini
 	docker compose exec $(SRV_NAME) sv restart websmsd autoband
 
 xdebug_getdata:

@@ -2,7 +2,11 @@
 
 - [build](Dockerfile) Switch to php82 and make it a build argument: `--build-arg PHP_VER=php82`.
 - [build](Makefile) Now set `DOCKER_BUILDKIT=1` since we don't use special symbolic links.
+- [build](bld.mk) Harmonize [bld.mk](bld.mk) between repositories.
+- [build](dkr.mk) Harmonize [dkr.mk](dkr.mk) between repositories.
+- [docker](src/docker) Added switch to set run as user [docker-service.sh](src/docker/bin/docker-service.sh).
 - [docker](src/docker) Improve debug message in [docker-service.sh](src/docker/bin/docker-service.sh).
+
 
 # 1.1.6
 

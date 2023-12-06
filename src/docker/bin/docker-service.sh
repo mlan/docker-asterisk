@@ -27,6 +27,7 @@ usage() {
 		  -l       activate logging (svlogd)
 		  -n name  use this name instead of command
 		  -s file  source file
+		  -u user  run command as this user
 		  -q       send stdout and stderr to /dev/null
 
 		 EXAMPLES
@@ -60,10 +61,11 @@ init_service() {
 	local redirstd=
 	local clearpid=
 	local sourcefile=
+	local setuser=
 	local sv_name cmd runsv_dir svlog_dir sv_log sv_down sv_force options
 	dc_log 7 "Called with args $@"
 	OPTIND=1
-	while getopts ":dfhln:s:q" opts; do
+	while getopts ":dfhln:s:u:q" opts; do
 		case "${opts}" in
 			d) sv_down="down"; add_opt "down";;
 			f) sv_force="force"; add_opt "force";;
@@ -71,6 +73,7 @@ init_service() {
 			l) sv_log="log"; add_opt "log";;
 			n) sv_name="${OPTARG}"; add_opt "name";;
 			s) sourcefile=". ${OPTARG}"; add_opt "source";;
+			u) sv_user="${OPTARG}"; add_opt "user";;
 			q) redirstd="exec >/dev/null"; add_opt "quiet";;
 		esac
 	done
@@ -83,6 +86,9 @@ init_service() {
 	if [ -n "$sv_force" ]; then
 		forcepid="$(echo rm -f $(pid_name $sv_name)*)"
 	fi
+	if [ -n "$sv_user" ]; then
+		setuser="chpst -u $sv_name"
+	fi
 	shift
 	if [ ! -z "$cmd_path" ]; then
 		dc_log 5 "Setting up ($sv_name) options ($options) cmd ($cmd_path) args ($@)"
@@ -93,7 +99,7 @@ init_service() {
 			$forcepid
 			$redirstd
 			$sourcefile
-			exec $cmd_path $@
+			exec $setuser $cmd_path $@
 		!cat
 		chmod +x $runsv_dir/run
 		if [ -n "$sv_down" ]; then

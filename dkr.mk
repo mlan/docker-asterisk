@@ -33,6 +33,32 @@ dkr_cnt_pid  = $(shell docker inspect --format '{{.State.Pid}}' $(1))
 #
 dkr_img_env  = $(shell docker inspect -f \
 	'{{range .Config.Env}}{{println .}}{{end}}' $(1) | grep -P "^$(2)=" | sed 's/[^=]*=//'
+
+#
+# $(call dkr_cnt_state,demo-app-1) -> docker inspect -f '{{.State.Status}}' demo-app-1
+#
+dkr_cnt_state = docker inspect -f '{{.State.Status}}' $(1)
+
+#
+# $(call dkr_cnt_wait_run,test-db,180) -> i=0; time while ! [ "$(docker inspect -f '{{.State.Status}}'  test-db)" = "running" ]; do sleep 1; i=$((i+1)); if [[ $i > 180 ]]; then echo test-db timeout with state: $(docker inspect -f '{{.State.Status}}'  test-db); break; fi; done
+#
+dkr_cnt_wait_run = i=0; time while ! [ "$$($(call dkr_cnt_state, $(1)))" = "running" ]; do sleep 1; i=$$((i+1)); if [[ $$i > $(2) ]]; then echo $(1) timeout with state: $$($(call dkr_cnt_state, $(1))); break; fi; done
+
+#
+# $(call dkr_srv_wait_run,180,app) -> wait up to 180s for app to enter state running
+#
+dkr_srv_wait_run = $(call dkr_cnt_wait_run,$(call dkr_srv_cnt $(1)),$(2))
+
+#
+# $(call dkr_cnt_wait_log,app,ready for connections) -> time docker logs -f app | sed -n '/ready for connections/{p;q}'
+#
+dkr_cnt_wait_log = time docker logs -f $(1) 2>&1 | sed -n '/$(2)/{p;q}'
+
+#
+# $(call dkr_pull_missing,mariadb:latest) -> if ! docker image inspect mariadb:latest &>/dev/null; then docker pull mariadb:latest; fi
+#
+dkr_pull_missing = if ! docker image inspect $(1) &>/dev/null; then docker pull $(1); fi
+
 #
 # List IPs of containers
 #

@@ -1,6 +1,6 @@
 # 1.1.7
 
-- [build](Makefile) Now use alpine:3.19 (asterisk:20.5.0).
+- [build](Makefile) Now use alpine:3.19 (asterisk:20.5.2).
 - [build](Dockerfile) Switch to php82 and make it a build argument: `--build-arg PHP_VER=php82`.
 - [build](Makefile) Now set `DOCKER_BUILDKIT=1` since we don't use special symbolic links.
 - [build](bld.mk) Harmonize [bld.mk](bld.mk) between repositories.

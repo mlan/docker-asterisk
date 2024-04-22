@@ -11,7 +11,7 @@ BLD_VER  ?= latest
 BLD_TGT  ?= full
 BLD_TGTS ?= mini base full xtra
 BLD_CMT  ?= HEAD
-BLD_CVER ?= ast160
+BLD_CVER ?= ast200
 BLD_DNLD ?= curl -o
 BLD_KIT  ?= DOCKER_BUILDKIT=1
 

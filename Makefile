@@ -11,7 +11,7 @@ BLD_VER  ?= latest
 BLD_TGT  ?= full
 BLD_TGTS ?= mini base full xtra
 BLD_CMT  ?= HEAD
-BLD_CVER ?= ast160
+BLD_CVER ?= ast200
 BLD_DNLD ?= curl -o
 BLD_KIT  ?= DOCKER_BUILDKIT=1
 
@@ -53,14 +53,14 @@ pre_codecs: codec_g723.so codec_g729.so
 
 sub/autoban/php/ami.class.inc: submodule
 	mkdir -p $(@D)
-	ln -f sub/module/phpami/src/Ami.php $@
+	cp --remove-destination sub/module/phpami/src/Ami.php $@
 
 submodule:
 	git submodule update --init --recursive
 
 codec_%.so: sub/codecs/download/codec_%-$(BLD_CVER).so
 	mkdir -p sub/codecs/module
-	ln -f $< sub/codecs/module/$@
+	cp --remove-destination $< sub/codecs/module/$@
 
 .PRECIOUS: sub/codecs/download/%.so
 

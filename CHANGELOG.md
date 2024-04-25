@@ -1,3 +1,9 @@
+# 1.1.8
+
+- [build](Makefile) Due to changed behavior with docker 26, files are now copied on the host instead of being hard-linked.
+- [build](Makefile) Now set `BLD_CVER ?= ast200` to match codec and asterisk versions.
+- [demo](demo/docker-compose.yml) Remove obsolete element `version` in docker-compose.yml.
+
 # 1.1.7
 
 - [build](Makefile) Now use alpine:3.19 (asterisk:20.5.2).

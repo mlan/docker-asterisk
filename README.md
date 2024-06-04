@@ -53,7 +53,7 @@ git clone https://github.com/mlan/docker-asterisk.git
 An example of how to configure an VoIP SIP server using docker compose is given below.
 
 ```yaml
-version: '3'
+name: demo
 
 services:
   tele:

@@ -105,7 +105,7 @@ restart_%:
 	docker compose exec $(SRV_NAME) sv restart $*
 
 apk_list:
-	docker compose exec $(SRV_NAME) /bin/sh -c 'for pkg in $$(apk info 2>/dev/null); do printf "%9s  %s\n" $$(apk info -s $$pkg 2>/dev/null | sed -n "2{p;q}") $$pkg; done | sort'
+	docker compose exec $(SRV_NAME) /bin/sh -c 'apk info -sq $$(apk info -q) | sed -r "N;N;s/([^ ]+) installed size:\n([^ ]+) (.).*/\2\3\t\1/" | sort -h'
 
 apk_add_%:
 	docker compose exec $(SRV_NAME) apk -q --no-cache --update add $*

@@ -1,3 +1,9 @@
+# 1.1.9
+
+- [build](Makefile) Now use alpine:3.20 (asterisk:20.8.1).
+- [build](Dockerfile) Switch to php83.
+- [demo](demo) Fixed target 'apk_list'.
+
 # 1.1.8
 
 - [build](Makefile) Due to changed behavior with docker 26, files are now copied on the host instead of being hard-linked.

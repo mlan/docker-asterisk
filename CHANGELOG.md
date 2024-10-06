@@ -1,8 +1,15 @@
+# 1.1.10
+
+- [build](Makefile) Now use alpine:3.20 (asterisk:20.9.3).
+- [asterisk](src/asterisk/config/modules.conf) Add modules that are not loaded by default helping to get rid of error messages during startup.
+- [asterisk](src/asterisk/config/console.conf) Add `console.conf` so we can use `chan_console.so` since `chan_alsa.so` will be removed in asterisk:21.
+- [demo](demo/Makefile) Now use `chan_console.so` since `chan_alsa.so` will be removed in asterisk:21.
+
 # 1.1.9
 
 - [build](Makefile) Now use alpine:3.20 (asterisk:20.8.1).
 - [build](Dockerfile) Switch to php83.
-- [demo](demo) Fixed target 'apk_list'.
+- [demo](demo) Fixed target `apk_list`.
 
 # 1.1.8
 

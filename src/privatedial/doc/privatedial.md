@@ -83,7 +83,7 @@ You also need to configure WebSMS for SMS to work, see separate documentation.
 
 ### Outgoing SMTP email server
 
-PrivateDial use [MiniVoiceMail](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmRecord) to deliver voice mail messages via email with attached sound files. For this to work a separate SMTP email server need to have been set up. This can for example be achieved by using the image [mlan/postfix-amavis](https://hub.docker.com/repository/docker/mlan/postfix-amavis). With a functional email server, configure MiniVM to connect to it by providing its URL and authentication credentials in `minivm.conf`
+PrivateDial use [MiniVoiceMail](https://wiki.asterisk.org/wiki/display/AST/Asterisk+16+Application_MinivmRecord) to deliver voice mail messages via email with attached sound files. For this to work a separate SMTP email server need to have been set up. This can for example be achieved by using the image [mlan/postfix](https://hub.docker.com/repository/docker/mlan/postfix). With a functional email server, configure MiniVM to connect to it by providing its URL and authentication credentials in `minivm.conf`
 
 `minivm.conf`
 

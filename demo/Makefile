@@ -132,7 +132,7 @@ sips_test:
 sound_enable: pulse/socket
 	cp -f $${PULSE_COOKIE-$$HOME/.config/pulse/cookie} pulse/cookie
 	sudo mount --bind $$(pactl info | sed '1!d;s/.*:\s*//g') pulse/socket
-	docker compose exec $(SRV_NAME) asterisk -rx 'module load chan_alsa.so' || true
+	docker compose exec $(SRV_NAME) asterisk -rx 'module load chan_console.so' || true
 
 sound_disable:
 	rm pulse/cookie

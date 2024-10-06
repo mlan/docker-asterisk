@@ -19,7 +19,7 @@ Consider fixing the code in [app_minivm.c](https://github.com/asterisk/asterisk/
 
 ## AutoBan
 
-- Now `.nft` file is loaded at container strartup (entry.d) irrespective of if autoband is enabled or not. Only load `.nft` files if autoband is enabled.
+- Now `.nft` file is loaded at container startup (entry.d) irrespective of whether autoband is enabled or not. Only load `.nft` files if autoband is enabled.
 - Add option to get reverse DNS using gethostbyaddr($ip); in `show who`.
 - Perhaps replace entry.d/ with /etc/conf.d/nftables?
 - Allow intervals, eg 192.168.1.1-192.168.1.200, in blacklist and whitelist.
@@ -27,6 +27,3 @@ Consider fixing the code in [app_minivm.c](https://github.com/asterisk/asterisk/
 ## WebSMS
 
 ## Asterisk modules
-
-- Check what modules are needed and avoid loading others. This will help get rid of error messages during startup.
-

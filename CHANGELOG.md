@@ -1,3 +1,8 @@
+# 1.1.11
+
+- [build](Makefile) Now use alpine:3.21 (asterisk:20.11.0).
+- [build](Makefile) Switch to php84.
+
 # 1.1.10
 
 - [build](Makefile) Now use alpine:3.20 (asterisk:20.9.3).

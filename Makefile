@@ -5,7 +5,7 @@
 
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.20 --build-arg PHP_VER=php83
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.21 --build-arg PHP_VER=php84
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full

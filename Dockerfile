@@ -11,7 +11,7 @@ ARG 	REL=latest
 #
 
 FROM	$DIST:$REL AS mini
-ARG 	PHP_VER=php82
+ARG 	PHP_VER=php84
 LABEL	maintainer=mlan
 
 ENV	PHP_VER=$PHP_VER \

@@ -35,7 +35,7 @@ The configuration files making up PrivateDial are tabulated below.
 | pjsip_wizard.conf     | Defines templates for sip trunk and soft-phone endpoints     |
 | pjsip_endpoint.conf   | Defines sip trunk and soft-phone endpoints                   |
 
-When configuring the asterisk sever the following files often needs to be updated: `pjsip_transport.conf` and `minivm.conf`. The remaining task is, once the severer has been configured, to add and maintain sip trunk and soft-phone endpoints, which is kept in `pjsip_endpoint.conf`.
+When configuring the asterisk sever the following files often needs to be updated: `pjsip_transport.conf` and `minivm.conf`. The remaining task is, once the server has been configured, to add and maintain sip trunk and soft-phone endpoints, which is kept in `pjsip_endpoint.conf`.
 
 ## Usage
 

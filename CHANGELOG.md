@@ -1,3 +1,7 @@
+# 1.1.12
+
+- [build](Makefile) Now use alpine:3.22 (asterisk:20.11.1).
+
 # 1.1.11
 
 - [build](Makefile) Now use alpine:3.21 (asterisk:20.11.0).

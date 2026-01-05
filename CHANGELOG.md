@@ -1,3 +1,11 @@
+# 1.1.13
+
+- [build](Makefile) Now use alpine:3.23 (asterisk:20.15.2).
+- [build](Makefile) Updated target `clean`.
+- [privatedial](src/privatedial) Fixed typo.
+- [demo](demo/Makefile) Fixed target `sound_2`.
+- [demo](demo/Makefile) Added target `netstat`.
+
 # 1.1.12
 
 - [build](Makefile) Now use alpine:3.22 (asterisk:20.11.1).

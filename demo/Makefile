@@ -97,6 +97,9 @@ htop: tools_install
 ipcs:
 	docker compose exec $(SRV_NAME) ipcs
 
+netstat:
+	docker compose exec $(SRV_NAME) netstat -apen
+
 logger:
 	docker compose exec $(SRV_NAME) asterisk -rx \
 	'logger add channel console notice,warning,error,verbose'
@@ -146,7 +149,7 @@ sound_1:
 	docker compose exec $(SRV_NAME) play -nq -t alsa synth 1 sine 300
 
 sound_2:
-	docker compose exec $(SRV_NAME) play -q /var/lib/asterisk/sounds/en/hello-world.gsm
+	docker compose exec $(SRV_NAME) play -q /usr/share/asterisk/sounds/en/hello-world.gsm
 
 sound_3: apk_add_alsa-utils
 	docker compose exec $(SRV_NAME) aplay -Dpulse /usr/share/sounds/alsa/Front_Right.wav

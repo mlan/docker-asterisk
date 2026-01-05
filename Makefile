@@ -5,7 +5,7 @@
 
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.22 --build-arg PHP_VER=php84
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.23 --build-arg PHP_VER=php84
 BLD_REPO ?= mlan/asterisk
 BLD_VER  ?= latest
 BLD_TGT  ?= full
@@ -79,7 +79,7 @@ prune:
 	docker image prune -f
 
 clean:
-	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi || true
+	docker images --all --filter reference=$(BLD_REPO) --format '{{.Repository}}:{{.Tag}}' | uniq | xargs docker rmi || true
 
 $(TST_TGTE):
 	${MAKE} $(TST_ENV) $@
